@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const round = Number(req.query.round);
+    const round = Number(req.query.matchday);
 
     if (!round) {
       return res.status(400).json({ error: 'Round number is required' });
