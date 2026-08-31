@@ -37,6 +37,20 @@ async function loadEplFixtures(){
     notice(e.message||'Could not load EPL fixtures.','warn');
   }
 }
+function resultForTeam(match,team){
+  if(match.status!=='FINISHED') return null;
+  const h=match.score.fullTime.home;
+  const a=match.score.fullTime.away;
+  const isHome=match.homeTeam.name===team;
+  const mine=isHome?h:a;
+  const theirs=isHome?a:h;
+
+  if(mine>theirs) return 'win';
+  if(mine<theirs) return 'loss';
+  if(mine===0&&theirs===0) return isHome?'zero-home':'zero-away';
+  return 'score-draw';
+}
+
 function outcomeSurvives(outcome){return outcome==='win'||outcome==='zero-away'}
 function shortTeam(t){return t.split(' ').map(x=>x[0]).join('').slice(0,3).toUpperCase()}
 function savePick(team){const p=player();if(!p.alive)return notice('This player has been eliminated.','warn');if(!team)return notice('Choose a team first.','warn');if(p.used.includes(team)&&p.picks[state.round]!==team)return notice('That team has already been used.','warn');const prev=p.picks[state.round];if(prev)p.used=p.used.filter(t=>t!==prev);p.picks[state.round]=team;p.used=[...new Set([...p.used,team])];notice(`${p.name} selected ${team} for Round ${state.round}.`);render()}
