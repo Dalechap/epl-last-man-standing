@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch(
-      `https://api.football-data.org/v4/competitions/PL/matches?matchday=${round}`,
+      `https://api.football-data.org/v4/competitions/PL/matches?season=2026&matchday=${round}`,
       {
         headers: {
           'X-Auth-Token': apiKey
