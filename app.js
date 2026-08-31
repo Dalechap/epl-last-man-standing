@@ -18,6 +18,25 @@ function player(){return state.players.find(p=>p.name===state.selectedPlayer&&p.
 function roundPicks(){return state.players.filter(p=>p.alive&&p.picks[state.round]).map(p=>p.picks[state.round])}
 function pickedTeams(){return [...new Set(roundPicks())].sort()}
 function roundFixtures(){return state.fixtures[state.round]||[]}
+async function loadEplFixtures(){
+  try{
+    notice(`Loading EPL Round ${state.round} fixtures...`);
+    const r=await fetch(`/api/football?round=${state.round}`);
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||'Could not load fixtures');
+
+    state.fixtures[state.round]=data.matches.map(m=>({
+      home:m.homeTeam.name,
+      away:m.awayTeam.name
+    }));
+
+    save();
+    notice(`Loaded ${state.fixtures[state.round].length} EPL fixtures for Round ${state.round}.`);
+    render();
+  }catch(e){
+    notice(e.message||'Could not load EPL fixtures.','warn');
+  }
+}
 function outcomeSurvives(outcome){return outcome==='win'||outcome==='zero-away'}
 function shortTeam(t){return t.split(' ').map(x=>x[0]).join('').slice(0,3).toUpperCase()}
 function savePick(team){const p=player();if(!p.alive)return notice('This player has been eliminated.','warn');if(!team)return notice('Choose a team first.','warn');if(p.used.includes(team)&&p.picks[state.round]!==team)return notice('That team has already been used.','warn');const prev=p.picks[state.round];if(prev)p.used=p.used.filter(t=>t!==prev);p.picks[state.round]=team;p.used=[...new Set([...p.used,team])];notice(`${p.name} selected ${team} for Round ${state.round}.`);render()}
