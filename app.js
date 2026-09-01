@@ -1,6 +1,6 @@
 const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Leeds United','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sunderland','Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'];
 const defaults=['Dale','Ben','Paul','Nick'];
-const freshState=()=>({round:1,selectedPlayer:'Dale',deadlinePassed:false,roundProcessed:false,results:{},fixtures:{},players:defaults.map(name=>({name,alive:true,picks:{},used:[],eliminatedRound:null}))});
+const freshState=()=>({round:4,selectedPlayer:'Dale',deadlinePassed:false,roundProcessed:false,results:{},fixtures:{},players:defaults.map(name=>({name,alive:true,picks:{},used:[],eliminatedRound:null}))});
 let state=JSON.parse(localStorage.getItem('lms-state')||'null')||freshState();
 if(state.deadlinePassed===undefined) state.deadlinePassed=false;
 if(state.roundProcessed===undefined) state.roundProcessed=false;
