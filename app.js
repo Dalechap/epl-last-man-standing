@@ -88,7 +88,7 @@ async function loadEplResults(){
 }
 function outcomeSurvives(outcome){return outcome==='win'||outcome==='zero-away'}
 function shortTeam(t){return t.split(' ').map(x=>x[0]).join('').slice(0,3).toUpperCase()}
-function savePick(team){const p=player();if(!p.alive)return notice('This player has been eliminated.','warn');if(!team)return notice('Choose a team first.','warn');if(p.used.includes(team)&&p.picks[state.round]!==team)return notice('That team has already been used.','warn');const prev=p.picks[state.round];if(prev)p.used=p.used.filter(t=>t!==prev);p.picks[state.round]=team;p.used=[...new Set([...p.used,team])];notice(`${p.name} selected ${team} for Round ${state.round}.`);render()}
+function savePick(team){const p=player();if(!p.alive)return notice('This player has been eliminated.','warn');if(!team)return notice('Choose a team first.','warn');if(p.used.some(t=>t.replace(/ FC$/,'')===team.replace(/ FC$/,''))&&p.picks[state.round]!==team)return notice('That team has already been used.','warn');const prev=p.picks[state.round];if(prev)p.used=p.used.filter(t=>t!==prev);p.picks[state.round]=team;p.used=[...new Set([...p.used,team])];notice(`${p.name} selected ${team} for Round ${state.round}.`);render()}
 function processRound(){
   if(!state.deadlinePassed) return notice('Close the selection deadline before processing results.','warn');
   if(state.roundProcessed) return notice('This round has already been processed.','warn');
