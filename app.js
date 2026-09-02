@@ -1395,6 +1395,18 @@ placeholder='Player name'
 Add
 </button>
 </div>
+<label>Remove player</label>
+
+<div class='row'>
+<select id='removePlayer'>
+<option value=''>Select player…</option>
+${
+state.players.map(p=>
+`<option value='${esc(p.name)}'>${esc(p.name)}</option>`
+).join('')
+}
+</select>
+
 
 <hr>
 
@@ -1589,6 +1601,49 @@ notice(
 
 render();
 };
+
+ f($('#removePlayerBtn')){
+$('#removePlayerBtn').onclick=()=>{
+const name=$('#removePlayer').value;
+
+if(!name){
+return notice(
+'Select a player to remove.',
+'warn'
+);
+}
+
+if(
+!confirm(
+`Remove ${name} from the competition?`
+)
+){
+return;
+}
+
+state.players=
+state.players.filter(
+p=>p.name!==name
+);
+
+if(state.selectedPlayer===name){
+const nextPlayer=
+state.players.find(p=>p.alive)
+||state.players[0];
+
+state.selectedPlayer=
+nextPlayer
+?nextPlayer.name
+:'';
+}
+
+notice(
+`${name} removed from the competition.`
+);
+
+render();
+};
+} 
 
 $('#reset').onclick=()=>{
 if(
