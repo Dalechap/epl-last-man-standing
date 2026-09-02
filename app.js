@@ -9,7 +9,30 @@ if(!state.fixtures) state.fixtures={};
 if(!state.processSnapshot) state.processSnapshot=null;
 state.players.forEach(p=>{if(!p.picks)p.picks={};if(!p.used)p.used=[];if(p.alive===undefined)p.alive=true;if(p.eliminatedRound===undefined)p.eliminatedRound=null});
 let tab='home'; const $=s=>document.querySelector(s); const esc=s=>String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
-function save(){localStorage.setItem('lms-state',JSON.stringify(state))}
+function save(){
+localStorage.setItem('lms-state',JSON.stringify(state));
+fetch('/api/state',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify(state)
+}).catch(error=>console.error('Database save failed:',error));
+}
+
+async function loadState(){
+try{
+const response=await fetch('/api/state');
+if(response.ok){
+const serverState=await response.json();
+if(serverState){
+state=serverState;
+localStorage.setItem('lms-state',JSON.stringify(state));
+}
+}
+}catch(error){
+console.error('Database load failed:',error);
+}
+render();
+}
 function notice(t,type='ok'){const n=$('#notice');n.innerHTML=t?`<div class='notice ${type==='warn'?'warn':''}'>${esc(t)}</div>`:''}
 function alivePlayers(){return state.players.filter(p=>p.alive)}
 function alive(){return alivePlayers().length}
@@ -140,4 +163,4 @@ function render(){
     $('#reset').onclick=()=>{if(confirm('Reset all players, picks, fixtures and used teams?')){state=freshState();notice('Competition reset.');render()}};
   }
 }
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;notice('');render()});render();
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;notice('');render()});loadState();
