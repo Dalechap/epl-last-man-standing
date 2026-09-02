@@ -35,6 +35,7 @@ if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 });
 
 let tab='home';
+let autoResultsCheckInProgress=false;
 
 const $=s=>document.querySelector(s);
 
@@ -111,6 +112,7 @@ render();
 
 function notice(t,type='ok'){
 const n=$('#notice');
+
 n.innerHTML=t
 ?`<div class='notice ${type==='warn'?'warn':''}'>${esc(t)}</div>`
 :'';
@@ -131,7 +133,9 @@ return state.roundProcessed&&alive()===1
 }
 
 function player(){
-return state.players.find(p=>p.name===state.selectedPlayer&&p.alive)
+return state.players.find(
+p=>p.name===state.selectedPlayer&&p.alive
+)
 ||state.players.find(p=>p.alive)
 ||state.players[0];
 }
@@ -157,7 +161,11 @@ notice(`Loading EPL Round ${state.round} fixtures...`);
 const r=await fetch(`/api/football?round=${state.round}`);
 const data=await r.json();
 
-if(!r.ok) throw new Error(data.error||'Could not load fixtures');
+if(!r.ok){
+throw new Error(
+data.error||'Could not load fixtures'
+);
+}
 
 state.fixtures[state.round]=(data.matches||[]).map(m=>({
 home:m.homeTeam.name,
@@ -170,8 +178,11 @@ const kickoffTimes=state.fixtures[state.round]
 .filter(t=>Number.isFinite(t));
 
 if(kickoffTimes.length){
-state.deadline=new Date(Math.min(...kickoffTimes)).toISOString();
+state.deadline=
+new Date(Math.min(...kickoffTimes)).toISOString();
+
 state.deadlinePassed=false;
+
 syncDeadline();
 }
 
@@ -184,7 +195,10 @@ notice(
 render();
 
 }catch(e){
-notice(e.message||'Could not load EPL fixtures.','warn');
+notice(
+e.message||'Could not load EPL fixtures.',
+'warn'
+);
 }
 }
 
@@ -198,6 +212,7 @@ const mine=isHome?h:a;
 const theirs=isHome?a:h;
 
 if(mine>theirs) return 'win';
+
 if(mine<theirs) return 'loss';
 
 if(mine===0&&theirs===0){
@@ -207,6 +222,46 @@ return isHome?'zero-home':'zero-away';
 return 'score-draw';
 }
 
+function matchForTeam(matches,team){
+return (matches||[]).find(m=>
+m.homeTeam.name===team ||
+m.awayTeam.name===team
+);
+}
+
+function updateResultsFromMatches(matches){
+let updated=0;
+
+pickedTeams().forEach(team=>{
+const match=matchForTeam(matches,team);
+
+if(!match) return;
+
+const result=resultForTeam(match,team);
+
+if(result && state.results[team]!==result){
+state.results[team]=result;
+updated++;
+}
+});
+
+return updated;
+}
+
+function selectedTeamMatchesFinished(matches){
+const selectedTeams=pickedTeams();
+
+if(selectedTeams.length===0){
+return true;
+}
+
+return selectedTeams.every(team=>{
+const match=matchForTeam(matches,team);
+
+return match && match.status==='FINISHED';
+});
+}
+
 async function loadEplResults(){
 try{
 notice(`Checking EPL Round ${state.round} results...`);
@@ -214,24 +269,15 @@ notice(`Checking EPL Round ${state.round} results...`);
 const r=await fetch(`/api/football?round=${state.round}`);
 const data=await r.json();
 
-if(!r.ok) throw new Error(data.error||'Could not load EPL results');
-
-let updated=0;
-
-pickedTeams().forEach(team=>{
-const match=(data.matches||[]).find(m=>
-m.homeTeam.name===team || m.awayTeam.name===team
+if(!r.ok){
+throw new Error(
+data.error||'Could not load EPL results'
 );
-
-if(!match) return;
-
-const result=resultForTeam(match,team);
-
-if(result){
-state.results[team]=result;
-updated++;
 }
-});
+
+const updated=updateResultsFromMatches(
+data.matches||[]
+);
 
 save();
 render();
@@ -239,11 +285,14 @@ render();
 notice(
 updated
 ?`Updated ${updated} EPL result${updated===1?'':'s'}`
-:'No finished selected-team matches yet'
+:'No new finished selected-team matches yet'
 );
 
 }catch(e){
-notice(e.message||'Could not load EPL results');
+notice(
+e.message||'Could not load EPL results',
+'warn'
+);
 }
 }
 
@@ -264,6 +313,7 @@ function savePick(team){
 if(syncDeadline()){
 save();
 render();
+
 return notice(
 `Round ${state.round} selections are closed because the first match has kicked off.`,
 'warn'
@@ -280,18 +330,29 @@ return notice(
 const p=player();
 
 if(!p.alive){
-return notice('This player has been eliminated.','warn');
+return notice(
+'This player has been eliminated.',
+'warn'
+);
 }
 
 if(!team){
-return notice('Choose a team first.','warn');
+return notice(
+'Choose a team first.',
+'warn'
+);
 }
 
 if(
-p.used.some(t=>t.replace(/ FC$/,'')===team.replace(/ FC$/,''))
+p.used.some(
+t=>t.replace(/ FC$/,'')===team.replace(/ FC$/,'')
+)
 &&p.picks[state.round]!==team
 ){
-return notice('That team has already been used.','warn');
+return notice(
+'That team has already been used.',
+'warn'
+);
 }
 
 const prev=p.picks[state.round];
@@ -303,44 +364,52 @@ p.used=p.used.filter(t=>t!==prev);
 p.picks[state.round]=team;
 p.used=[...new Set([...p.used,team])];
 
-notice(`${p.name} selected ${team} for Round ${state.round}.`);
+notice(
+`${p.name} selected ${team} for Round ${state.round}.`
+);
+
 render();
 }
 
-function processRound(){
+function processRound(automatic=false){
 syncDeadline();
 
 if(!state.deadlinePassed){
-return notice(
-'Close the selection deadline before processing results.',
+return false;
+}
+
+if(state.roundProcessed){
+return false;
+}
+
+const active=state.players.filter(p=>p.alive);
+
+const missingResults=pickedTeams().filter(
+t=>!state.results[t]
+);
+
+if(missingResults.length){
+if(!automatic){
+notice(
+`Enter a result for: ${missingResults.join(', ')}`,
 'warn'
 );
 }
 
-if(state.roundProcessed){
-return notice('This round has already been processed.','warn');
+return false;
 }
-
-const active=state.players.filter(p=>p.alive);
 
 state.processSnapshot={
 alive:Object.fromEntries(
 state.players.map(p=>[p.name,p.alive])
 ),
 eliminatedRound:Object.fromEntries(
-state.players.map(p=>[p.name,p.eliminatedRound||null])
+state.players.map(
+p=>[p.name,p.eliminatedRound||null]
+)
 ),
 results:{...state.results}
 };
-
-const missingResults=pickedTeams().filter(t=>!state.results[t]);
-
-if(missingResults.length){
-return notice(
-`Enter a result for: ${missingResults.join(', ')}`,
-'warn'
-);
-}
 
 const wouldEliminate=[];
 
@@ -362,12 +431,17 @@ wouldEliminate.length===active.length
 &&active.length>0
 ){
 state.roundProcessed=true;
+
 save();
 render();
 
-return notice(
-'Everyone failed this round, so all remaining players stay alive. Their selected teams still count as used.'
+notice(
+automatic
+?`Round ${state.round} was processed automatically. Everyone failed, so all remaining players stay alive. Their selected teams still count as used.`
+:'Everyone failed this round, so all remaining players stay alive. Their selected teams still count as used.'
 );
+
+return true;
 }
 
 wouldEliminate.forEach(p=>{
@@ -381,16 +455,87 @@ save();
 render();
 
 notice(
-`Round ${state.round} processed. ${alive()} player${alive()===1?'':'s'} remain alive.`
+automatic
+?`Round ${state.round} was processed automatically. ${alive()} player${alive()===1?'':'s'} remain alive.`
+:`Round ${state.round} processed. ${alive()} player${alive()===1?'':'s'} remain alive.`
 );
+
+return true;
+}
+
+async function autoCheckResults(){
+if(autoResultsCheckInProgress){
+return;
+}
+
+const deadlineJustClosed=syncDeadline();
+
+if(deadlineJustClosed){
+save();
+render();
+}
+
+if(
+!state.deadlinePassed ||
+state.roundProcessed
+){
+return;
+}
+
+autoResultsCheckInProgress=true;
+
+try{
+const r=await fetch(
+`/api/football?round=${state.round}`
+);
+
+const data=await r.json();
+
+if(!r.ok){
+throw new Error(
+data.error||'Could not check EPL results'
+);
+}
+
+const matches=data.matches||[];
+
+const updated=updateResultsFromMatches(matches);
+
+if(updated){
+save();
+}
+
+if(selectedTeamMatchesFinished(matches)){
+processRound(true);
+return;
+}
+
+if(updated){
+render();
+}
+
+}catch(e){
+console.error(
+'Automatic EPL results check failed:',
+e
+);
+}finally{
+autoResultsCheckInProgress=false;
+}
 }
 
 function undoProcessedRound(){
 if(!state.roundProcessed){
-return notice('This round has not been processed yet.','warn');
+return notice(
+'This round has not been processed yet.',
+'warn'
+);
 }
 
-if(state.processSnapshot&&state.processSnapshot.alive){
+if(
+state.processSnapshot &&
+state.processSnapshot.alive
+){
 state.players.forEach(p=>{
 if(
 Object.prototype.hasOwnProperty.call(
@@ -398,12 +543,13 @@ state.processSnapshot.alive,
 p.name
 )
 ){
-p.alive=state.processSnapshot.alive[p.name];
+p.alive=
+state.processSnapshot.alive[p.name];
 }
 
 if(
-state.processSnapshot.eliminatedRound
-&&Object.prototype.hasOwnProperty.call(
+state.processSnapshot.eliminatedRound &&
+Object.prototype.hasOwnProperty.call(
 state.processSnapshot.eliminatedRound,
 p.name
 )
@@ -415,8 +561,10 @@ state.processSnapshot.eliminatedRound[p.name];
 }
 
 state.roundProcessed=false;
-state.deadlinePassed=false;
-state.deadline=null;
+
+state.deadlinePassed=
+deadlineTimePassed();
+
 state.results={};
 state.processSnapshot=null;
 
@@ -427,7 +575,9 @@ state.selectedPlayer=p.name;
 }
 
 notice(
-`Round ${state.round} processing undone. Selections are open again.`
+state.deadlinePassed
+?`Round ${state.round} processing undone. Selections remain closed because the deadline has passed.`
+:`Round ${state.round} processing undone. Selections are open again.`
 );
 
 render();
@@ -490,8 +640,11 @@ return `<div class='standingRow'>
 }
 
 function fixtureCard(home,away,current,p){
-const hUsed=p.used.includes(home)&&current!==home;
-const aUsed=p.used.includes(away)&&current!==away;
+const hUsed=
+p.used.includes(home)&&current!==home;
+
+const aUsed=
+p.used.includes(away)&&current!==away;
 
 return `<div class='fixtureCard'>
 <button
@@ -499,8 +652,12 @@ class='teamPick ${current===home?'selected':''}'
 data-team='${esc(home)}'
 ${hUsed?'disabled':''}
 >
-<span class='crest'>${shortTeam(home)}</span>
+<span class='crest'>
+${shortTeam(home)}
+</span>
+
 <span>${esc(home)}</span>
+
 ${hUsed?`<small>Used</small>`:''}
 </button>
 
@@ -511,8 +668,12 @@ class='teamPick ${current===away?'selected':''}'
 data-team='${esc(away)}'
 ${aUsed?'disabled':''}
 >
-<span class='crest'>${shortTeam(away)}</span>
+<span class='crest'>
+${shortTeam(away)}
+</span>
+
 <span>${esc(away)}</span>
+
 ${aUsed?`<small>Used</small>`:''}
 </button>
 </div>`;
@@ -525,8 +686,13 @@ save();
 $('#summary').textContent=
 `Round ${state.round} · ${alive()} player${alive()==1?'':'s'} alive`;
 
-document.querySelectorAll('.tabs button').forEach(b=>
-b.classList.toggle('active',b.dataset.tab===tab)
+document
+.querySelectorAll('.tabs button')
+.forEach(b=>
+b.classList.toggle(
+'active',
+b.dataset.tab===tab
+)
 );
 
 const c=$('#content');
@@ -535,13 +701,23 @@ if(tab==='home'){
 const w=winner();
 
 c.innerHTML=`
-${w
+${
+w
 ?`<div class='winnerCard'>
 <div class='trophy'>🏆</div>
+
 <div>
-<div class='winnerLabel'>COMPETITION WINNER</div>
-<h2>${esc(w.name)} is the Last Man Standing!</h2>
-<p>The competition is complete.</p>
+<div class='winnerLabel'>
+COMPETITION WINNER
+</div>
+
+<h2>
+${esc(w.name)} is the Last Man Standing!
+</h2>
+
+<p>
+The competition is complete.
+</p>
 </div>
 </div>`
 :''
@@ -560,14 +736,19 @@ ${w
 
 <div class='card'>
 <span>Selections</span>
-<strong>${state.deadlinePassed?'Closed':'Open'}</strong>
+<strong>
+${state.deadlinePassed?'Closed':'Open'}
+</strong>
 </div>
 </div>
 
 <div class='card tableCard'>
 <div class='sectionHead'>
 <div>
-<div class='eyebrow dark'>COMPETITION</div>
+<div class='eyebrow dark'>
+COMPETITION
+</div>
+
 <h2>Standings</h2>
 </div>
 </div>
@@ -579,12 +760,29 @@ ${renderStandings()}
 <h2>Competition rules</h2>
 
 <ul>
-<li>Competition starts at EPL Round 4 and continues until one player remains.</li>
-<li>Pick one EPL team each round. A team can only be used once by each player.</li>
-<li>Win = survive. Loss or score draw = eliminated.</li>
-<li>For a 0–0 draw, the away-team picker survives; the home-team picker is eliminated.</li>
-<li>No pick before the deadline = eliminated.</li>
-<li>If every remaining player is eliminated in the same round, they all stay alive, but their selected teams still count as used.</li>
+<li>
+Competition starts at EPL Round 4 and continues until one player remains.
+</li>
+
+<li>
+Pick one EPL team each round. A team can only be used once by each player.
+</li>
+
+<li>
+Win = survive. Loss or score draw = eliminated.
+</li>
+
+<li>
+For a 0–0 draw, the away-team picker survives; the home-team picker is eliminated.
+</li>
+
+<li>
+No pick before the deadline = eliminated.
+</li>
+
+<li>
+If every remaining player is eliminated in the same round, they all stay alive, but their selected teams still count as used.
+</li>
 </ul>
 </div>
 `;
@@ -598,7 +796,10 @@ c.innerHTML+=`
 Register your name and create a 4-digit PIN.
 </p>
 
-<button class='primary' id='joinBtn'>
+<button
+class='primary'
+id='joinBtn'
+>
 Join Competition
 </button>
 
@@ -610,11 +811,17 @@ Tap Make Pick in the menu to choose your team.
 `;
 
 $('#joinBtn').onclick=()=>{
-const name=prompt('Enter your name:');
+const name=prompt(
+'Enter your name:'
+);
 
-if(!name||!name.trim())return;
+if(!name||!name.trim()){
+return;
+}
 
-const pin=prompt('Create a 4-digit PIN:');
+const pin=prompt(
+'Create a 4-digit PIN:'
+);
 
 if(!/^\d{4}$/.test(pin||'')){
 return notice(
@@ -625,7 +832,9 @@ return notice(
 
 if(
 state.players.some(
-p=>p.name.toLowerCase()===name.trim().toLowerCase()
+p=>
+p.name.toLowerCase()===
+name.trim().toLowerCase()
 )
 ){
 return notice(
@@ -653,17 +862,26 @@ render();
 
 if(tab==='pick'){
 const p=player();
-const current=p.picks[state.round]||'';
+
+const current=
+p.picks[state.round]||'';
+
 const avail=teams.filter(
-t=>!p.used.includes(t)||t===current
+t=>
+!p.used.includes(t) ||
+t===current
 );
+
 const fixtures=roundFixtures();
 
 c.innerHTML=`
 <section class='card formCard'>
 <div class='sectionHead'>
 <div>
-<div class='eyebrow dark'>ROUND ${state.round}</div>
+<div class='eyebrow dark'>
+ROUND ${state.round}
+</div>
+
 <h2>Make my pick</h2>
 </div>
 </div>
@@ -675,7 +893,9 @@ ${
 state.players
 .filter(x=>x.alive)
 .map(x=>
-`<option ${x.name===p.name?'selected':''}>
+`<option
+${x.name===p.name?'selected':''}
+>
 ${esc(x.name)}
 </option>`
 )
@@ -686,7 +906,8 @@ ${esc(x.name)}
 ${
 current
 ?`<p class='current'>
-Current pick: <b>${esc(current)}</b>
+Current pick:
+<b>${esc(current)}</b>
 </p>`
 :''
 }
@@ -698,6 +919,7 @@ Selections are closed for Round ${state.round}.
 </div>`
 :fixtures.length
 ?`<label>Fixtures</label>
+
 <div class='fixtures'>
 ${
 fixtures
@@ -720,15 +942,22 @@ Select a team…
 </option>
 
 ${
-avail.map(t=>
-`<option ${t===current?'selected':''}>
+avail
+.map(t=>
+`<option
+${t===current?'selected':''}
+>
 ${t}
 </option>`
-).join('')
+)
+.join('')
 }
 </select>
 
-<button class='primary' id='savePick'>
+<button
+class='primary'
+id='savePick'
+>
 Save Pick
 </button>
 
@@ -739,13 +968,18 @@ No fixtures entered yet — team-list mode is active.
 
 <p class='usedTeams'>
 <b>Used:</b>
-${p.used.length?p.used.join(', '):'None yet'}
+${
+p.used.length
+?p.used.join(', ')
+:'None yet'
+}
 </p>
 </section>
 `;
 
 $('#playerSel').onchange=e=>{
-const target=state.players.find(
+const target=
+state.players.find(
 p=>p.name===e.target.value
 );
 
@@ -755,27 +989,41 @@ const pin=prompt(
 );
 
 if(pin!==target.pin){
-notice('Incorrect PIN.','warn');
+notice(
+'Incorrect PIN.',
+'warn'
+);
+
 render();
+
 return;
 }
 }
 
-state.selectedPlayer=e.target.value;
+state.selectedPlayer=
+e.target.value;
+
 notice('');
+
 render();
 };
 
 if(!state.deadlinePassed){
 if($('#savePick')){
 $('#savePick').onclick=()=>
-savePick($('#teamSel').value);
+savePick(
+$('#teamSel').value
+);
 }
 
 document
 .querySelectorAll('.teamPick')
 .forEach(
-b=>b.onclick=()=>savePick(b.dataset.team)
+b=>
+b.onclick=()=>
+savePick(
+b.dataset.team
+)
 );
 }
 }
@@ -787,13 +1035,17 @@ c.innerHTML=`
 <div class='playerList'>
 ${
 state.players.map(p=>{
-let displayRound=state.round;
+let displayRound=
+state.round;
+
 let shown;
 
 if(p.alive){
-const pick=p.picks[state.round];
+const pick=
+p.picks[state.round];
 
-shown=state.deadlinePassed
+shown=
+state.deadlinePassed
 ?(pick||'No pick')
 :(pick
 ?'Pick submitted'
@@ -804,25 +1056,35 @@ displayRound=
 p.eliminatedRound
 ||Math.max(
 0,
-...Object.keys(p.picks).map(Number)
+...Object.keys(
+p.picks
+).map(Number)
 )
 ||state.round;
 
-const pick=p.picks[displayRound];
+const pick=
+p.picks[displayRound];
 
-shown=pick||'No pick';
+shown=
+pick||'No pick';
 }
 
 return `<div class='card player'>
 <div>
-<strong>${esc(p.name)}</strong>
-<span class='${p.alive?'alive':'out'}'>
+<strong>
+${esc(p.name)}
+</strong>
+
+<span
+class='${p.alive?'alive':'out'}'
+>
 ${p.alive?'Alive':'Eliminated'}
 </span>
 </div>
 
 <div class='pickLine'>
-Round ${displayRound}: ${esc(shown)}
+Round ${displayRound}:
+${esc(shown)}
 </div>
 
 <div class='muted'>
@@ -849,7 +1111,8 @@ Current team selections stay hidden until the selection deadline is closed.
 }
 
 if(tab==='admin'){
-const teamRows=pickedTeams().length
+const teamRows=
+pickedTeams().length
 ?pickedTeams().map(t=>
 `<div class='resultRow'>
 <div class='resultTeam'>
@@ -908,17 +1171,24 @@ No team selections have been made yet.
 
 const w=winner();
 const fixtures=roundFixtures();
-const automaticClosed=deadlineTimePassed();
+const automaticClosed=
+deadlineTimePassed();
 
 c.innerHTML=`
 <section class='card formCard'>
 <h2>Admin</h2>
 
-<button class='primary' id='loadEpl'>
+<button
+class='primary'
+id='loadEpl'
+>
 Load EPL fixtures
 </button>
 
-<button class='primary' id='loadResults'>
+<button
+class='primary'
+id='loadResults'
+>
 Update EPL results
 </button>
 
@@ -961,9 +1231,13 @@ Home team…
 </option>
 
 ${
-teams.map(t=>
-`<option>${t}</option>`
-).join('')
+teams
+.map(t=>
+`<option>
+${t}
+</option>`
+)
+.join('')
 }
 </select>
 
@@ -973,9 +1247,13 @@ Away team…
 </option>
 
 ${
-teams.map(t=>
-`<option>${t}</option>`
-).join('')
+teams
+.map(t=>
+`<option>
+${t}
+</option>`
+)
+.join('')
 }
 </select>
 
@@ -996,7 +1274,11 @@ ${
 state.deadline
 ?`<p class='muted'>
 Automatic cutoff:
-${esc(new Date(state.deadline).toLocaleString())}
+${esc(
+new Date(
+state.deadline
+).toLocaleString()
+)}
 </p>`
 :`<p class='muted'>
 Load EPL fixtures to set the automatic cutoff time.
@@ -1004,7 +1286,9 @@ Load EPL fixtures to set the automatic cutoff time.
 }
 
 <div class='adminState'>
-<span class='statusPill ${state.deadlinePassed?'closed':'open'}'>
+<span
+class='statusPill ${state.deadlinePassed?'closed':'open'}'
+>
 ${state.deadlinePassed?'Closed':'Open'}
 </span>
 
@@ -1016,7 +1300,8 @@ state.deadlinePassed
 :'danger'
 }'
 ${
-state.roundProcessed||automaticClosed
+state.roundProcessed ||
+automaticClosed
 ?'disabled'
 :''
 }
@@ -1037,13 +1322,23 @@ Selections close automatically when the first EPL match of the round kicks off.
 
 <hr>
 
-<label>Match results</label>
+<label>
+Match results
+</label>
+
+<p class='muted'>
+Results are checked automatically after the deadline. The round processes automatically once all selected-team matches are finished.
+</p>
 
 ${teamRows}
 
 ${
-state.deadlinePassed&&!state.roundProcessed
-?`<button class='primary' id='process'>
+state.deadlinePassed &&
+!state.roundProcessed
+?`<button
+class='primary'
+id='process'
+>
 Process Round ${state.round}
 </button>`
 :''
@@ -1058,7 +1353,8 @@ Round ${state.round} has been processed.
 ${
 w
 ?`<div class='adminWinner'>
-🏆 <b>${esc(w.name)}</b>
+🏆
+<b>${esc(w.name)}</b>
 is the Last Man Standing.
 Competition complete.
 </div>`
@@ -1112,17 +1408,22 @@ Reset competition
 `;
 
 if($('#loadEpl')){
-$('#loadEpl').onclick=loadEplFixtures;
+$('#loadEpl').onclick=
+loadEplFixtures;
 }
 
 if($('#loadResults')){
-$('#loadResults').onclick=loadEplResults;
+$('#loadResults').onclick=
+loadEplResults;
 }
 
 if($('#addFixture')){
 $('#addFixture').onclick=()=>{
-const home=$('#homeTeam').value;
-const away=$('#awayTeam').value;
+const home=
+$('#homeTeam').value;
+
+const away=
+$('#awayTeam').value;
 
 if(!home||!away){
 return notice(
@@ -1142,10 +1443,10 @@ const f=roundFixtures();
 
 if(
 f.some(x=>
-x.home===home
-||x.away===home
-||x.home===away
-||x.away===away
+x.home===home ||
+x.away===home ||
+x.home===away ||
+x.away===away
 )
 ){
 return notice(
@@ -1168,15 +1469,23 @@ render();
 }
 
 document
-.querySelectorAll('.removeFixture')
+.querySelectorAll(
+'.removeFixture'
+)
 .forEach(
 b=>b.onclick=()=>{
 state.fixtures[state.round]=
 roundFixtures().filter(
-(_,i)=>i!==Number(b.dataset.i)
+(_,i)=>
+i!==Number(
+b.dataset.i
+)
 );
 
-notice('Fixture removed.');
+notice(
+'Fixture removed.'
+);
+
 render();
 }
 );
@@ -1185,15 +1494,19 @@ if($('#deadlineBtn')){
 $('#deadlineBtn').onclick=()=>{
 if(deadlineTimePassed()){
 state.deadlinePassed=true;
+
 notice(
 `Round ${state.round} selections are closed because the first match has kicked off.`,
 'warn'
 );
+
 render();
+
 return;
 }
 
-state.deadlinePassed=!state.deadlinePassed;
+state.deadlinePassed=
+!state.deadlinePassed;
 
 notice(
 state.deadlinePassed
@@ -1206,23 +1519,29 @@ render();
 }
 
 document
-.querySelectorAll('.resultSel')
+.querySelectorAll(
+'.resultSel'
+)
 .forEach(
 s=>s.onchange=()=>{
-state.results[s.dataset.team]=s.value;
+state.results[
+s.dataset.team
+]=s.value;
+
 save();
 }
 );
 
 if($('#process')){
-$('#process').onclick=processRound;
+$('#process').onclick=()=>
+processRound(false);
 }
 
 if($('#undoRound')){
 $('#undoRound').onclick=()=>{
 if(
 confirm(
-`Undo Round ${state.round} results and re-open selections?`
+`Undo Round ${state.round} processing?`
 )
 ){
 undoProcessedRound();
@@ -1231,17 +1550,23 @@ undoProcessedRound();
 }
 
 if($('#advance')){
-$('#advance').onclick=advanceRound;
+$('#advance').onclick=
+advanceRound;
 }
 
 $('#addPlayer').onclick=()=>{
-const name=$('#newPlayer').value.trim();
+const name=
+$('#newPlayer').value.trim();
 
-if(!name)return;
+if(!name){
+return;
+}
 
 if(
 state.players.some(
-p=>p.name.toLowerCase()===name.toLowerCase()
+p=>
+p.name.toLowerCase()===
+name.toLowerCase()
 )
 ){
 return notice(
@@ -1258,7 +1583,10 @@ used:[],
 eliminatedRound:null
 });
 
-notice(`${name} added.`);
+notice(
+`${name} added.`
+);
+
 render();
 };
 
@@ -1269,7 +1597,11 @@ confirm(
 )
 ){
 state=freshState();
-notice('Competition reset.');
+
+notice(
+'Competition reset.'
+);
+
 render();
 }
 };
@@ -1298,7 +1630,25 @@ render();
 notice(
 `Round ${state.round} selections are now closed.`
 );
+
+autoCheckResults();
 }
 },15000);
 
-loadState();
+/*
+After selections close, check EPL results every 5 minutes.
+When every selected team's match is finished,
+process the round automatically.
+*/
+setInterval(()=>{
+autoCheckResults();
+},300000);
+
+/*
+Load the shared state, then immediately check results.
+This means if nobody had the app open when matches finished,
+the round will be processed the next time somebody opens it.
+*/
+loadState().then(()=>{
+autoCheckResults();
+});
