@@ -838,6 +838,9 @@ Tap Make Pick in the menu to choose your team.
 `;
 
 $('#joinBtn').onclick=()=>{
+if(!checkAccess()){
+  return;
+}
 const name=prompt(
 'Enter your name:'
 );
@@ -1710,11 +1713,13 @@ document
 .querySelectorAll('.tabs button')
 .forEach(
 b=>b.onclick=()=>{
-tab=b.dataset.tab;
-notice('');
-render();
+
+if(
+b.dataset.tab!=='home' &&
+!checkAccess()
+){
+return;
 }
-);
 
 /*
 Check every 15 seconds in case the first match kicks off
