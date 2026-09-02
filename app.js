@@ -811,6 +811,22 @@ Tap Make Pick in the menu to choose your team.
 `;
 
 $('#joinBtn').onclick=()=>{
+
+const accessCode=prompt(
+'Enter competition access code:'
+);
+
+if(
+!accessCode ||
+accessCode.trim().toLowerCase()!=='lms2026'
+){
+alert(
+'Incorrect competition access code.'
+);
+
+return;
+}
+
 const name=prompt(
 'Enter your name:'
 );
