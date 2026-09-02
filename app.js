@@ -1,3 +1,4 @@
+const ACCESS_CODE='lms2026';
 const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Leeds United','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sunderland','Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'];
 const defaults=['Dale','Ben','Paul','Nick'];
 
