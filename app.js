@@ -1,3 +1,4 @@
+const ACCESS_CODE='LMS2026';
 const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Leeds United','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sunderland','Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'];
 const defaults=['Dale','Ben','Paul','Nick'];
 
@@ -35,8 +36,34 @@ if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 });
 
 let tab='home';
-let autoResultsCheckInProgress=false;
+let autoResultsCheckInProgress=let accessGranted=
+sessionStorage.getItem('lms-access')==='yes';
 
+function checkAccess(){
+if(accessGranted){
+return true;
+}
+
+const code=prompt(
+'Enter competition access code:'
+);
+
+if(code===ACCESS_CODE){
+accessGranted=true;
+sessionStorage.setItem(
+'lms-access',
+'yes'
+);
+return true;
+}
+
+notice(
+'Incorrect competition access code.',
+'warn'
+);
+
+return false;
+}
 const $=s=>document.querySelector(s);
 
 const esc=s=>String(s).replace(/[&<>\"']/g,c=>({
