@@ -1528,20 +1528,7 @@ Open Round ${state.round+1}
 
 <hr>
 
-<label>Add player</label>
 
-<div class='row'>
-<input
-id='newPlayer'
-placeholder='Player name'
->
-
-<button id='addPlayer'>
-Add
-</button>
-</div>
-
-<hr>
 
 <label>Remove player</label>
 
@@ -1738,41 +1725,7 @@ $('#advance').onclick=
 advanceRound;
 }
 
-$('#addPlayer').onclick=()=>{
-const name=
-$('#newPlayer').value.trim();
 
-if(!name){
-return;
-}
-
-if(
-state.players.some(
-p=>
-p.name.toLowerCase()===
-name.toLowerCase()
-)
-){
-return notice(
-'That player already exists.',
-'warn'
-);
-}
-
-state.players.push({
-name,
-alive:true,
-picks:{},
-used:[],
-eliminatedRound:null
-});
-
-notice(
-`${name} added.`
-);
-
-render();
-};
 if($('#removePlayerBtn')){
 $('#removePlayerBtn').onclick=()=>{
 const name=
