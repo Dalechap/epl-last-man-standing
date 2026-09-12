@@ -366,6 +366,8 @@ p.used=p.used.filter(t=>t!==prev);
 p.picks[state.round]=team;
 p.used=[...new Set([...p.used,team])];
 
+save();
+
 notice(
 `${p.name} selected ${team} for Round ${state.round}.`
 );
@@ -607,6 +609,8 @@ state.roundProcessed=false;
 state.results={};
 state.processSnapshot=null;
 
+save();
+
 notice(
 `Round ${state.round} is now open for selections.`
 );
@@ -683,7 +687,6 @@ ${aUsed?`<small>Used</small>`:''}
 
 function render(){
 syncDeadline();
-save();
 
 $('#summary').textContent=
 `Round ${state.round} · ${alive()} player${alive()==1?'':'s'} alive`;
@@ -869,6 +872,8 @@ picks:{},
 used:[],
 eliminatedRound:null
 });
+
+save();
 
 notice(
 `${name.trim()} joined the competition.`
@@ -1513,6 +1518,8 @@ state.fixtures[state.round]=[
 {home,away}
 ];
 
+save();
+
 notice(
 `${home} v ${away} added.`
 );
@@ -1548,6 +1555,8 @@ $('#deadlineBtn').onclick=()=>{
 if(deadlineTimePassed()){
 state.deadlinePassed=true;
 
+save();
+
 notice(
 `Round ${state.round} selections are closed because the first match has kicked off.`,
 'warn'
@@ -1560,14 +1569,20 @@ return;
 
 state.deadlinePassed=
 !state.deadlinePassed;
-
+ 
+save();
+  
 notice(
 state.deadlinePassed
 ?`Round ${state.round} selections are now closed and picks are revealed.`
 :`Round ${state.round} selections have been re-opened.`
 );
 
+save();
+  
 render();
+
+ 
 };
 }
 
@@ -1666,6 +1681,11 @@ state.players=
 state.players.filter(
 p=>p.name!==name
 );
+  
+  
+save();
+
+
 
 if(state.selectedPlayer===name){
 const nextPlayer=
@@ -1692,7 +1712,7 @@ confirm(
 )
 ){
 state=freshState();
-
+save();
 notice(
 'Competition reset.'
 );
