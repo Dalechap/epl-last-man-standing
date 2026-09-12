@@ -154,7 +154,7 @@ const serverState=await response.json();
 
 if(serverState){
 state=serverState;
-state.selectedPlayer='';
+
 if(state.deadlinePassed===undefined) state.deadlinePassed=false;
 if(state.deadline===undefined) state.deadline=null;
 if(state.roundProcessed===undefined) state.roundProcessed=false;
@@ -171,20 +171,11 @@ if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 
 syncDeadline();
 
-function save(){
 localStorage.setItem('lms-state',JSON.stringify(state));
-
-const sharedState={
-...state,
-selectedPlayer:''
-};
-
-fetch('/api/state',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify(sharedState)
-}).catch(error=>console.error('Database save failed:',error));
 }
+}
+}catch(error){
+console.error('Database load failed:',error);
 }
 
 render();
