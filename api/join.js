@@ -29,8 +29,8 @@ export default async function handler(req, res) {
           ||
           jsonb_build_array(
             jsonb_build_object(
-              'name', ${cleanName},
-              'pin', ${cleanPin},
+              'name', ${cleanName}::text,
+              'pin', ${cleanPin}::text,
               'alive', true,
               'picks', '{}'::jsonb,
               'used', '[]'::jsonb,
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
           FROM jsonb_array_elements(
             COALESCE(state->'players', '[]'::jsonb)
           ) AS player
-          WHERE lower(player->>'name') = lower(${cleanName})
+          WHERE lower(player->>'name') = lower(${cleanName}::text)
         )
       RETURNING state
     `;
