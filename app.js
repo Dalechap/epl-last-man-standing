@@ -428,6 +428,23 @@ return notice(
 );
 }
 
+const enteredPin=prompt(
+`Enter PIN for ${p.name}:`
+);
+
+if(enteredPin===null){
+return;
+}
+
+if(!/^\d{4}$/.test(enteredPin)){
+return notice(
+'PIN must be exactly 4 digits.',
+'warn'
+);
+}
+
+const prev=p.picks[state.round];
+
 const prev=p.picks[state.round];
 
 if(prev){
@@ -443,7 +460,8 @@ headers:{'Content-Type':'application/json'},
 body:JSON.stringify({
 playerName:p.name,
 team:team,
-round:state.round
+round:state.round,
+pin:enteredPin
 })
 })
 .then(async response=>{
