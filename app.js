@@ -947,22 +947,38 @@ return notice(
 );
 }
 
-state.players.push({
+fetch('/api/join',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
 name:name.trim(),
-pin,
-alive:true,
-picks:{},
-used:[],
-eliminatedRound:null
-});
+pin
+})
+})
+.then(async response=>{
+const data=await response.json();
 
-save();
+if(!response.ok){
+throw new Error(data.error||'Could not join competition');
+}
+
+if(data.state){
+state=data.state;
+localStorage.setItem('lms-state',JSON.stringify(state));
+}
 
 notice(
 `${name.trim()} joined the competition.`
 );
 
 render();
+})
+.catch(error=>{
+notice(
+`Could not join competition: ${error.message}`,
+'warn'
+);
+});
 };
 }
 
