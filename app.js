@@ -743,7 +743,7 @@ return `<div class='standingRow'>
 }</div>`;
 }
 
-function fixtureCard(home,away,current,p){
+function fixtureCard(home,away,current,p,homeCrest,awayCrest){
 const hUsed=
 p.used.includes(home)&&current!==home;
 
@@ -1052,7 +1052,9 @@ fixtureCard(
 f.home,
 f.away,
 current,
-p
+p,
+f.homeCrest,
+f.awayCrest
 )
 )
 .join('')
