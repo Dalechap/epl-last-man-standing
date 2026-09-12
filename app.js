@@ -37,8 +37,77 @@ if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 let tab='home';
 let adminUnlocked=false;
 const ADMIN_PIN='9999';
-let autoResultsCheckInProgress=false;
 
+const COMPETITION_CODE='lms2026';
+let competitionUnlocked=
+sessionStorage.getItem('lms-access')==='ok';
+
+const appShell=document.querySelector('.shell');
+
+if(appShell && !competitionUnlocked){
+appShell.style.display='none';
+}
+
+if(!competitionUnlocked){
+
+const accessGate=document.createElement('main');
+accessGate.className='shell';
+
+accessGate.innerHTML=`
+<section class='card formCard'>
+<h2>Enter Competition</h2>
+
+<p>
+Enter the competition access code to continue.
+</p>
+
+<input
+id='competitionCodeInput'
+type='text'
+placeholder='Competition code'
+autocomplete='off'
+>
+
+<button
+class='primary'
+id='competitionCodeBtn'
+>
+Enter
+</button>
+
+<div id='competitionCodeError'></div>
+</section>
+`;
+
+document.body.prepend(accessGate);
+
+document.getElementById('competitionCodeBtn').onclick=()=>{
+
+const entered=
+document.getElementById('competitionCodeInput').value
+.trim()
+.toLowerCase();
+
+if(entered!==COMPETITION_CODE){
+
+document.getElementById('competitionCodeError').innerHTML=
+`<p class='error'>Incorrect competition code.</p>`;
+
+return;
+}
+
+competitionUnlocked=true;
+sessionStorage.setItem('lms-access','ok');
+
+accessGate.remove();
+
+if(appShell){
+appShell.style.display='';
+}
+
+};
+
+}
 const $=s=>document.querySelector(s);
 
 const esc=s=>String(s).replace(/[&<>\"']/g,c=>({
@@ -817,20 +886,7 @@ Tap Make Pick in the menu to choose your team.
 
 $('#joinBtn').onclick=()=>{
 
-const accessCode=prompt(
-'Enter competition access code:'
-);
 
-if(
-!accessCode ||
-accessCode.trim().toLowerCase()!=='lms2026'
-){
-alert(
-'Incorrect competition access code.'
-);
-
-return;
-}
 
 const name=prompt(
 'Enter your name:'
