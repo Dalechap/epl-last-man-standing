@@ -15,7 +15,34 @@ export default async function handler(req, res) {
         error: 'playerName, team and round are required'
       });
     }
-const playerRows = await sql`
+const competitionRows = await sql`
+  SELECT state
+  FROM competition_state
+  WHERE id = 1
+`;
+
+if (!competitionRows.length) {
+  return res.status(404).json({
+    error: 'Competition not found'
+  });
+}
+
+const competitionState = competitionRows[0].state;
+
+const deadlineReached =
+  competitionState.deadlinePassed === true ||
+  (
+    competitionState.deadline &&
+    new Date(competitionState.deadline).getTime() <= Date.now()
+  );
+
+if (deadlineReached) {
+  return res.status(409).json({
+    error: 'Selections are closed'
+  });
+}
+    
+    const playerRows = await sql`
   SELECT player
   FROM competition_state,
   jsonb_array_elements(state->'players') AS player
