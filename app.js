@@ -1146,6 +1146,13 @@ state.round;
 
 let shown;
 
+ const currentPick=p.picks[state.round];
+
+const visibleUsed=
+state.deadlinePassed
+?p.used
+:p.used.filter(team=>team!==currentPick);
+ 
 if(p.alive){
 const pick=
 p.picks[state.round];
@@ -1196,8 +1203,8 @@ ${esc(shown)}
 <div class='muted'>
 Teams used:
 ${
-p.used.length
-?p.used.join(', ')
+visibleUsed.length
+?visibleUsed.join(', ')
 :'None'
 }
 </div>
