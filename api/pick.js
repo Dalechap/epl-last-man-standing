@@ -29,12 +29,23 @@ export default async function handler(req, res) {
                 true
               ),
               '{used}',
-              CASE
-                WHEN COALESCE(player->'used', '[]'::jsonb) ? ${team}
-                THEN COALESCE(player->'used', '[]'::jsonb)
-                ELSE COALESCE(player->'used', '[]'::jsonb)
-                     || jsonb_build_array(${team}::text)
-              END,
+              (
+                COALESCE(
+                  (
+                    SELECT jsonb_agg(value)
+                    FROM jsonb_array_elements_text(
+                      COALESCE(player->'used', '[]'::jsonb)
+                    ) AS u(value)
+                    WHERE value <> COALESCE(
+                      player #>> ARRAY['picks', ${String(round)}]::text[],
+                      ''
+                    )
+                    AND value <> ${team}
+                  ),
+                  '[]'::jsonb
+                )
+                || jsonb_build_array(${team}::text)
+              ),
               true
             )
             ELSE player
