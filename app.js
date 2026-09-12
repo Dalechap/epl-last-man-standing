@@ -2,7 +2,7 @@ const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnl
 const defaults=[];
 
 const freshState=()=>({
-round:3,
+round:4,
 selectedPlayer:'',
 deadlinePassed:false,
 deadline:null,
