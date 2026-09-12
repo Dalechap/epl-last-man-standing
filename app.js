@@ -1802,7 +1802,7 @@ confirm(
 )
 ){
 state=freshState();
-alert('Players after reset: ' + state.players.length);
+
 save();
 save();
 notice(
