@@ -757,7 +757,10 @@ data-team='${esc(home)}'
 ${hUsed?'disabled':''}
 >
 <span class='crest'>
-${shortTeam(home)}
+${homeCrest
+?`<img src='${esc(homeCrest)}' alt='${esc(home)} badge'>`
+:shortTeam(home)
+}
 </span>
 
 <span>${esc(home)}</span>
@@ -773,7 +776,10 @@ data-team='${esc(away)}'
 ${aUsed?'disabled':''}
 >
 <span class='crest'>
-${shortTeam(away)}
+${awayCrest
+?`<img src='${esc(awayCrest)}' alt='${esc(away)} badge'>`
+:shortTeam(away)
+}
 </span>
 
 <span>${esc(away)}</span>
