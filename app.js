@@ -435,8 +435,35 @@ p.used=p.used.filter(t=>t!==prev);
 p.picks[state.round]=team;
 p.used=[...new Set([...p.used,team])];
 
-save();
+fetch('/api/pick',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+playerName:p.name,
+team:team,
+round:state.round
+})
+})
+.then(async response=>{
+const data=await response.json();
 
+if(!response.ok){
+throw new Error(data.error||'Could not save pick');
+}
+
+if(data.state){
+state=data.state;
+localStorage.setItem('lms-state',JSON.stringify(state));
+}
+
+render();
+})
+.catch(error=>{
+notice(
+`Pick could not be saved: ${error.message}`,
+'warn'
+);
+});
 notice(
 `${p.name} selected ${team} for Round ${state.round}.`
 );
