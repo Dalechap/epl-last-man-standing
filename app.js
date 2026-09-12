@@ -3,7 +3,7 @@ const defaults=[];
 
 const freshState=()=>({
 round:3,
-selectedPlayer:'Dale',
+selectedPlayer:'',
 deadlinePassed:false,
 deadline:null,
 roundProcessed:false,
