@@ -35,6 +35,8 @@ if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 });
 
 let tab='home';
+let adminUnlocked=false;
+const ADMIN_PIN='9999';
 let autoResultsCheckInProgress=false;
 
 const $=s=>document.querySelector(s);
@@ -1127,6 +1129,12 @@ Current team selections stay hidden until the selection deadline is closed.
 }
 
 if(tab==='admin'){
+if(!adminUnlocked){
+tab='home';
+notice('Admin access is locked.','warn');
+render();
+return;
+}
 const teamRows=
 pickedTeams().length
 ?pickedTeams().map(t=>
@@ -1696,9 +1704,21 @@ render();
 }
 
 document
+document
 .querySelectorAll('.tabs button')
 .forEach(
 b=>b.onclick=()=>{
+if(b.dataset.tab==='admin' && !adminUnlocked){
+const pin=prompt('Enter Admin PIN:');
+
+if(pin!==ADMIN_PIN){
+notice('Incorrect Admin PIN.','warn');
+return;
+}
+
+adminUnlocked=true;
+}
+
 tab=b.dataset.tab;
 notice('');
 render();
