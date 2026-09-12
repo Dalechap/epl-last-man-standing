@@ -241,6 +241,8 @@ data.error||'Could not load fixtures'
 state.fixtures[state.round]=(data.matches||[]).map(m=>({
 home:m.homeTeam.name,
 away:m.awayTeam.name,
+homeCrest:m.homeTeam.crest,
+awayCrest:m.awayTeam.crest,
 kickoff:m.utcDate
 }));
 
