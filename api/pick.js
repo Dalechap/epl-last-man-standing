@@ -15,7 +15,37 @@ export default async function handler(req, res) {
         error: 'playerName, team and round are required'
       });
     }
+const playerRows = await sql`
+  SELECT player
+  FROM competition_state,
+  jsonb_array_elements(state->'players') AS player
+  WHERE id = 1
+    AND player->>'name' = ${playerName}::text
+`;
 
+if (!playerRows.length) {
+  return res.status(404).json({
+    error: 'Player not found'
+  });
+}
+
+const player = playerRows[0].player;
+
+const usedTeams = Array.isArray(player.used)
+  ? player.used
+  : [];
+
+const currentPick =
+  player.picks?.[String(round)] || null;
+
+if (
+  usedTeams.includes(team) &&
+  currentPick !== team
+) {
+  return res.status(409).json({
+    error: 'You have already used that team'
+  });
+}
     const rows = await sql`
       WITH updated_players AS (
         SELECT jsonb_agg(
