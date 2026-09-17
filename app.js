@@ -2023,7 +2023,6 @@ if(b.dataset.tab==='admin' && !adminUnlocked){
     return;
   }
 }
-}
 
 tab=b.dataset.tab;
 notice('');
