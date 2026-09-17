@@ -1114,6 +1114,7 @@ try{
   render();
   return;
 }
+}
 const p=player();
 
 const current=
