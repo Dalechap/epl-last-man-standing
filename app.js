@@ -486,6 +486,7 @@ throw new Error(data.error||'Could not save pick');
 
 if(data.state){
 state=data.state;
+state.selectedPlayer=authenticatedPlayer;
 localStorage.setItem('lms-state',JSON.stringify(state));
 }
 
