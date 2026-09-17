@@ -492,9 +492,10 @@ fetch('/api/pick',{
 method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({
-playerName:p.name,
-team:team,
-round:state.round
+  playerName:p.name,
+  team:team,
+  round:state.round,
+  pin:p.pin
 })
 })
 .then(async response=>{
