@@ -1,1 +1,10 @@
-{"cleanUrls":true,"trailingSlash":false}
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "crons": [
+    {
+      "path": "/api/auto-results",
+      "schedule": "30 22 * * *"
+    }
+  ]
+}
