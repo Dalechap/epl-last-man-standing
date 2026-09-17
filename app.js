@@ -725,7 +725,7 @@ async function autoCheckResults(){
   }
 }
 
-function undoProcessedRound(){
+
 
 function undoProcessedRound(){
 if(!state.roundProcessed){
