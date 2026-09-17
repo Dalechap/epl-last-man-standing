@@ -124,15 +124,7 @@ const esc=s=>String(s).replace(/[&<>\"']/g,c=>({
 "'":'&#39;'
 }[c]));
 
-function save(){
-localStorage.setItem('lms-state',JSON.stringify(state));
 
-fetch('/api/state',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify(state)
-}).catch(error=>console.error('Database save failed:',error));
-}
 
 function saveAdmin(){
   localStorage.setItem(
