@@ -1896,7 +1896,7 @@ state.results[
 s.dataset.team
 ]=s.value;
 
-save();
+saveAdmin();
 }
 );
 
