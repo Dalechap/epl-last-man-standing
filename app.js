@@ -134,6 +134,14 @@ body:JSON.stringify(state)
 }).catch(error=>console.error('Database save failed:',error));
 }
 
+function save(){
+  ...
+}
+
+function saveAdmin(){
+  ...
+}
+
 function deadlineTimePassed(){
 if(!state.deadline) return false;
 
