@@ -1996,14 +1996,33 @@ document
 .forEach(
 b=>b.onclick=()=>{
 if(b.dataset.tab==='admin' && !adminUnlocked){
-const pin=prompt('Enter Admin PIN:');
+  const pin=prompt('Enter Admin PIN:');
 
-if(pin!==ADMIN_PIN){
-notice('Incorrect Admin PIN.','warn');
-return;
+  if(!pin){
+    return;
+  }
+
+  try{
+    const response=await fetch('/api/admin-auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pin})
+    });
+
+    const data=await response.json();
+
+    if(!response.ok){
+      notice(data.error||'Incorrect Admin PIN.','warn');
+      return;
+    }
+
+    adminUnlocked=true;
+
+  }catch(error){
+    notice('Unable to authenticate Admin. Please try again.','warn');
+    return;
+  }
 }
-
-adminUnlocked=true;
 }
 
 tab=b.dataset.tab;
