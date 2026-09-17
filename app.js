@@ -720,12 +720,12 @@ async function autoCheckResults(){
       'Automatic EPL results check failed:',
       error
     );
-  }finally{
+ }finally{
     autoResultsCheckInProgress=false;
   }
-};
 }
-}
+
+function undoProcessedRound(){
 
 function undoProcessedRound(){
 if(!state.roundProcessed){
