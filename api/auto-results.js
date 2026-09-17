@@ -2,8 +2,18 @@ import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 
+function outcomeSurvives(outcome) {
+  return outcome === 'win' || outcome === 'zero-away';
+}
+
 export default async function handler(req, res) {
   try {
+    if (req.method !== 'POST' && req.method !== 'GET') {
+      return res.status(405).json({
+        error: 'Method not allowed'
+      });
+    }
+
     const rows = await sql`
       SELECT state
       FROM competition_state
@@ -11,14 +21,21 @@ export default async function handler(req, res) {
     `;
 
     if (!rows.length) {
-      return res.status(404).json({ error: 'Competition state not found' });
+      return res.status(404).json({
+        error: 'Competition state not found'
+      });
     }
 
     const state = rows[0].state;
 
-    if (!state || state.roundProcessed || !state.deadlinePassed) {
+    if (
+      !state ||
+      state.roundProcessed ||
+      !state.deadlinePassed
+    ) {
       return res.status(200).json({
         ok: true,
+        changed: false,
         message: 'No result update required'
       });
     }
@@ -41,7 +58,9 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      throw new Error(`Football API error: ${response.status}`);
+      throw new Error(
+        `Football API error: ${response.status}`
+      );
     }
 
     const data = await response.json();
@@ -49,54 +68,149 @@ export default async function handler(req, res) {
 
     state.results = state.results || {};
 
-    const active = state.players.filter(p => p.alive);
+    const active =
+      state.players.filter(p => p.alive);
 
-    for (const p of active) {
-      const team = p.picks?.[state.round];
+    const pickedTeams = [
+      ...new Set(
+        active
+          .map(p => p.picks?.[state.round])
+          .filter(Boolean)
+      )
+    ];
 
-      if (!team) continue;
+    let changed = false;
 
+    for (const team of pickedTeams) {
       const match = matches.find(
         m =>
           m.homeTeam?.name === team ||
           m.awayTeam?.name === team
       );
 
-      if (!match || match.status !== 'FINISHED') continue;
+      if (!match || match.status !== 'FINISHED') {
+        continue;
+      }
 
-      const home = match.score?.fullTime?.home;
-      const away = match.score?.fullTime?.away;
+      const home =
+        match.score?.fullTime?.home;
 
-      if (home == null || away == null) continue;
+      const away =
+        match.score?.fullTime?.away;
+
+      if (home == null || away == null) {
+        continue;
+      }
+
+      let result;
 
       if (home === 0 && away === 0) {
-        state.results[team] =
+        result =
           match.awayTeam.name === team
             ? 'zero-away'
             : 'zero-home';
       } else if (home === away) {
-        state.results[team] = 'score-draw';
+        result = 'score-draw';
       } else {
         const winner =
           home > away
             ? match.homeTeam.name
             : match.awayTeam.name;
 
-        state.results[team] =
-          winner === team ? 'win' : 'loss';
+        result =
+          winner === team
+            ? 'win'
+            : 'loss';
+      }
+
+      if (state.results[team] !== result) {
+        state.results[team] = result;
+        changed = true;
       }
     }
 
-    await sql`
-      UPDATE competition_state
-      SET state = ${state},
-          updated_at = NOW()
-      WHERE id = 1
-    `;
+    const allPickedMatchesFinished =
+      pickedTeams.every(team => {
+        const match = matches.find(
+          m =>
+            m.homeTeam?.name === team ||
+            m.awayTeam?.name === team
+        );
+
+        return (
+          match &&
+          match.status === 'FINISHED'
+        );
+      });
+
+    if (allPickedMatchesFinished) {
+      const wouldEliminate = [];
+
+      for (const player of active) {
+        const pick =
+          player.picks?.[state.round];
+
+        if (
+          !pick ||
+          !outcomeSurvives(
+            state.results[pick]
+          )
+        ) {
+          wouldEliminate.push(player);
+        }
+      }
+
+      state.processSnapshot = {
+        alive: Object.fromEntries(
+          state.players.map(
+            p => [p.name, p.alive]
+          )
+        ),
+        eliminatedRound:
+          Object.fromEntries(
+            state.players.map(
+              p => [
+                p.name,
+                p.eliminatedRound || null
+              ]
+            )
+          ),
+        results: {
+          ...state.results
+        }
+      };
+
+      // Special rule:
+      // if everybody fails, everybody survives.
+      if (
+        wouldEliminate.length !== active.length ||
+        active.length === 0
+      ) {
+        for (const player of wouldEliminate) {
+          player.alive = false;
+          player.eliminatedRound =
+            state.round;
+        }
+      }
+
+      state.roundProcessed = true;
+      changed = true;
+    }
+
+    if (changed) {
+      await sql`
+        UPDATE competition_state
+        SET state = ${state},
+            updated_at = NOW()
+        WHERE id = 1
+      `;
+    }
 
     return res.status(200).json({
       ok: true,
-      message: 'Results checked and updated'
+      changed,
+      roundProcessed:
+        state.roundProcessed === true
     });
 
   } catch (error) {
