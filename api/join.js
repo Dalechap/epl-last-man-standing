@@ -83,10 +83,20 @@ if (!rows.length) {
   });
 }
 
-    return res.status(200).json({
-      ok: true,
-      state: rows[0].state
+const publicState = structuredClone(rows[0].state);
+
+if (Array.isArray(publicState.players)) {
+  publicState.players =
+    publicState.players.map(player => {
+      const { pin, ...safePlayer } = player;
+      return safePlayer;
     });
+}
+
+return res.status(200).json({
+  ok: true,
+  state: publicState
+});
 
   } catch (error) {
     console.error(error);
