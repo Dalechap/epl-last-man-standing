@@ -41,8 +41,16 @@ export default async function handler(req, res) {
         ),
         updated_at = NOW()
       WHERE id = 1
-      AND COALESCE(
+AND COALESCE(
   (state->>'registrationClosed')::boolean,
+  false
+) = false
+AND COALESCE(
+  (state->>'round')::integer,
+  4
+) = 4
+AND COALESCE(
+  (state->>'deadlinePassed')::boolean,
   false
 ) = false
         AND NOT EXISTS (
