@@ -1,3 +1,4 @@
+
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
@@ -12,7 +13,7 @@ export default async function handler(req, res) {
 
     const { adminPin, state: incomingState } = req.body || {};
 
-    if (String(adminPin) !== '9999') {
+if (String(adminPin) !== String(process.env.ADMIN_PIN)) {
       return res.status(403).json({
         error: 'Incorrect Admin PIN'
       });
