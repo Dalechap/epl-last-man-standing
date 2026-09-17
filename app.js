@@ -1832,7 +1832,7 @@ document
 '.removeFixture'
 )
 .forEach(
-b=>b.onclick=()=>{
+b=>b.onclick=async ()=>{
 state.fixtures[state.round]=
 roundFixtures().filter(
 (_,i)=>
