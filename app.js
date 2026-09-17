@@ -2018,7 +2018,11 @@ while somebody has the app open.
 */
 setInterval(()=>{
 if(syncDeadline()){
-save();
+fetch('/api/deadline',{
+  method:'POST'
+}).catch(error=>
+  console.error('Deadline save failed:',error)
+);
 render();
 
 notice(
