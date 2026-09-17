@@ -387,7 +387,27 @@ e.message||'Could not load EPL results',
 function outcomeSurvives(outcome){
 return outcome==='win'||outcome==='zero-away';
 }
+function livePlayerStatus(p){
+  if(!p.alive){
+    return 'eliminated';
+  }
 
+  const pick=p.picks[state.round];
+
+  if(!pick){
+    return 'alive';
+  }
+
+  const outcome=state.results[pick];
+
+  if(!outcome){
+    return 'alive';
+  }
+
+  return outcomeSurvives(outcome)
+    ?'surviving'
+    :'pending-elimination';
+}
 function shortTeam(t){
 return t
 .split(' ')
@@ -1250,16 +1270,20 @@ state.deadlinePassed
 :p.used.filter(team=>team!==currentPick);
  
 if(p.alive){
-const pick=
-p.picks[state.round];
+  const pick=p.picks[state.round];
+  const liveStatus=livePlayerStatus(p);
 
-shown=
-state.deadlinePassed
-?(pick||'No pick')
-:(pick
-?'Pick submitted'
-:'No pick submitted'
-);
+  if(state.deadlinePassed && liveStatus==='pending-elimination'){
+    shown=pick
+      ?`${pick} — Pending elimination`
+      :'Pending elimination';
+  }else if(state.deadlinePassed){
+    shown=pick||'No pick';
+  }else{
+    shown=pick
+      ?'Pick submitted'
+      :'No pick submitted';
+  }
 }else{
 displayRound=
 p.eliminatedRound
@@ -1287,7 +1311,13 @@ ${esc(p.name)}
 <span
 class='${p.alive?'alive':'out'}'
 >
-${p.alive?'Alive':'Eliminated'}
+${
+  !p.alive
+    ?'Eliminated'
+    :livePlayerStatus(p)==='pending-elimination'
+    ?'Pending elimination'
+    :'Alive'
+}
 </span>
 </div>
 
