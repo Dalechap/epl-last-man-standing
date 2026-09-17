@@ -1870,7 +1870,7 @@ return;
 state.deadlinePassed=
 !state.deadlinePassed;
  
-save();
+saveAdmin();
   
 notice(
 state.deadlinePassed
@@ -1878,7 +1878,7 @@ state.deadlinePassed
 :`Round ${state.round} selections have been re-opened.`
 );
 
-save();
+saveAdmin();
   
 render();
 
@@ -1949,7 +1949,7 @@ p=>p.name!==name
 );
   
   
-save();
+saveAdmin();
 
 
 
@@ -1979,8 +1979,7 @@ confirm(
 ){
 state=freshState();
 
-save();
-save();
+saveAdmin();
 notice(
 'Competition reset.'
 );
