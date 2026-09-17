@@ -315,7 +315,7 @@ state.deadlinePassed=false;
 syncDeadline();
 }
 
-save();
+saveAdmin();
 
 notice(
 `Loaded ${state.fixtures[state.round].length} EPL fixtures for Round ${state.round}.`
@@ -408,7 +408,7 @@ const updated=updateResultsFromMatches(
 data.matches||[]
 );
 
-save();
+saveAdmin();
 render();
 
 notice(
@@ -466,7 +466,11 @@ function savePick(team){
   );
 }
 if(syncDeadline()){
-save();
+fetch('/api/deadline',{
+  method:'POST'
+}).catch(error=>
+  console.error('Deadline save failed:',error)
+);
 render();
 
 return notice(
@@ -628,7 +632,7 @@ wouldEliminate.length===active.length
 ){
 state.roundProcessed=true;
 
-save();
+saveAdmin();
 render();
 
 notice(
@@ -647,7 +651,7 @@ p.eliminatedRound=state.round;
 
 state.roundProcessed=true;
 
-save();
+saveAdmin();
 render();
 
 notice(
@@ -660,63 +664,66 @@ return true;
 }
 
 async function autoCheckResults(){
-if(autoResultsCheckInProgress){
-return;
-}
+  if(autoResultsCheckInProgress){
+    return;
+  }
 
-const deadlineJustClosed=syncDeadline();
+  const deadlineJustClosed=syncDeadline();
 
-if(deadlineJustClosed){
-save();
-render();
-}
+  if(deadlineJustClosed){
+    try{
+      await fetch('/api/deadline',{
+        method:'POST'
+      });
+    }catch(error){
+      console.error(
+        'Deadline save failed:',
+        error
+      );
+    }
 
-if(
-!state.deadlinePassed ||
-state.roundProcessed
-){
-return;
-}
+    render();
+  }
 
-autoResultsCheckInProgress=true;
+  if(
+    !state.deadlinePassed ||
+    state.roundProcessed
+  ){
+    return;
+  }
 
-try{
-const r=await fetch(
-`/api/football?round=${state.round}`
-);
+  autoResultsCheckInProgress=true;
 
-const data=await r.json();
+  try{
+    const response=await fetch(
+      '/api/auto-results',
+      {
+        method:'POST'
+      }
+    );
 
-if(!r.ok){
-throw new Error(
-data.error||'Could not check EPL results'
-);
-}
+    const data=await response.json();
 
-const matches=data.matches||[];
+    if(!response.ok){
+      throw new Error(
+        data.error||
+        'Could not check automatic results'
+      );
+    }
 
-const updated=updateResultsFromMatches(matches);
+    if(data.changed){
+      await loadState();
+    }
 
-if(updated){
-save();
-}
-
-if(selectedTeamMatchesFinished(matches)){
-processRound(true);
-return;
-}
-
-if(updated){
-render();
-}
-
-}catch(e){
-console.error(
-'Automatic EPL results check failed:',
-e
-);
-}finally{
-autoResultsCheckInProgress=false;
+  }catch(error){
+    console.error(
+      'Automatic EPL results check failed:',
+      error
+    );
+  }finally{
+    autoResultsCheckInProgress=false;
+  }
+};
 }
 }
 
@@ -801,7 +808,7 @@ state.roundProcessed=false;
 state.results={};
 state.processSnapshot=null;
 
-save();
+saveAdmin();
 
 notice(
 `Round ${state.round} is now open for selections.`
@@ -1818,7 +1825,7 @@ state.fixtures[state.round]=[
 {home,away}
 ];
 
-save();
+saveAdmin();
 
 notice(
 `${home} v ${away} added.`
@@ -1855,7 +1862,7 @@ $('#deadlineBtn').onclick=()=>{
 if(deadlineTimePassed()){
 state.deadlinePassed=true;
 
-save();
+saveAdmin();
 
 notice(
 `Round ${state.round} selections are closed because the first match has kicked off.`,
