@@ -1007,8 +1007,9 @@ throw new Error(data.error||'Could not join competition');
 }
 
 if(data.state){
-state=data.state;
-localStorage.setItem('lms-state',JSON.stringify(state));
+  state=data.state;
+  state.selectedPlayer=authenticatedPlayer;
+  localStorage.setItem('lms-state',JSON.stringify(state));
 }
 
 notice(
