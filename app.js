@@ -776,25 +776,31 @@ let r=p.alive
 :(p.eliminatedRound||state.round);
 
 let pick=p.picks[r];
+let liveStatus=livePlayerStatus(p);
 
 let shown=p.alive&&!state.deadlinePassed
 ?(pick?'Pick submitted':'No pick submitted')
 :(pick||'No pick');
 
+let statusText=!p.alive
+?'Eliminated'
+:(liveStatus==='pending-elimination'
+?'Pending elimination'
+:'Alive');
+
 return `<div class='standingRow'>
 <div class='pos'>${i+1}</div>
 <div class='standingName'>
 <strong>${esc(p.name)}</strong>
-<span>${p.alive?'Alive':'Eliminated'}</span>
+<span>${statusText}</span>
 </div>
 <div class='standingPick'>${esc(shown)}</div>
 <div class='usedCount'>${p.used.length} used</div>
-<span class='dot ${p.alive?'on':'off'}'></span>
+<span class='dot ${liveStatus==='pending-elimination'?'off':(p.alive?'on':'off')}'></span>
 </div>`;
 }).join('')
 }</div>`;
 }
-
 function fixtureCard(home,away,current,p,homeCrest,awayCrest){
 const hUsed=
 p.used.includes(home)&&current!==home;
