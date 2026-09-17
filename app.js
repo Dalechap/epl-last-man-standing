@@ -782,7 +782,7 @@ state.deadlinePassed
 ?`Round ${state.round} processing undone. Selections remain closed because the deadline has passed.`
 :`Round ${state.round} processing undone. Selections are open again.`
 );
-
+saveAdmin();
 render();
 }
 
@@ -1852,7 +1852,8 @@ b.dataset.i
 notice(
 'Fixture removed.'
 );
-
+saveAdmin();
+  
 render();
 }
 );
