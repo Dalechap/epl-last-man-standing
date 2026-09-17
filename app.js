@@ -41,6 +41,7 @@ if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 let tab='home';
 let adminUnlocked=false;
 let authenticatedPlayer=null;
+let authenticatedPin=null;
 const ADMIN_PIN='9999';
 
 const COMPETITION_CODE='lms2026';
@@ -1076,17 +1077,42 @@ if(tab==='pick'){
     return;
   }
 
-  const pin=prompt(`Enter PIN for ${selected.name}:`);
+const pin=prompt(`Enter PIN for ${selected.name}:`);
 
-  if(pin!==selected.pin){
-    notice('Incorrect PIN.','warn');
+if(!pin){
+  tab='home';
+  render();
+  return;
+}
+
+try{
+  const response=await fetch('/api/auth',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      playerName:selected.name,
+      pin:pin
+    })
+  });
+
+  const data=await response.json();
+
+  if(!response.ok){
+    notice(data.error||'Incorrect PIN.','warn');
     tab='home';
     render();
     return;
   }
 
   authenticatedPlayer=selected.name;
+  authenticatedPin=pin;
   state.selectedPlayer=selected.name;
+
+}catch(error){
+  notice('Unable to authenticate. Please try again.','warn');
+  tab='home';
+  render();
+  return;
 }
 const p=player();
 
