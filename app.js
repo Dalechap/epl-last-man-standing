@@ -3,6 +3,7 @@ const defaults=[];
 
 const freshState=()=>({
 round:4,
+registrationClosed:false,
 selectedPlayer:'',
 deadlinePassed:false,
 deadline:null,
@@ -20,6 +21,9 @@ eliminatedRound:null
 
 let state=JSON.parse(localStorage.getItem('lms-state')||'null')||freshState();
 
+if(state.registrationClosed===undefined){
+  state.registrationClosed=state.round>4 || state.deadlinePassed===true;
+}
 if(state.deadlinePassed===undefined) state.deadlinePassed=false;
 if(state.deadline===undefined) state.deadline=null;
 if(state.roundProcessed===undefined) state.roundProcessed=false;
@@ -36,6 +40,7 @@ if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 
 let tab='home';
 let adminUnlocked=false;
+let authenticatedPlayer=null;
 const ADMIN_PIN='9999';
 
 const COMPETITION_CODE='lms2026';
@@ -138,8 +143,13 @@ return Number.isFinite(deadlineTime) && Date.now()>=deadlineTime;
 
 function syncDeadline(){
 if(!state.deadlinePassed && deadlineTimePassed()){
-state.deadlinePassed=true;
-return true;
+  state.deadlinePassed=true;
+
+  if(state.round===4){
+    state.registrationClosed=true;
+  }
+
+  return true;
 }
 
 return false;
@@ -383,6 +393,12 @@ return t
 }
 
 function savePick(team){
+ if(!authenticatedPlayer){
+  return notice(
+    'Please authenticate before making a pick.',
+    'warn'
+  );
+}
 if(syncDeadline()){
 save();
 render();
@@ -400,7 +416,17 @@ return notice(
 );
 }
 
-const p=player();
+const p=state.players.find(
+  x=>x.name===authenticatedPlayer
+);
+
+if(!p){
+  authenticatedPlayer=null;
+  return notice(
+    'Player authentication has expired. Please authenticate again.',
+    'warn'
+  );
+}
 
 if(!p.alive){
 return notice(
@@ -920,7 +946,12 @@ Tap Make Pick in the menu to choose your team.
 `;
 
 $('#joinBtn').onclick=()=>{
-
+if(state.registrationClosed){
+  return notice(
+    'Registration is closed. The competition has already started.',
+    'warn'
+  );
+}
 
 
 const name=prompt(
@@ -991,6 +1022,38 @@ notice(
 }
 
 if(tab==='pick'){
+ if(!authenticatedPlayer){
+  const selectedName=prompt('Enter your player name:');
+
+  if(!selectedName){
+    tab='home';
+    render();
+    return;
+  }
+
+  const selected=state.players.find(
+    p=>p.alive && p.name.toLowerCase()===selectedName.trim().toLowerCase()
+  );
+
+  if(!selected){
+    notice('Player not found or already eliminated.','warn');
+    tab='home';
+    render();
+    return;
+  }
+
+  const pin=prompt(`Enter PIN for ${selected.name}:`);
+
+  if(pin!==selected.pin){
+    notice('Incorrect PIN.','warn');
+    tab='home';
+    render();
+    return;
+  }
+
+  authenticatedPlayer=selected.name;
+  state.selectedPlayer=selected.name;
+}
 const p=player();
 
 const current=
@@ -1110,34 +1173,34 @@ p.used.length
 `;
 
 $('#playerSel').onchange=e=>{
-const target=
-state.players.find(
-p=>p.name===e.target.value
-);
+  const target=
+  state.players.find(
+  p=>p.name===e.target.value
+  );
 
-if(target&&target.pin){
-const pin=prompt(
-`Enter PIN for ${target.name}:`
-);
+  if(target&&target.pin){
+    const pin=prompt(
+    `Enter PIN for ${target.name}:`
+    );
 
-if(pin!==target.pin){
-notice(
-'Incorrect PIN.',
-'warn'
-);
+    if(pin!==target.pin){
+      notice(
+      'Incorrect PIN.',
+      'warn'
+      );
 
-render();
+      render();
 
-return;
-}
-}
+      return;
+    }
+  }
 
-state.selectedPlayer=
-e.target.value;
+  state.selectedPlayer=
+  e.target.value;
 
-notice('');
+  notice('');
 
-render();
+  render();
 };
 
 if(!state.deadlinePassed){
