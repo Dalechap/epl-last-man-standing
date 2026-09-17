@@ -2005,11 +2005,7 @@ return;
 adminUnlocked=true;
 }
 
-tab=b.dataset.tab;
-notice('');
-render();
-}
-);
+
 
 tab=b.dataset.tab;
 notice('');
