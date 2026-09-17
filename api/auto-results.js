@@ -28,19 +28,72 @@ export default async function handler(req, res) {
 
     const state = rows[0].state;
 
-    if (
-      !state ||
-      state.roundProcessed ||
-      !state.deadlinePassed
-    ) {
+    if (!state) {
       return res.status(200).json({
         ok: true,
         changed: false,
-        message: 'No result update required'
+        message: 'No competition state'
       });
     }
 
-    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    if (state.roundProcessed) {
+      return res.status(200).json({
+        ok: true,
+        changed: false,
+        message: 'Round already processed'
+      });
+    }
+
+    let changed = false;
+
+    /*
+      IMPORTANT:
+      Close the deadline on the server if kickoff
+      has already passed. This means automatic
+      processing does not depend on somebody
+      having the app open at kickoff.
+    */
+    if (!state.deadlinePassed && state.deadline) {
+      const deadlineTime =
+        new Date(state.deadline).getTime();
+
+      if (
+        Number.isFinite(deadlineTime) &&
+        Date.now() >= deadlineTime
+      ) {
+        state.deadlinePassed = true;
+
+        if (Number(state.round) === 4) {
+          state.registrationClosed = true;
+        }
+
+        changed = true;
+      }
+    }
+
+    /*
+      If the deadline still has not passed,
+      save any deadline-related change and stop.
+    */
+    if (!state.deadlinePassed) {
+      if (changed) {
+        await sql`
+          UPDATE competition_state
+          SET state = ${state},
+              updated_at = NOW()
+          WHERE id = 1
+        `;
+      }
+
+      return res.status(200).json({
+        ok: true,
+        changed,
+        message: 'Deadline has not passed'
+      });
+    }
+
+    const apiKey =
+      process.env.FOOTBALL_DATA_API_KEY;
 
     if (!apiKey) {
       return res.status(500).json({
@@ -79,8 +132,6 @@ export default async function handler(req, res) {
       )
     ];
 
-    let changed = false;
-
     for (const team of pickedTeams) {
       const match = matches.find(
         m =>
@@ -109,8 +160,10 @@ export default async function handler(req, res) {
           match.awayTeam.name === team
             ? 'zero-away'
             : 'zero-home';
+
       } else if (home === away) {
         result = 'score-draw';
+
       } else {
         const winner =
           home > away
@@ -166,6 +219,7 @@ export default async function handler(req, res) {
             p => [p.name, p.alive]
           )
         ),
+
         eliminatedRound:
           Object.fromEntries(
             state.players.map(
@@ -175,13 +229,17 @@ export default async function handler(req, res) {
               ]
             )
           ),
+
         results: {
           ...state.results
         }
       };
 
-      // Special rule:
-      // if everybody fails, everybody survives.
+      /*
+        Special LMS rule:
+        if every remaining player fails,
+        everybody stays alive.
+      */
       if (
         wouldEliminate.length !== active.length ||
         active.length === 0
@@ -209,6 +267,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       changed,
+      deadlinePassed:
+        state.deadlinePassed === true,
       roundProcessed:
         state.roundProcessed === true
     });
