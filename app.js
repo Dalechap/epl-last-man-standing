@@ -849,7 +849,7 @@ ${aUsed?`<small>Used</small>`:''}
 </div>`;
 }
 
-function render(){
+async function render(){
 syncDeadline();
 
 $('#summary').textContent=
