@@ -4,8 +4,6 @@ const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   try {
-
-    // Public state is READ ONLY.
     if (req.method !== 'GET') {
       return res.status(405).json({
         error: 'Method not allowed'
@@ -25,7 +23,6 @@ export default async function handler(req, res) {
     const publicState =
       structuredClone(rows[0].state);
 
-    // Never expose player PINs publicly.
     if (Array.isArray(publicState.players)) {
       publicState.players =
         publicState.players.map(player => {
