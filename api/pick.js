@@ -8,13 +8,13 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { playerName, team, round } = req.body || {};
+const { playerName, team, round, pin } = req.body || {};
 
-    if (!playerName || !team || !round) {
-      return res.status(400).json({
-        error: 'playerName, team and round are required'
-      });
-    }
+if (!playerName || !team || !round || !pin) {
+  return res.status(400).json({
+    error: 'playerName, team, round and PIN are required'
+  });
+}
 const competitionRows = await sql`
   SELECT state
   FROM competition_state
@@ -57,7 +57,11 @@ if (!playerRows.length) {
 }
 
 const player = playerRows[0].player;
-
+if (String(player.pin) !== String(pin)) {
+  return res.status(403).json({
+    error: 'Incorrect PIN'
+  });
+}
 const usedTeams = Array.isArray(player.used)
   ? player.used
   : [];
