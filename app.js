@@ -496,7 +496,7 @@ body:JSON.stringify({
   playerName:p.name,
   team:team,
   round:state.round,
-  pin:p.pin
+ pin:authenticatedPin
 })
 })
 .then(async response=>{
@@ -1232,31 +1232,54 @@ p.used.length
 </section>
 `;
 
-$('#playerSel').onchange=e=>{
+$('#playerSel').onchange=async e=>{
   const target=
   state.players.find(
   p=>p.name===e.target.value
   );
 
-  if(target&&target.pin){
-    const pin=prompt(
+  if(target){
+  const pin=prompt(
     `Enter PIN for ${target.name}:`
-    );
+  );
 
-    if(pin!==target.pin){
-      notice(
-      'Incorrect PIN.',
-      'warn'
-      );
-
-      render();
-
-      return;
-    }
+  if(!pin){
+    render();
+    return;
   }
 
-  state.selectedPlayer=
-  e.target.value;
+  try{
+    const response=await fetch('/api/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        playerName:target.name,
+        pin:pin
+      })
+    });
+
+    const data=await response.json();
+
+    if(!response.ok){
+      notice(data.error||'Incorrect PIN.','warn');
+      render();
+      return;
+    }
+
+    authenticatedPlayer=target.name;
+    authenticatedPin=pin;
+
+  }catch(error){
+    notice(
+      'Unable to authenticate. Please try again.',
+      'warn'
+    );
+    render();
+    return;
+  }
+}
+
+state.selectedPlayer=target.name;
 
   notice('');
 
