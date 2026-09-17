@@ -41,6 +41,10 @@ export default async function handler(req, res) {
         ),
         updated_at = NOW()
       WHERE id = 1
+      AND COALESCE(
+  (state->>'registrationClosed')::boolean,
+  false
+) = false
         AND NOT EXISTS (
           SELECT 1
           FROM jsonb_array_elements(
@@ -51,11 +55,25 @@ export default async function handler(req, res) {
       RETURNING state
     `;
 
-    if (!rows.length) {
-      return res.status(409).json({
-        error: 'That player name is already in the competition'
-      });
-    }
+if (!rows.length) {
+  const check = await sql`
+    SELECT state
+    FROM competition_state
+    WHERE id = 1
+  `;
+
+  const currentState = check.length ? check[0].state : null;
+
+  if (currentState?.registrationClosed) {
+    return res.status(403).json({
+      error: 'Registration is closed. The competition has already started.'
+    });
+  }
+
+  return res.status(409).json({
+    error: 'That player name is already in the competition'
+  });
+}
 
     return res.status(200).json({
       ok: true,
