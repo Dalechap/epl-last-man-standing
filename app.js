@@ -169,6 +169,7 @@ state=serverState;
   state.registrationClosed=
     state.round>4 ||
     state.deadlinePassed===true;
+}
 if(state.deadlinePassed===undefined) state.deadlinePassed=false;
 if(state.deadline===undefined) state.deadline=null;
 if(state.roundProcessed===undefined) state.roundProcessed=false;
