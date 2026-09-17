@@ -134,12 +134,44 @@ body:JSON.stringify(state)
 }).catch(error=>console.error('Database save failed:',error));
 }
 
-function save(){
-  ...
-}
-
 function saveAdmin(){
-  ...
+  localStorage.setItem(
+    'lms-state',
+    JSON.stringify(state)
+  );
+
+  return fetch('/api/admin-state',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      adminPin:ADMIN_PIN,
+      state:state
+    })
+  })
+  .then(async response=>{
+    const data=await response.json();
+
+    if(!response.ok){
+      throw new Error(
+        data.error||'Admin save failed'
+      );
+    }
+
+    return data;
+  })
+  .catch(error=>{
+    console.error(
+      'Admin database save failed:',
+      error
+    );
+
+    notice(
+      `Admin save failed: ${error.message}`,
+      'warn'
+    );
+  });
 }
 
 function deadlineTimePassed(){
