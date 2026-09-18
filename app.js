@@ -42,7 +42,7 @@ let tab='home';
 let adminUnlocked=false;
 let authenticatedPlayer=null;
 let authenticatedPin=null;
-const ADMIN_PIN='9999';
+let authenticatedAdminPin=null;
 
 const COMPETITION_CODE='lms2026';
 let competitionUnlocked=
@@ -138,7 +138,7 @@ function saveAdmin(){
       'Content-Type':'application/json'
     },
     body:JSON.stringify({
-      adminPin:ADMIN_PIN,
+   adminPin:authenticatedAdminPin,
       state:state
     })
   })
@@ -1991,6 +1991,7 @@ render();
 }
 
 document
+document
 .querySelectorAll('.tabs button')
 .forEach(
 b=>b.onclick=()=>{
@@ -2005,7 +2006,46 @@ return;
 adminUnlocked=true;
 }
 
+tab=b.dataset.tab;
+notice('');
+render();
+}
+);
 
+
+document
+.querySelectorAll('.tabs button')
+.forEach(
+b=>b.onclick=async ()=>{
+if(b.dataset.tab==='admin' && !adminUnlocked){
+const pin=prompt('Enter Admin PIN:');
+
+if(!pin){
+return;
+}
+
+try{
+const response=await fetch('/api/admin-auth',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({pin})
+});
+
+const data=await response.json();
+
+if(!response.ok){
+notice(data.error||'Incorrect Admin PIN.','warn');
+return;
+}
+
+adminUnlocked=true;
+authenticatedAdminPin=pin;
+
+}catch(error){
+notice('Unable to authenticate Admin. Please try again.','warn');
+return;
+}
+}
 
 tab=b.dataset.tab;
 notice('');
