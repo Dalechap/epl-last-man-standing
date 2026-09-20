@@ -1990,27 +1990,7 @@ render();
 }
 }
 
-document
-document
-.querySelectorAll('.tabs button')
-.forEach(
-b=>b.onclick=()=>{
-if(b.dataset.tab==='admin' && !adminUnlocked){
-const pin=prompt('Enter Admin PIN:');
 
-if(pin!==ADMIN_PIN){
-notice('Incorrect Admin PIN.','warn');
-return;
-}
-
-adminUnlocked=true;
-}
-
-tab=b.dataset.tab;
-notice('');
-render();
-}
-);
 
 
 document
