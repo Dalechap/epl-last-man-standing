@@ -1528,12 +1528,6 @@ id='loadEpl'
 Load EPL fixtures
 </button>
 
-<button
-class='primary'
-id='loadResults'
->
-Update EPL results
-</button>
 
 <p class='muted'>
 ${fixtures.length
