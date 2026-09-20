@@ -1542,48 +1542,6 @@ ${fixtures.length
 }
 </p>
 
-${
-!state.deadlinePassed
-?`<div class='fixtureAdd'>
-<select id='homeTeam'>
-<option value=''>
-Home team…
-</option>
-
-${
-teams
-.map(t=>
-`<option>
-${t}
-</option>`
-)
-.join('')
-}
-</select>
-
-<select id='awayTeam'>
-<option value=''>
-Away team…
-</option>
-
-${
-teams
-.map(t=>
-`<option>
-${t}
-</option>`
-)
-.join('')
-}
-</select>
-
-<button id='addFixture'>
-Add fixture
-</button>
-</div>`
-:''
-}
-
 <hr>
 
 <label>
