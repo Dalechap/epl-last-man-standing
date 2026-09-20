@@ -1535,35 +1535,12 @@ id='loadResults'
 Update EPL results
 </button>
 
-<label>
-Round ${state.round} fixtures
-</label>
-
-<div id='fixtureList'>
-${
-fixtures.length
-?fixtures.map((f,i)=>
-`<div class='fixtureAdmin'>
-<span>
-${esc(f.home)}
-<b>v</b>
-${esc(f.away)}
-</span>
-
-<button
-class='hidden removeFixture'
-data-i='${i}'
-${state.deadlinePassed?'disabled':''}
->
-Remove
-</button>
-</div>`
-).join('')
-:`<p class='muted'>
-No fixtures added yet.
-</p>`
+<p class='muted'>
+${fixtures.length
+?`${fixtures.length} fixtures loaded for Round ${state.round}.`
+:`No fixtures loaded for Round ${state.round}.`
 }
-</div>
+</p>
 
 ${
 !state.deadlinePassed
