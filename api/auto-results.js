@@ -252,7 +252,47 @@ export default async function handler(req, res) {
       }
 
       state.roundProcessed = true;
-      changed = true;
+changed = true;
+
+// Automatically prepare the next round
+const nextRound = Number(state.round) + 1;
+
+const nextResponse = await fetch(
+  `https://api.football-data.org/v4/competitions/PL/matches?season=2026&matchday=${nextRound}`,
+  {
+    headers: {
+      'X-Auth-Token': apiKey
+    }
+  }
+);
+
+if (nextResponse.ok) {
+  const nextData = await nextResponse.json();
+  const nextMatches = nextData.matches || [];
+
+  if (nextMatches.length) {
+    state.round = nextRound;
+
+    state.fixtures = nextMatches.map(match => ({
+      home: match.homeTeam.name,
+      away: match.awayTeam.name,
+      kickoff: match.utcDate
+    }));
+
+    const kickoffTimes = state.fixtures
+      .map(f => new Date(f.kickoff).getTime())
+      .filter(Number.isFinite);
+
+    state.deadline = kickoffTimes.length
+      ? new Date(Math.min(...kickoffTimes)).toISOString()
+      : null;
+
+    state.deadlinePassed = false;
+    state.roundProcessed = false;
+    state.results = {};
+    state.processSnapshot = null;
+  }
+}
     }
 
     if (changed) {
