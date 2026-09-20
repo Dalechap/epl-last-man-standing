@@ -1519,14 +1519,7 @@ deadlineTimePassed();
 
 c.innerHTML=`
 <section class='card formCard'>
-<h2>Admin</h2>
-
-<button
-class='primary'
-id='loadEpl'
->
-Load EPL fixtures
-</button>
+<h2>Admin</h2
 
 
 <p class='muted'>
@@ -1598,6 +1591,13 @@ Selections close automatically when the first EPL match of the round kicks off.
 <summary><b>Advanced / Emergency Controls</b></summary>
 
 <div style='margin-top:16px'>
+
+<button
+class='primary'
+id='loadEpl'
+>
+Load EPL fixtures
+</button>
 
 <label>
 Match results
