@@ -1594,6 +1594,11 @@ Selections close automatically when the first EPL match of the round kicks off.
 
 <hr>
 
+<details>
+<summary><b>Advanced / Emergency Controls</b></summary>
+
+<div style='margin-top:16px'>
+
 <label>
 Match results
 </label>
@@ -1692,9 +1697,12 @@ id='reset'
 >
 Reset competition
 </button>
+
+</div>
+</details>
+
 </section>
 `;
-
 if($('#loadEpl')){
 $('#loadEpl').onclick=
 loadEplFixtures;
