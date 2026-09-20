@@ -909,6 +909,28 @@ if(tab==='home'){
 const w=winner();
 
 c.innerHTML=`
+<div class='card'>
+<h2>Join Competition</h2>
+
+<p>
+<b>New player?</b>
+Register your name and create a 4-digit PIN.
+</p>
+
+<button
+class='primary'
+id='joinBtn'
+>
+Join Competition
+</button>
+
+<div id='joinMessage'></div>
+
+<p class='muted'>
+<b>Already joined?</b>
+Tap Make Pick in the menu to choose your team.
+</p>
+</div>
 ${
 w
 ?`<div class='winnerCard'>
@@ -995,35 +1017,13 @@ If every remaining player is eliminated in the same round, they all stay alive, 
 </div>
 `;
 
-c.innerHTML+=`
-<div class='card'>
-<h2>Join Competition</h2>
 
-<p>
-<b>New player?</b>
-Register your name and create a 4-digit PIN.
-</p>
-
-<button
-class='primary'
-id='joinBtn'
->
-Join Competition
-</button>
-
-<p class='muted'>
-<b>Already joined?</b>
-Tap Make Pick in the menu to choose your team.
-</p>
-</div>
-`;
 
 $('#joinBtn').onclick=()=>{
 if(state.registrationClosed){
-  return notice(
-    'Registration is closed. The competition has already started.',
-    'warn'
-  );
+  $('#joinMessage').innerHTML=
+    `<div class='notice warn'>Registration is closed. The competition has already started.</div>`;
+  return;
 }
 
 
