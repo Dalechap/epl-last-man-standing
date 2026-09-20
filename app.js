@@ -778,7 +778,7 @@ saveAdmin();
 render();
 }
 
-function advanceRound(){
+async function advanceRound(){
 if(!state.roundProcessed){
 return notice(
 'Process the current round results first.',
@@ -800,13 +800,15 @@ state.roundProcessed=false;
 state.results={};
 state.processSnapshot=null;
 
-saveAdmin();
+await saveAdmin();
 
 notice(
-`Round ${state.round} is now open for selections.`
+`Round ${state.round} is now open. Loading EPL fixtures...`
 );
 
 render();
+
+await loadEplFixtures();
 }
 
 function renderStandings(){
