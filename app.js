@@ -907,7 +907,6 @@ function urlBase64ToUint8Array(base64String){
     )
   );
 }
-
 async function enableNotifications(){
   if(!('Notification' in window)){
     notice(
@@ -929,23 +928,56 @@ async function enableNotifications(){
     const permission=
       await Notification.requestPermission();
 
-    if(permission==='granted'){
-      notice(
-        'Notifications are enabled.',
-        'ok'
-      );
-    }else{
+    if(permission!=='granted'){
       notice(
         'Notifications were not enabled.',
         'warn'
       );
+      render();
+      return;
     }
+
+    const keyResponse=
+      await fetch('/api/push-public-key');
+
+    const keyData=
+      await keyResponse.json();
+
+    if(!keyResponse.ok){
+      throw new Error(
+        keyData.error||
+        'Could not load notification key'
+      );
+    }
+
+    const registration=
+      await navigator.serviceWorker.ready;
+
+    let subscription=
+      await registration.pushManager
+        .getSubscription();
+
+    if(!subscription){
+      subscription=
+        await registration.pushManager.subscribe({
+          userVisibleOnly:true,
+          applicationServerKey:
+            urlBase64ToUint8Array(
+              keyData.publicKey
+            )
+        });
+    }
+
+    notice(
+      'Notifications are ready. Select your player to connect this device.',
+      'ok'
+    );
 
     render();
 
   }catch(error){
     console.error(
-      'Notification permission failed:',
+      'Notification setup failed:',
       error
     );
 
