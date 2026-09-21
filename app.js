@@ -46,7 +46,7 @@ let authenticatedAdminPin=null;
 
 const COMPETITION_CODE='lms3973';
 let competitionUnlocked=
-sessionStorage.getItem('lms-access')==='ok';
+localStorage.getItem('lms-access')===COMPETITION_CODE;
 
 const appShell=document.querySelector('.shell');
 
@@ -103,7 +103,7 @@ return;
 }
 
 competitionUnlocked=true;
-sessionStorage.setItem('lms-access','ok');
+localStorage.setItem('lms-access',COMPETITION_CODE);
 
 accessGate.remove();
 
