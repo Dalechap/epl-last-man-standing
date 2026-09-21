@@ -2221,7 +2221,8 @@ This means if nobody had the app open when matches finished,
 the Matchweek will be processed the next time somebody opens it.
 */
 loadState().then(()=>{
-autoCheckResults();
+  autoCheckResults();
+  checkNotifications();
 });
 
 if ('serviceWorker' in navigator) {
