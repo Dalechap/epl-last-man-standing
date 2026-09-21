@@ -717,6 +717,30 @@ async function autoCheckResults(){
   }
 }
 
+async function checkNotifications(){
+  try{
+    const response=
+      await fetch('/api/notifications',{
+        method:'POST'
+      });
+
+    if(!response.ok){
+      const data=
+        await response.json();
+
+      throw new Error(
+        data.error||
+        'Notification check failed'
+      );
+    }
+
+  }catch(error){
+    console.error(
+      'Notification reminder check failed:',
+      error
+    );
+  }
+}
 
 
 function undoProcessedRound(){
