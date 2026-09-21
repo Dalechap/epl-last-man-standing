@@ -1091,8 +1091,7 @@ Enable Notifications
 `
 :''
 }
-<div class='card'>
-<h2>Join Competition</h2>
+
 <div class='card'>
 <h2>Join Competition</h2>
 
