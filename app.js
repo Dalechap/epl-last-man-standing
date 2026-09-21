@@ -1643,11 +1643,19 @@ ${esc(shown)}
 </div>
 
 <div class='muted'>
-Teams used:
+<strong>Pick history:</strong>
 ${
-visibleUsed.length
-?visibleUsed.join(', ')
-:'None'
+Object.keys(p.picks || {})
+  .map(Number)
+  .filter(matchweek =>
+    matchweek < Number(state.round)
+  )
+  .sort((a,b) => a-b)
+  .map(matchweek =>
+    `MW${matchweek}: ${esc(p.picks[matchweek])}`
+  )
+  .join(' · ')
+  || 'None'
 }
 </div>
 </div>`;
