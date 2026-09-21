@@ -1018,6 +1018,11 @@ if(!subscribeResponse.ok){
   );
 }
 
+localStorage.setItem(
+  'lms-notification-player',
+  subscribeData.playerName
+);
+    
 notice(
   `Notifications are enabled for ${subscribeData.playerName}.`,
   'ok'
@@ -1060,38 +1065,34 @@ const notificationsSupported=
   'Notification' in window &&
   'serviceWorker' in navigator;
 
-const notificationsEnabled=
-  notificationsSupported &&
-  Notification.permission==='granted';
+const notificationPlayer=
+  localStorage.getItem(
+    'lms-notification-player'
+  );
 
 c.innerHTML=`
 
+${
+notificationsSupported&&!notificationPlayer
+?`
 <div class='card'>
 <h2>Notifications</h2>
-
 <p>
-${
-notificationsEnabled
-?'Notifications are allowed on this device. Connect them to your player to receive Matchweek updates and pick reminders.'
-:notificationsSupported
-?'Turn on notifications for Matchweek updates and pick reminders.'
-:'Notifications are not supported on this device.'
-}
+Turn on notifications for Matchweek updates and pick reminders.
 </p>
 
-${
-notificationsSupported
-?`<button
+<button
 class='primary'
 id='enableNotifications'
 >
-${notificationsEnabled
-?'Connect Notifications'
-:'Enable Notifications'}
-</button>`
+Enable Notifications
+</button>
+</div>
+`
 :''
 }
-</div>
+<div class='card'>
+<h2>Join Competition</h2>
 <div class='card'>
 <h2>Join Competition</h2>
 
