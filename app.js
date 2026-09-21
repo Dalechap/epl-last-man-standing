@@ -890,6 +890,54 @@ ${aUsed?`<small>Used</small>`:''}
 </div>`;
 }
 
+
+async function enableNotifications(){
+  if(!('Notification' in window)){
+    notice(
+      'Notifications are not supported on this device.',
+      'warn'
+    );
+    return;
+  }
+
+  if(!('serviceWorker' in navigator)){
+    notice(
+      'Notifications are not supported in this browser.',
+      'warn'
+    );
+    return;
+  }
+
+  try{
+    const permission=
+      await Notification.requestPermission();
+
+    if(permission==='granted'){
+      notice(
+        'Notifications are enabled.',
+        'ok'
+      );
+    }else{
+      notice(
+        'Notifications were not enabled.',
+        'warn'
+      );
+    }
+
+    render();
+
+  }catch(error){
+    console.error(
+      'Notification permission failed:',
+      error
+    );
+
+    notice(
+      'Could not enable notifications.',
+      'warn'
+    );
+  }
+}
 async function render(){
 syncDeadline();
 
