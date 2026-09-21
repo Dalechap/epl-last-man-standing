@@ -1643,21 +1643,21 @@ if(tab==='fixtures'){
             <div class='fixtures'>
               ${
 item.matches.length
-  ?item.matches.map(match=>
-  <div class='fixtureCard'>
-    <div>
-      ${esc(match.homeTeam?.name || '')}
-    </div>
+  ?item.matches.map(match=>`
+    <div class='fixtureCard'>
+      <div>
+        ${esc(match.homeTeam?.name || '')}
+      </div>
 
-    <div class='muted'>
-      v
-    </div>
+      <div class='muted'>
+        v
+      </div>
 
-    <div>
-      ${esc(match.awayTeam?.name || '')}
+      <div>
+        ${esc(match.awayTeam?.name || '')}
+      </div>
     </div>
-  </div>
-`).join('')
+  `).join('')
                   :`<p class='muted'>
                       Fixtures not available yet.
                     </p>`
