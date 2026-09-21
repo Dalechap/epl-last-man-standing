@@ -38,7 +38,14 @@ if(p.alive===undefined)p.alive=true;
 if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 });
 
-let tab='home';
+const requestedTab =
+  new URLSearchParams(window.location.search)
+    .get('tab');
+
+let tab =
+  requestedTab === 'pick'
+    ? 'pick'
+    : 'home';
 let adminUnlocked=false;
 let authenticatedPlayer=null;
 let authenticatedPin=null;
