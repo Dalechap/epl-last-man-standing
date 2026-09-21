@@ -275,7 +275,7 @@ return state.fixtures[state.round]||[];
 
 async function loadEplFixtures(){
 try{
-notice(`Loading EPL Round ${state.round} fixtures...`);
+notice(`Loading EPL Matchweek ${state.round} fixtures...`);
 
 const r=await fetch(`/api/football?round=${state.round}`);
 const data=await r.json();
@@ -310,7 +310,7 @@ syncDeadline();
 saveAdmin();
 
 notice(
-`Loaded ${state.fixtures[state.round].length} EPL fixtures for Round ${state.round}.`
+`Loaded ${state.fixtures[state.round].length} EPL fixtures for Matchweek ${state.round}.`
 );
 
 render();
@@ -385,7 +385,7 @@ return match && match.status==='FINISHED';
 
 async function loadEplResults(){
 try{
-notice(`Checking EPL Round ${state.round} results...`);
+notice(`Checking EPL Matchweek ${state.round} results...`);
 
 const r=await fetch(`/api/football?round=${state.round}`);
 const data=await r.json();
@@ -466,14 +466,14 @@ fetch('/api/deadline',{
 render();
 
 return notice(
-`Round ${state.round} selections are closed because the first match has kicked off.`,
+`Matchweek ${state.round} selections are closed because the first match has kicked off.`,
 'warn'
 );
 }
 
 if(state.deadlinePassed){
 return notice(
-`Selections are closed for Round ${state.round}.`,
+`Selections are closed for Matchweek ${state.round}.`,
 'warn'
 );
 }
@@ -557,7 +557,7 @@ notice(
 );
 });
 notice(
-`${p.name} selected ${team} for Round ${state.round}.`
+`${p.name} selected ${team} for Matchweek ${state.round}.`
 );
 
 render();
@@ -629,7 +629,7 @@ render();
 
 notice(
 automatic
-?`Round ${state.round} was processed automatically. Everyone failed, so all remaining players stay alive. Their selected teams still count as used.`
+?`Matchweek ${state.round} was processed automatically. Everyone failed, so all remaining players stay alive. Their selected teams still count as used.`
 :'Everyone failed this round, so all remaining players stay alive. Their selected teams still count as used.'
 );
 
@@ -648,8 +648,8 @@ render();
 
 notice(
 automatic
-?`Round ${state.round} was processed automatically. ${alive()} player${alive()===1?'':'s'} remain alive.`
-:`Round ${state.round} processed. ${alive()} player${alive()===1?'':'s'} remain alive.`
+?`Matchweek ${state.round} was processed automatically. ${alive()} player${alive()===1?'':'s'} remain alive.`
+:`Matchweek ${state.round} processed. ${alive()} player${alive()===1?'':'s'} remain alive.`
 );
 
 return true;
@@ -771,8 +771,8 @@ state.selectedPlayer=p.name;
 
 notice(
 state.deadlinePassed
-?`Round ${state.round} processing undone. Selections remain closed because the deadline has passed.`
-:`Round ${state.round} processing undone. Selections are open again.`
+?`Matchweek ${state.round} processing undone. Selections remain closed because the deadline has passed.`
+:`Matchweek ${state.round} processing undone. Selections are open again.`
 );
 saveAdmin();
 render();
@@ -803,7 +803,7 @@ state.processSnapshot=null;
 await saveAdmin();
 
 notice(
-`Round ${state.round} is now open. Loading EPL fixtures...`
+`Matchweek ${state.round} is now open. Loading EPL fixtures...`
 );
 
 render();
@@ -894,7 +894,7 @@ async function render(){
 syncDeadline();
 
 $('#summary').textContent=
-`Round ${state.round} · ${alive()} player${alive()==1?'':'s'} alive`;
+`Matchweek ${state.round} · ${alive()} player${alive()==1?'':'s'} alive`;
 
 document
 .querySelectorAll('.tabs button')
@@ -1174,7 +1174,7 @@ c.innerHTML=`
 <div class='sectionHead'>
 <div>
 <div class='eyebrow dark'>
-ROUND ${state.round}
+Matchweek ${state.round}
 </div>
 
 <h2>Make my pick</h2>
@@ -1210,7 +1210,7 @@ Current pick:
 ${
 state.deadlinePassed
 ?`<div class='closedBox'>
-Selections are closed for Round ${state.round}.
+Selections are closed for Matchweek ${state.round}.
 </div>`
 :fixtures.length
 ?`<label>Fixtures</label>
@@ -1524,15 +1524,15 @@ c.innerHTML=`
 
 <p class='muted'>
 ${fixtures.length
-?`${fixtures.length} fixtures loaded for Round ${state.round}.`
-:`No fixtures loaded for Round ${state.round}.`
+?`${fixtures.length} fixtures loaded for Matchweek ${state.round}.`
+:`No fixtures loaded for Matchweek ${state.round}.`
 }
 </p>
 
 <hr>
 
 <label>
-Round ${state.round} selection deadline
+Matchweek ${state.round} selection deadline
 </label>
 
 ${
@@ -1616,7 +1616,7 @@ state.deadlinePassed &&
 class='primary'
 id='process'
 >
-Process Round ${state.round}
+Process Matchweek ${state.round}
 </button>`
 :''
 }
@@ -1624,7 +1624,7 @@ Process Round ${state.round}
 ${
 state.roundProcessed
 ?`<div class='processedBox'>
-Round ${state.round} has been processed.
+Matchweek ${state.round} has been processed.
 </div>
 
 ${
@@ -1642,7 +1642,7 @@ Competition complete.
 class='danger full'
 id='undoRound'
 >
-Undo Round ${state.round} Processing
+Undo Matchweek ${state.round} Processing
 </button>
 
 ${
@@ -1797,7 +1797,7 @@ state.deadlinePassed=true;
 saveAdmin();
 
 notice(
-`Round ${state.round} selections are closed because the first match has kicked off.`,
+`Matchweek ${state.round} selections are closed because the first match has kicked off.`,
 'warn'
 );
 
@@ -1813,8 +1813,8 @@ saveAdmin();
   
 notice(
 state.deadlinePassed
-?`Round ${state.round} selections are now closed and picks are revealed.`
-:`Round ${state.round} selections have been re-opened.`
+?`Matchweek ${state.round} selections are now closed and picks are revealed.`
+:`Matchweek ${state.round} selections have been re-opened.`
 );
 
 saveAdmin();
@@ -1848,7 +1848,7 @@ if($('#undoRound')){
 $('#undoRound').onclick=()=>{
 if(
 confirm(
-`Undo Round ${state.round} processing?`
+`Undo Matchweek ${state.round} processing?`
 )
 ){
 undoProcessedRound();
@@ -1986,7 +1986,7 @@ fetch('/api/deadline',{
 render();
 
 notice(
-`Round ${state.round} selections are now closed.`
+`Matchweek ${state.round} selections are now closed.`
 );
 
 autoCheckResults();
