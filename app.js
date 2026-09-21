@@ -1072,38 +1072,6 @@ render();
     );
   }
 }
-
-async function loadPlannerFixtures(){
-const matchweeks = [
-  Number(state.round),
-  Number(state.round) + 1,
-  Number(state.round) + 2,
-  Number(state.round) + 3
-  ];
-
-  const results = await Promise.all(
-    matchweeks.map(async matchweek => {
-      const response = await fetch(
-        `/api/football?round=${matchweek}`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-          `Could not load Matchweek ${matchweek}`
-        );
-      }
-
-      return {
-        matchweek,
-        matches: data.matches || []
-      };
-    })
-  );
-
-  return results;
 }
 
 async function loadPlannerFixtures(){
