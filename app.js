@@ -44,7 +44,7 @@ let authenticatedPlayer=null;
 let authenticatedPin=null;
 let authenticatedAdminPin=null;
 
-const COMPETITION_CODE='lms2026';
+const COMPETITION_CODE='lms3973';
 let competitionUnlocked=
 sessionStorage.getItem('lms-access')==='ok';
 
