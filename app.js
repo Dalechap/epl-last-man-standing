@@ -1774,14 +1774,6 @@ Selections close automatically when the first EPL match of the Matchweek kicks o
 
 <hr>
 
-<div style='margin-bottom:16px'>
-  <button
-    class='primary'
-    id='testPush'
-  >
-    Send Test Notification
-  </button>
-</div>
 
 <details>
 <summary><b>Advanced / Emergency Controls</b></summary>
@@ -1899,60 +1891,7 @@ Reset competition
 
 </section>
 `;
-if($('#testPush')){
-  $('#testPush').onclick=async()=>{
-    try{
-      const playerName=
-        prompt(
-          'Which player should receive the test notification?',
-          'Dale'
-        );
 
-      if(!playerName){
-        return;
-      }
-
-      const response=
-        await fetch('/api/push-test',{
-          method:'POST',
-          headers:{
-            'Content-Type':'application/json'
-          },
-          body:JSON.stringify({
-            adminPin:authenticatedAdminPin,
-            playerName
-          })
-        });
-
-      const data=
-        await response.json();
-
-      if(!response.ok){
-        throw new Error(
-          data.error||
-          'Could not send test notification'
-        );
-      }
-
-      notice(
-        `Test notification sent to ${playerName} (${data.sent} device${data.sent===1?'':'s'}).`,
-        'ok'
-      );
-
-    }catch(error){
-      console.error(
-        'Push notification test failed:',
-        error
-      );
-
-      notice(
-        error.message||
-        'Could not send test notification.',
-        'warn'
-      );
-    }
-  };
-}
 if($('#loadEpl')){
 $('#loadEpl').onclick=
 loadEplFixtures;
