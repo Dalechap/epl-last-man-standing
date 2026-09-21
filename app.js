@@ -1600,6 +1600,87 @@ b.dataset.team
 }
 
 if(tab==='fixtures'){
+    if(!authenticatedPlayer){
+    const selectedName=
+      prompt('Enter your player name:');
+
+    if(!selectedName){
+      tab='home';
+      render();
+      return;
+    }
+
+    const selected=
+      state.players.find(
+        p=>
+          p.alive &&
+          p.name.toLowerCase()===
+          selectedName.trim().toLowerCase()
+      );
+
+    if(!selected){
+      notice(
+        'Player not found or already eliminated.',
+        'warn'
+      );
+      tab='home';
+      render();
+      return;
+    }
+
+    const pin=
+      prompt(`Enter PIN for ${selected.name}:`);
+
+    if(!pin){
+      tab='home';
+      render();
+      return;
+    }
+
+    try{
+      const response=
+        await fetch('/api/auth',{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json'
+          },
+          body:JSON.stringify({
+            playerName:selected.name,
+            pin:pin
+          })
+        });
+
+      const data=
+        await response.json();
+
+      if(!response.ok){
+        notice(
+          data.error||'Incorrect PIN.',
+          'warn'
+        );
+        tab='home';
+        render();
+        return;
+      }
+
+      authenticatedPlayer=selected.name;
+      authenticatedPin=pin;
+
+    }catch(error){
+      notice(
+        'Unable to authenticate. Please try again.',
+        'warn'
+      );
+      tab='home';
+      render();
+      return;
+    }
+  }
+
+  const plannerPlayer=
+    state.players.find(
+      p=>p.name===authenticatedPlayer
+    );
   c.innerHTML=`
     <h2>Fixtures</h2>
 
@@ -1657,7 +1738,16 @@ item.matches.length
               >`
             :''
         }
-        ${esc(match.homeTeam?.name || '')}
+       ${esc(match.homeTeam?.name || '')}
+${
+  plannerPlayer?.used?.some(
+    team=>
+      team.replace(/ FC$/,'')===
+      (match.homeTeam?.name||'').replace(/ FC$/,'')
+  )
+    ?` <strong>· USED</strong>`
+    :''
+}
       </div>
 
       <div class='muted'>
@@ -1676,6 +1766,15 @@ item.matches.length
             :''
         }
         ${esc(match.awayTeam?.name || '')}
+${
+  plannerPlayer?.used?.some(
+    team=>
+      team.replace(/ FC$/,'')===
+      (match.awayTeam?.name||'').replace(/ FC$/,'')
+  )
+    ?` <strong>· USED</strong>`
+    :''
+}
       </div>
 
     </div>
