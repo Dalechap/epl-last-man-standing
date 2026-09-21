@@ -1676,45 +1676,19 @@ if(tab==='fixtures'){
             <div class='fixtures'>
               ${
                 item.matches.length
-               item.matches.map(match=>`
-  <div class='plannerFixture'>
-
-    <div class='plannerTeam plannerHome'>
-      <span>
-        ${esc(match.homeTeam?.name || '')}
-      </span>
-
-      ${
-        match.homeTeam?.crest
-          ?`<img
-              src='${esc(match.homeTeam.crest)}'
-              alt=''
-              class='plannerCrest'
-            >`
-          :''
-      }
+item.matches.map(match=>`
+  <div class='fixtureCard'>
+    <div>
+      ${esc(match.homeTeam?.name || '')}
     </div>
 
-    <div class='plannerVs'>
+    <div class='muted'>
       v
     </div>
 
-    <div class='plannerTeam plannerAway'>
-      ${
-        match.awayTeam?.crest
-          ?`<img
-              src='${esc(match.awayTeam.crest)}'
-              alt=''
-              class='plannerCrest'
-            >`
-          :''
-      }
-
-      <span>
-        ${esc(match.awayTeam?.name || '')}
-      </span>
+    <div>
+      ${esc(match.awayTeam?.name || '')}
     </div>
-
   </div>
 `).join('')
                   :`<p class='muted'>
