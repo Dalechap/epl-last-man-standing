@@ -251,8 +251,32 @@ export default async function handler(req, res) {
         }
       }
 
-      state.roundProcessed = true;
+state.roundProcessed = true;
 changed = true;
+
+// Stop here if processing has produced a winner
+const survivors = state.players.filter(
+  player => player.alive
+);
+
+if (survivors.length === 1) {
+  if (changed) {
+    await sql`
+      UPDATE competition_state
+      SET state = ${state},
+          updated_at = NOW()
+      WHERE id = 1
+    `;
+  }
+
+  return res.status(200).json({
+    ok: true,
+    changed: true,
+    deadlinePassed: true,
+    roundProcessed: true,
+    winner: survivors[0].name
+  });
+}
 
 // Automatically prepare the next round
 const nextRound = Number(state.round) + 1;
