@@ -1774,6 +1774,15 @@ Selections close automatically when the first EPL match of the Matchweek kicks o
 
 <hr>
 
+<div style='margin-bottom:16px'>
+  <button
+    class='primary'
+    id='testPush'
+  >
+    Send Test Notification
+  </button>
+</div>
+
 <details>
 <summary><b>Advanced / Emergency Controls</b></summary>
 
