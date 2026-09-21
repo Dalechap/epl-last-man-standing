@@ -958,7 +958,41 @@ const c=$('#content');
 if(tab==='home'){
 const w=winner();
 
+const notificationsSupported=
+  'Notification' in window &&
+  'serviceWorker' in navigator;
+
+const notificationsEnabled=
+  notificationsSupported &&
+  Notification.permission==='granted';
+  
 c.innerHTML=`
+
+<div class='card'>
+<h2>Notifications</h2>
+
+<p>
+${
+notificationsEnabled
+?'Notifications are enabled on this device.'
+:notificationsSupported
+?'Turn on notifications for Matchweek updates and pick reminders.'
+:'Notifications are not supported on this device.'
+}
+</p>
+
+${
+notificationsSupported&&!notificationsEnabled
+?`<button
+class='primary'
+id='enableNotifications'
+>
+Enable Notifications
+</button>`
+:''
+}
+</div>
+
 <div class='card'>
 <h2>Join Competition</h2>
 
@@ -1067,7 +1101,13 @@ If every remaining player is eliminated in the same round, they all stay alive, 
 </div>
 `;
 
+const enableNotificationsBtn=
+  $('#enableNotifications');
 
+if(enableNotificationsBtn){
+  enableNotificationsBtn.onclick=
+    enableNotifications;
+}
 
 $('#joinBtn').onclick=()=>{
 if(state.registrationClosed){
