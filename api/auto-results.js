@@ -254,21 +254,22 @@ export default async function handler(req, res) {
 state.roundProcessed = true;
 changed = true;
 
+// Save the completed Matchweek before doing anything else.
+// This protects the results and eliminations if loading
+// the next Matchweek fails.
+await sql`
+  UPDATE competition_state
+  SET state = ${state},
+      updated_at = NOW()
+  WHERE id = 1
+`;
+
 // Stop here if processing has produced a winner
 const survivors = state.players.filter(
   player => player.alive
 );
 
 if (survivors.length === 1) {
-  if (changed) {
-    await sql`
-      UPDATE competition_state
-      SET state = ${state},
-          updated_at = NOW()
-      WHERE id = 1
-    `;
-  }
-
   return res.status(200).json({
     ok: true,
     changed: true,
@@ -278,47 +279,54 @@ if (survivors.length === 1) {
   });
 }
 
-// Automatically prepare the next round
+// Automatically prepare the next Matchweek
 const nextRound = Number(state.round) + 1;
 
-const nextResponse = await fetch(
-  `https://api.football-data.org/v4/competitions/PL/matches?season=2026&matchday=${nextRound}`,
-  {
-    headers: {
-      'X-Auth-Token': apiKey
+try {
+  const nextResponse = await fetch(
+    `https://api.football-data.org/v4/competitions/PL/matches?season=2026&matchday=${nextRound}`,
+    {
+      headers: {
+        'X-Auth-Token': apiKey
+      }
+    }
+  );
+
+  if (nextResponse.ok) {
+    const nextData = await nextResponse.json();
+    const nextMatches = nextData.matches || [];
+
+    if (nextMatches.length) {
+      state.round = nextRound;
+
+      state.fixtures = nextMatches.map(match => ({
+        home: match.homeTeam.name,
+        away: match.awayTeam.name,
+        kickoff: match.utcDate
+      }));
+
+      const kickoffTimes = state.fixtures
+        .map(f => new Date(f.kickoff).getTime())
+        .filter(Number.isFinite);
+
+      state.deadline = kickoffTimes.length
+        ? new Date(Math.min(...kickoffTimes)).toISOString()
+        : null;
+
+      state.deadlinePassed = false;
+      state.roundProcessed = false;
+      state.results = {};
+      state.processSnapshot = null;
     }
   }
-);
-
-if (nextResponse.ok) {
-  const nextData = await nextResponse.json();
-  const nextMatches = nextData.matches || [];
-
-  if (nextMatches.length) {
-    state.round = nextRound;
-
-    state.fixtures = nextMatches.map(match => ({
-      home: match.homeTeam.name,
-      away: match.awayTeam.name,
-      kickoff: match.utcDate
-    }));
-
-    const kickoffTimes = state.fixtures
-      .map(f => new Date(f.kickoff).getTime())
-      .filter(Number.isFinite);
-
-    state.deadline = kickoffTimes.length
-      ? new Date(Math.min(...kickoffTimes)).toISOString()
-      : null;
-
-    state.deadlinePassed = false;
-    state.roundProcessed = false;
-    state.results = {};
-    state.processSnapshot = null;
-  }
+} catch (error) {
+  console.error(
+    'Could not automatically load next Matchweek:',
+    error
+  );
 }
-    }
 
+}
     if (changed) {
       await sql`
         UPDATE competition_state
