@@ -781,7 +781,7 @@ render();
 async function advanceRound(){
 if(!state.roundProcessed){
 return notice(
-'Process the current round results first.',
+'Process the current Matchweek results first.',
 'warn'
 );
 }
@@ -957,7 +957,7 @@ The competition is complete.
 
 <div class='grid stats'>
 <div class='card'>
-<span>Current round</span>
+<span>Current Matchweek</span>
 <strong>${state.round}</strong>
 </div>
 
@@ -993,7 +993,7 @@ ${renderStandings()}
 
 <ul>
 <li>
-Competition starts at EPL Round 4 and continues until one player remains.
+Competition starts at EPL Matchweek 4 and continues until one player remains.
 </li>
 
 <li>
@@ -1420,7 +1420,7 @@ ${
 </div>
 
 <div class='pickLine'>
-Round ${displayRound}:
+Matchweek ${displayRound}:
 ${esc(shown)}
 </div>
 
@@ -1582,7 +1582,7 @@ automaticClosed
 </div>
 
 <p class='muted'>
-Selections close automatically when the first EPL match of the round kicks off.
+Selections close automatically when the first EPL match of the Matchweek kicks off.
 </p>
 
 <hr>
@@ -1604,7 +1604,7 @@ Match results
 </label>
 
 <p class='muted'>
-Results are checked automatically after the deadline. The round processes automatically once all selected-team matches are finished.
+Results are checked automatically after the deadline. The Matchweek processes automatically once all selected-team matches are finished.
 </p>
 
 ${teamRows}
@@ -1651,7 +1651,7 @@ ${
 class='primary'
 id='advance'
 >
-Open Round ${state.round+1}
+Open Matchweek ${state.round+1}
 </button>`
 :''
 }`
@@ -1996,7 +1996,7 @@ autoCheckResults();
 /*
 After selections close, check EPL results every 5 minutes.
 When every selected team's match is finished,
-process the round automatically.
+process the Matchweek automatically.
 */
 setInterval(()=>{
 autoCheckResults();
@@ -2005,7 +2005,7 @@ autoCheckResults();
 /*
 Load the shared state, then immediately check results.
 This means if nobody had the app open when matches finished,
-the round will be processed the next time somebody opens it.
+the Matchweek will be processed the next time somebody opens it.
 */
 loadState().then(()=>{
 autoCheckResults();
