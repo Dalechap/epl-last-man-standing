@@ -1072,7 +1072,6 @@ render();
     );
   }
 }
-}
 
 async function loadPlannerFixtures(){
   const matchweeks = [
