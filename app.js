@@ -1063,7 +1063,7 @@ const notificationsSupported=
 const notificationsEnabled=
   notificationsSupported &&
   Notification.permission==='granted';
-  
+
 c.innerHTML=`
 
 <div class='card'>
@@ -1072,7 +1072,7 @@ c.innerHTML=`
 <p>
 ${
 notificationsEnabled
-?'Notifications are enabled on this device.'
+?'Notifications are allowed on this device. Connect them to your player to receive Matchweek updates and pick reminders.'
 :notificationsSupported
 ?'Turn on notifications for Matchweek updates and pick reminders.'
 :'Notifications are not supported on this device.'
@@ -1080,17 +1080,18 @@ notificationsEnabled
 </p>
 
 ${
-notificationsSupported&&!notificationsEnabled
+notificationsSupported
 ?`<button
 class='primary'
 id='enableNotifications'
 >
-Enable Notifications
+${notificationsEnabled
+?'Connect Notifications'
+:'Enable Notifications'}
 </button>`
 :''
 }
 </div>
-
 <div class='card'>
 <h2>Join Competition</h2>
 
