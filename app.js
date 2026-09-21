@@ -630,7 +630,7 @@ render();
 notice(
 automatic
 ?`Matchweek ${state.round} was processed automatically. Everyone failed, so all remaining players stay alive. Their selected teams still count as used.`
-:'Everyone failed this round, so all remaining players stay alive. Their selected teams still count as used.'
+:'Everyone failed this Matchweek, so all remaining players stay alive. Their selected teams still count as used.'
 );
 
 return true;
@@ -722,7 +722,7 @@ async function autoCheckResults(){
 function undoProcessedRound(){
 if(!state.roundProcessed){
 return notice(
-'This round has not been processed yet.',
+'This Matchweek has not been processed yet.',
 'warn'
 );
 }
