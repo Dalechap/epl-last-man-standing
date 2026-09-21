@@ -85,6 +85,8 @@ export default async function handler(req, res) {
         `;
       }
 
+
+      
       return res.status(200).json({
         ok: true,
         changed,
@@ -282,6 +284,8 @@ if (survivors.length === 1) {
 // Automatically prepare the next Matchweek
 const nextRound = Number(state.round) + 1;
 
+  let openedNextMatchweek = false;
+
 try {
   const nextResponse = await fetch(
     `https://api.football-data.org/v4/competitions/PL/matches?season=2026&matchday=${nextRound}`,
@@ -313,10 +317,11 @@ try {
         ? new Date(Math.min(...kickoffTimes)).toISOString()
         : null;
 
-      state.deadlinePassed = false;
-      state.roundProcessed = false;
-      state.results = {};
-      state.processSnapshot = null;
+state.deadlinePassed = false;
+state.roundProcessed = false;
+state.results = {};
+state.processSnapshot = null;
+openedNextMatchweek = true;
     }
   }
 } catch (error) {
@@ -335,7 +340,21 @@ try {
         WHERE id = 1
       `;
     }
-
+    if (openedNextMatchweek) {
+      try {
+        await fetch(
+          'https://lastmanstandingsports.com/api/notifications',
+          {
+            method: 'POST'
+          }
+        );
+      } catch (error) {
+        console.error(
+          'New Matchweek notification trigger failed:',
+          error
+        );
+      }
+    }
     return res.status(200).json({
       ok: true,
       changed,
