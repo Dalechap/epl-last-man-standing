@@ -710,10 +710,10 @@ async function autoCheckResults(){
       );
     }
 
-    if(data.changed){
-      await loadState();
-    }
-
+   if(data.changed){
+  await loadState();
+  await checkNotifications();
+}
   }catch(error){
     console.error(
       'Automatic EPL results check failed:',
