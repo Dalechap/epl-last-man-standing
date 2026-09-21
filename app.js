@@ -1676,21 +1676,47 @@ if(tab==='fixtures'){
             <div class='fixtures'>
               ${
                 item.matches.length
-                  ?item.matches.map(match=>`
-                    <div class='fixtureCard'>
-                      <div>
-                        ${esc(match.homeTeam?.name || '')}
-                      </div>
+               item.matches.map(match=>`
+  <div class='plannerFixture'>
 
-                      <div class='muted'>
-                        v
-                      </div>
+    <div class='plannerTeam plannerHome'>
+      <span>
+        ${esc(match.homeTeam?.name || '')}
+      </span>
 
-                      <div>
-                        ${esc(match.awayTeam?.name || '')}
-                      </div>
-                    </div>
-                  `).join('')
+      ${
+        match.homeTeam?.crest
+          ?`<img
+              src='${esc(match.homeTeam.crest)}'
+              alt=''
+              class='plannerCrest'
+            >`
+          :''
+      }
+    </div>
+
+    <div class='plannerVs'>
+      v
+    </div>
+
+    <div class='plannerTeam plannerAway'>
+      ${
+        match.awayTeam?.crest
+          ?`<img
+              src='${esc(match.awayTeam.crest)}'
+              alt=''
+              class='plannerCrest'
+            >`
+          :''
+      }
+
+      <span>
+        ${esc(match.awayTeam?.name || '')}
+      </span>
+    </div>
+
+  </div>
+`).join('')
                   :`<p class='muted'>
                       Fixtures not available yet.
                     </p>`
