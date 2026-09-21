@@ -56,6 +56,106 @@ export default async function handler(req, res) {
       });
     }
 
+/*
+  Send the New Matchweek notification once
+  to every subscribed player who is still alive.
+*/
+const alivePlayers =
+  Array.isArray(state.players)
+    ? state.players.filter(
+        player => player.alive === true
+      )
+    : [];
+
+for (const player of alivePlayers) {
+  const subscriptions = await sql`
+    SELECT
+      endpoint,
+      p256dh,
+      auth
+    FROM push_subscriptions
+    WHERE lower(player_name) =
+      lower(${player.name}::text)
+      AND enabled = TRUE
+  `;
+
+  for (const subscription of subscriptions) {
+    const alreadySent = await sql`
+      SELECT id
+      FROM notification_log
+      WHERE lower(player_name) =
+        lower(${player.name}::text)
+        AND notification_type =
+          'new-matchweek'
+        AND matchweek =
+          ${Number(state.round)}
+        AND endpoint =
+          ${subscription.endpoint}
+      LIMIT 1
+    `;
+
+    if (alreadySent.length) {
+      continue;
+    }
+
+    const payload = JSON.stringify({
+      title:
+        `Matchweek ${state.round} is open`,
+      body:
+        'Make your selection before the deadline.',
+      url: '/?tab=pick'
+    });
+
+    try {
+      await webpush.sendNotification(
+        {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: subscription.p256dh,
+            auth: subscription.auth
+          }
+        },
+        payload
+      );
+
+      await sql`
+        INSERT INTO notification_log (
+          player_name,
+          notification_type,
+          matchweek,
+          endpoint
+        )
+        VALUES (
+          ${player.name},
+          'new-matchweek',
+          ${Number(state.round)},
+          ${subscription.endpoint}
+        )
+        ON CONFLICT DO NOTHING
+      `;
+
+    } catch (error) {
+      console.error(
+        'New Matchweek push failed:',
+        error
+      );
+
+      if (
+        error.statusCode === 404 ||
+        error.statusCode === 410
+      ) {
+        await sql`
+          UPDATE push_subscriptions
+          SET enabled = FALSE,
+              updated_at = NOW()
+          WHERE endpoint =
+            ${subscription.endpoint}
+        `;
+      }
+    }
+  }
+}
+    
     const deadline =
       new Date(state.deadline).getTime();
 
