@@ -1072,6 +1072,72 @@ render();
     );
   }
 }
+
+async function loadPlannerFixtures(){
+const matchweeks = [
+  Number(state.round),
+  Number(state.round) + 1,
+  Number(state.round) + 2,
+  Number(state.round) + 3
+  ];
+
+  const results = await Promise.all(
+    matchweeks.map(async matchweek => {
+      const response = await fetch(
+        `/api/football?round=${matchweek}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          `Could not load Matchweek ${matchweek}`
+        );
+      }
+
+      return {
+        matchweek,
+        matches: data.matches || []
+      };
+    })
+  );
+
+  return results;
+}
+
+async function loadPlannerFixtures(){
+  const matchweeks = [
+    Number(state.round),
+    Number(state.round) + 1,
+    Number(state.round) + 2,
+    Number(state.round) + 3
+  ];
+
+  const results = await Promise.all(
+    matchweeks.map(async matchweek => {
+      const response = await fetch(
+        `/api/football?round=${matchweek}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          `Could not load Matchweek ${matchweek}`
+        );
+      }
+
+      return {
+        matchweek,
+      matches: data.matches || []
+      };
+    })
+  );
+
+  return results;
+}
 async function render(){
 syncDeadline();
 
@@ -1566,6 +1632,91 @@ b.dataset.team
 }
 }
 
+if(tab==='fixtures'){
+  c.innerHTML=`
+    <h2>Fixtures</h2>
+
+    <div class='card'>
+      <p>
+        Loading the next four Matchweeks…
+      </p>
+    </div>
+  `;
+
+  try{
+    const planner=
+      await loadPlannerFixtures();
+
+    c.innerHTML=`
+      <h2>Fixtures</h2>
+
+      <p class='muted'>
+        Current Matchweek plus the next three.
+      </p>
+
+      ${
+        planner.map(item=>`
+          <div class='card'>
+            <div class='sectionHead'>
+              <div>
+                <div class='eyebrow dark'>
+                  ${
+                    item.matchweek===Number(state.round)
+                      ?'CURRENT MATCHWEEK'
+                      :'UPCOMING'
+                  }
+                </div>
+
+                <h2>
+                  Matchweek ${item.matchweek}
+                </h2>
+              </div>
+            </div>
+
+            <div class='fixtures'>
+              ${
+                item.matches.length
+                  ?item.matches.map(match=>`
+                    <div class='fixtureCard'>
+                      <div>
+                        ${esc(match.homeTeam?.name || '')}
+                      </div>
+
+                      <div class='muted'>
+                        v
+                      </div>
+
+                      <div>
+                        ${esc(match.awayTeam?.name || '')}
+                      </div>
+                    </div>
+                  `).join('')
+                  :`<p class='muted'>
+                      Fixtures not available yet.
+                    </p>`
+              }
+            </div>
+          </div>
+        `).join('')
+      }
+    `;
+
+  }catch(error){
+    console.error(
+      'Fixture planner failed:',
+      error
+    );
+
+    c.innerHTML=`
+      <h2>Fixtures</h2>
+
+      <div class='notice warn'>
+        Could not load upcoming fixtures.
+      </div>
+    `;
+  }
+}
+  
 if(tab==='players'){
 c.innerHTML=`
 <h2>Players</h2>
