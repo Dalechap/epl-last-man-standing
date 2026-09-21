@@ -1,0 +1,9 @@
+{
+  "name": "Last Man Standing",
+  "short_name": "LMS",
+  "description": "Last Man Standing competition",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111827"
+}
