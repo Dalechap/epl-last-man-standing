@@ -1675,8 +1675,8 @@ if(tab==='fixtures'){
 
             <div class='fixtures'>
               ${
-                item.matches.length
-item.matches.map(match=>`
+item.matches.length
+  ?item.matches.map(match=>
   <div class='fixtureCard'>
     <div>
       ${esc(match.homeTeam?.name || '')}
