@@ -968,13 +968,62 @@ async function enableNotifications(){
         });
     }
 
-    notice(
-      'Notifications are ready. Select your player to connect this device.',
-      'ok'
-    );
+    const playerName=
+  prompt('Enter your player name');
 
-    render();
+if(!playerName){
+  notice(
+    'Notification setup cancelled.',
+    'warn'
+  );
+  render();
+  return;
+}
 
+const pin=
+  prompt(
+    `Enter the 4-digit PIN for ${playerName}`
+  );
+
+if(!pin){
+  notice(
+    'Notification setup cancelled.',
+    'warn'
+  );
+  render();
+  return;
+}
+
+const subscribeResponse=
+  await fetch('/api/push-subscribe',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      playerName,
+      pin,
+      subscription:
+        subscription.toJSON()
+    })
+  });
+
+const subscribeData=
+  await subscribeResponse.json();
+
+if(!subscribeResponse.ok){
+  throw new Error(
+    subscribeData.error||
+    'Could not save notification subscription'
+  );
+}
+
+notice(
+  `Notifications are enabled for ${subscribeData.playerName}.`,
+  'ok'
+);
+
+render();
   }catch(error){
     console.error(
       'Notification setup failed:',
