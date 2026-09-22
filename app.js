@@ -1845,13 +1845,18 @@ if(tab==='fixtures'){
       return;
     }
     c.innerHTML=`
-      <h2>Fixtures</h2>
+     <div class='fixturesPlannerHead'>
+  <div>
+    <h2>Fixtures</h2>
+    <p class='muted'>
+      View the next 3 Matchweeks to help plan your future team selections.
+    </p>
+  </div>
 
-      <p class='muted'>
-  Current Matchweek plus the next three.<br>
-  Tap a Matchweek below to view its fixtures.
-</p>
-
+  <button id='toggleFutureMatchweeks' class='futureMatchweeksToggle' type='button'>
+    ▼
+  </button>
+</div>
       ${
         planner.map(item=>`
           <details class='card matchweekDropdown' ${item.matchweek===Number(state.round)?'open':''}>
@@ -1959,7 +1964,36 @@ item.matches.length
         `).join('')
       }
     `;
+`const futureToggle=$('#toggleFutureMatchweeks');
 
+if(futureToggle){
+  futureToggle.onclick=()=>{
+    const futureMatchweeks=[
+      ...document.querySelectorAll('.matchweekDropdown')
+    ].filter(
+      details=>
+        !details.hasAttribute('open')
+        || details.querySelector('.eyebrow')?.textContent.trim()==='UPCOMING'
+    ).filter(
+      details=>
+        details.querySelector('.eyebrow')?.textContent.trim()==='UPCOMING'
+    );
+
+    const shouldOpen=
+      futureMatchweeks.some(
+        details=>!details.open
+      );
+
+    futureMatchweeks.forEach(
+      details=>{
+        details.open=shouldOpen;
+      }
+    );
+
+    futureToggle.textContent=
+      shouldOpen?'▲':'▼';
+  };
+}
   }catch(error){
     console.error(
       'Fixture planner failed:',
