@@ -1853,7 +1853,7 @@ if(tab==='fixtures'){
 
       ${
         planner.map(item=>`
-          <div class='card'>
+          <details class='card matchweekDropdown' ${item.matchweek===Number(state.round)?'open':''}>
             <div class='sectionHead'>
               <div>
                 <div class='eyebrow dark'>
@@ -1953,7 +1953,7 @@ item.matches.length
                     </p>`
               }
             </div>
-          </div>
+         </details>
         `).join('')
       }
     `;
