@@ -1432,12 +1432,15 @@ const enableNotificationsBtn=
 
 if(enableNotificationsBtn){
   enableNotificationsBtn.textContent=
-    'Enable Notifications TEST';
+    'Enable Notifications TEST 2';
 
-  enableNotificationsBtn.onclick=()=>{
-    alert('Notification button works');
-    enableNotifications();
-  };
+  enableNotificationsBtn.addEventListener(
+    'click',
+    ()=>{
+      alert('Notification event listener works');
+      enableNotifications();
+    }
+  );
 }
 
 if($('#joinBtn')) $('#joinBtn').onclick=()=>{
