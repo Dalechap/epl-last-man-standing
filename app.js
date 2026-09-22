@@ -1427,21 +1427,7 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
 </div>
 `;
 
-const enableNotificationsBtn=
-  $('#enableNotifications');
 
-if(enableNotificationsBtn){
-  enableNotificationsBtn.textContent=
-    'Enable Notifications TEST 2';
-
-  enableNotificationsBtn.addEventListener(
-    'click',
-    ()=>{
-      alert('Notification event listener works');
-      enableNotifications();
-    }
-  );
-}
 
 if($('#joinBtn')) $('#joinBtn').onclick=()=>{
 if(state.registrationClosed){
@@ -1525,7 +1511,15 @@ notice(
     </div>
   `;
 
-$('#homeAdminBtn').onclick=async ()=>{
+const enableNotificationsBtn=
+  $('#enableNotifications');
+
+if(enableNotificationsBtn){
+  enableNotificationsBtn.onclick=
+    enableNotifications;
+}
+  
+  $('#homeAdminBtn').onclick=async ()=>{
   if(!adminUnlocked){
     const pin=prompt('Enter Admin PIN:');
 
