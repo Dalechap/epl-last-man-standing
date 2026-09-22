@@ -1727,7 +1727,15 @@ item.matches.length
  ?item.matches.map(match=>`
     <div class='fixtureCard'>
 
-      <div>
+      <div class='${
+  plannerPlayer?.used?.some(
+    team=>
+      team.replace(/ FC$/,'')===
+      (match.homeTeam?.name||'').replace(/ FC$/,'')
+  )
+    ?'plannerTeamUsed'
+    :''
+}'>
         ${
           match.homeTeam?.crest
             ?`<img
@@ -1745,7 +1753,7 @@ ${
       team.replace(/ FC$/,'')===
       (match.homeTeam?.name||'').replace(/ FC$/,'')
   )
-    ?` <strong>· USED</strong>`
+?` <span class='plannerUsed'>Used</span>`
     :''
 }
       </div>
@@ -1754,7 +1762,15 @@ ${
         v
       </div>
 
-      <div>
+      <div class='${
+  plannerPlayer?.used?.some(
+    team=>
+      team.replace(/ FC$/,'')===
+      (match.awayTeam?.name||'').replace(/ FC$/,'')
+  )
+    ?'plannerTeamUsed'
+    :''
+}'>
         ${
           match.awayTeam?.crest
             ?`<img
@@ -1772,7 +1788,7 @@ ${
       team.replace(/ FC$/,'')===
       (match.awayTeam?.name||'').replace(/ FC$/,'')
   )
-    ?` <strong>· USED</strong>`
+   ?` <span class='plannerUsed'>Used</span>`
     :''
 }
       </div>
