@@ -1604,22 +1604,9 @@ Matchweek ${state.round}
 </div>
 </div>
 
-<label>Player</label>
-
-<select id='playerSel'>
-${
-state.players
-.filter(x=>x.alive)
-.map(x=>
-`<option
-${x.name===p.name?'selected':''}
->
-${esc(x.name)}
-</option>`
-)
-.join('')
-}
-</select>
+<div class='pickGreeting'>
+  Hi ${esc(authenticatedPlayer)}, choose your team for Matchweek ${state.round}.
+</div>
 
 ${
 current
@@ -1696,60 +1683,6 @@ p.used.length
 </p>
 </section>
 `;
-
-$('#playerSel').onchange=async e=>{
-  const target=
-  state.players.find(
-  p=>p.name===e.target.value
-  );
-
-  if(target){
-  const pin=prompt(
-    `Enter PIN for ${target.name}:`
-  );
-
-  if(!pin){
-    render();
-    return;
-  }
-
-  try{
-    const response=await fetch('/api/auth',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        playerName:target.name,
-        pin:pin
-      })
-    });
-
-    const data=await response.json();
-
-    if(!response.ok){
-      notice(data.error||'Incorrect PIN.','warn');
-      render();
-      return;
-    }
-
-    authenticatedPlayer=target.name;
-    authenticatedPin=pin;
-
-  }catch(error){
-    notice(
-      'Unable to authenticate. Please try again.',
-      'warn'
-    );
-    render();
-    return;
-  }
-}
-
-state.selectedPlayer=target.name;
-
-  notice('');
-
-  render();
-};
 
 if(!state.deadlinePassed){
 if($('#savePick')){
