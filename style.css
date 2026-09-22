@@ -205,6 +205,13 @@
   gap:16px;
 }
 
+.fixturesPlannerHead{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:18px;
+}
+
 .fixturesPlannerHead h2{
   margin:0;
 }
@@ -222,6 +229,13 @@
   align-items:center;
   justify-content:center;
   cursor:pointer;
+}
+
+.fixturesPlannerHelp{
+  margin-top:16px;
+  margin-bottom:24px;
+  font-size:19px;
+  line-height:1.45;
 }
 
 .fixturesPlannerHelp{
