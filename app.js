@@ -1083,23 +1083,36 @@ async function loadPlannerFixtures(){
 
   const results = await Promise.all(
     matchweeks.map(async matchweek => {
-      const response = await fetch(
-        `/api/football?round=${matchweek}`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-          `Could not load Matchweek ${matchweek}`
+      try{
+        const response = await fetch(
+          `/api/football?round=${matchweek}`
         );
-      }
 
-      return {
-        matchweek,
-      matches: data.matches || []
-      };
+        const data = await response.json();
+
+        if(!response.ok){
+          throw new Error(
+            data.error ||
+            `Could not load Matchweek ${matchweek}`
+          );
+        }
+
+        return {
+          matchweek,
+          matches:data.matches || []
+        };
+
+      }catch(error){
+        console.error(
+          `Could not load Matchweek ${matchweek}:`,
+          error
+        );
+
+        return {
+          matchweek,
+          matches:[]
+        };
+      }
     })
   );
 
