@@ -1081,37 +1081,55 @@ async function loadPlannerFixtures(){
     Number(state.round) + 3
   ];
 
+  async function loadMatchweek(matchweek){
+    const response = await fetch(
+      `/api/football?round=${matchweek}`
+    );
+
+    const data = await response.json();
+
+    if(!response.ok){
+      throw new Error(
+        data.error ||
+        `Could not load Matchweek ${matchweek}`
+      );
+    }
+
+    return {
+      matchweek,
+      matches:data.matches || []
+    };
+  }
+
   const results = await Promise.all(
     matchweeks.map(async matchweek => {
       try{
-        const response = await fetch(
-          `/api/football?round=${matchweek}`
+        return await loadMatchweek(matchweek);
+
+      }catch(firstError){
+        console.warn(
+          `Retrying Matchweek ${matchweek}:`,
+          firstError
         );
 
-        const data = await response.json();
+        await new Promise(
+          resolve => setTimeout(resolve, 500)
+        );
 
-        if(!response.ok){
-          throw new Error(
-            data.error ||
-            `Could not load Matchweek ${matchweek}`
+        try{
+          return await loadMatchweek(matchweek);
+
+        }catch(secondError){
+          console.error(
+            `Could not load Matchweek ${matchweek}:`,
+            secondError
           );
+
+          return {
+            matchweek,
+            matches:[]
+          };
         }
-
-        return {
-          matchweek,
-          matches:data.matches || []
-        };
-
-      }catch(error){
-        console.error(
-          `Could not load Matchweek ${matchweek}:`,
-          error
-        );
-
-        return {
-          matchweek,
-          matches:[]
-        };
       }
     })
   );
@@ -1613,6 +1631,7 @@ b.dataset.team
 }
 
 if(tab==='fixtures'){
+    const fixturesTabAtLoad = tab;
     if(!authenticatedPlayer){
     const selectedName=
       prompt('Enter your player name:');
@@ -1708,6 +1727,9 @@ if(tab==='fixtures'){
     const planner=
       await loadPlannerFixtures();
 
+        if(tab !== fixturesTabAtLoad){
+      return;
+    }
     c.innerHTML=`
       <h2>Fixtures</h2>
 
