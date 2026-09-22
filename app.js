@@ -49,6 +49,10 @@ let tab =
 let adminUnlocked=false;
 let authenticatedPlayer=null;
 let authenticatedPin=null;
+
+let plannerFixturesCache=null;
+let plannerFixturesCacheRound=null;
+
 let authenticatedAdminPin=null;
 
 const COMPETITION_CODE='lms3973';
@@ -1074,6 +1078,16 @@ render();
 }
 
 async function loadPlannerFixtures(){
+
+    const currentRound = Number(state.round);
+
+  if(
+    plannerFixturesCache &&
+    plannerFixturesCacheRound === currentRound
+  ){
+    return plannerFixturesCache;
+  }
+  
   const matchweeks = [
     Number(state.round),
     Number(state.round) + 1,
@@ -1134,7 +1148,17 @@ async function loadPlannerFixtures(){
     })
   );
 
-  return results;
+    const hasFixtures = results.some(
+    item => item.matches && item.matches.length
+  );
+
+  if(!hasFixtures){
+    return results;
+  }
+  plannerFixturesCache = results;
+  plannerFixturesCacheRound = currentRound;
+
+  return plannerFixturesCache;
 }
 async function render(){
 syncDeadline();
