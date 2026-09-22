@@ -1845,16 +1845,10 @@ if(tab==='fixtures'){
       return;
     }
     c.innerHTML=`
-   <div class='fixturesPlannerHead'>
-  <h2>Fixtures</h2>
-
-  <button id='toggleFutureMatchweeks' class='futureMatchweeksToggle' type='button'>
-    ▼
-  </button>
-</div>
+   <h2>Fixtures</h2>
 
 <p class='muted fixturesPlannerHelp'>
- The current Matchweek is shown below. Tap the arrow to view the next 3 Matchweeks and plan your future team selections.
+  The current Matchweek is shown below. Scroll down further to see future Matchweeks and plan future selections.
 </p>
    ${    
         planner.map(item=>`
@@ -1963,36 +1957,7 @@ item.matches.length
         `).join('')
       }
     `;
-const futureToggle=$('#toggleFutureMatchweeks');
 
-if(futureToggle){
-  futureToggle.onclick=()=>{
-    const futureMatchweeks=[
-      ...document.querySelectorAll('.matchweekDropdown')
-    ].filter(
-      details=>
-        !details.hasAttribute('open')
-        || details.querySelector('.eyebrow')?.textContent.trim()==='UPCOMING'
-    ).filter(
-      details=>
-        details.querySelector('.eyebrow')?.textContent.trim()==='UPCOMING'
-    );
-
-    const shouldOpen=
-      futureMatchweeks.some(
-        details=>!details.open
-      );
-
-    futureMatchweeks.forEach(
-      details=>{
-        details.open=shouldOpen;
-      }
-    );
-
-    futureToggle.textContent=
-      shouldOpen?'▲':'▼';
-  };
-}
   }catch(error){
     console.error(
       'Fixture planner failed:',
