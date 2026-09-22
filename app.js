@@ -1397,7 +1397,7 @@ ${renderStandings()}
 
 <ul>
 <li>
-Competition starts at EPL Matchweek 4 and continues until one player remains.
+The competition continues until one player remains.
 </li>
 
 <li>
