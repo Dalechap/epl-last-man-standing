@@ -1431,6 +1431,9 @@ const enableNotificationsBtn=
   $('#enableNotifications');
 
 if(enableNotificationsBtn){
+  enableNotificationsBtn.textContent=
+    'Enable Notifications TEST';
+
   enableNotificationsBtn.onclick=()=>{
     alert('Notification button works');
     enableNotifications();
