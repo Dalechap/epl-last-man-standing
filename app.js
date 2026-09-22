@@ -1550,13 +1550,6 @@ $('#homeAdminBtn').onclick=async ()=>{
   render();
 };
 
-  const finalEnableNotificationsBtn=
-  $('#enableNotifications');
-
-if(finalEnableNotificationsBtn){
-  finalEnableNotificationsBtn.onclick=
-    enableNotifications;
-}
 
 if(tab==='pick'){
   if(!authenticatedPlayer){
