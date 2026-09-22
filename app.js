@@ -1431,8 +1431,10 @@ const enableNotificationsBtn=
   $('#enableNotifications');
 
 if(enableNotificationsBtn){
-  enableNotificationsBtn.onclick=
-    enableNotifications;
+  enableNotificationsBtn.onclick=()=>{
+    alert('Notification button works');
+    enableNotifications();
+  };
 }
 
 if($('#joinBtn')) $('#joinBtn').onclick=()=>{
