@@ -1845,19 +1845,17 @@ if(tab==='fixtures'){
       return;
     }
     c.innerHTML=`
-     <div class='fixturesPlannerHead'>
-  <div>
-    <h2>Fixtures</h2>
-    <p class='muted'>
-      View the next 3 Matchweeks to help plan your future team selections.
-    </p>
-  </div>
+   <div class='fixturesPlannerHead'>
+  <h2>Fixtures</h2>
 
   <button id='toggleFutureMatchweeks' class='futureMatchweeksToggle' type='button'>
     ▼
   </button>
 </div>
-      ${
+
+<p class='muted fixturesPlannerHelp'>
+  Tap the arrow to view the next 3 Matchweeks and plan your future team selections.
+</p>
         planner.map(item=>`
           <details class='card matchweekDropdown' ${item.matchweek===Number(state.round)?'open':''}>
             <summary class='matchweekSummary'>
