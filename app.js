@@ -1438,7 +1438,7 @@ if(enableNotificationsBtn){
     enableNotifications;
 }
 
-$('#joinBtn').onclick=()=>{
+if($('#joinBtn')) $('#joinBtn').onclick=()=>{
 if(state.registrationClosed){
   $('#joinMessage').innerHTML=
     `<div class='notice warn'>Registration is closed. The competition has already started.</div>`;
