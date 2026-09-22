@@ -1520,10 +1520,44 @@ notice(
     </div>
   `;
 
-  $('#homeAdminBtn').onclick=()=>{
-    tab='admin';
-    render();
-  };
+$('#homeAdminBtn').onclick=async ()=>{
+  if(!adminUnlocked){
+    const pin=prompt('Enter Admin PIN:');
+
+    if(!pin){
+      return;
+    }
+
+    try{
+      const response=await fetch('/api/admin-auth',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({pin})
+      });
+
+      const data=await response.json();
+
+      if(!response.ok){
+        notice(data.error||'Incorrect Admin PIN.','warn');
+        return;
+      }
+
+      adminUnlocked=true;
+      authenticatedAdminPin=pin;
+
+    }catch(error){
+      notice(
+        'Unable to authenticate Admin. Please try again.',
+        'warn'
+      );
+      return;
+    }
+  }
+
+  tab='admin';
+  notice('');
+  render();
+};
 }
 
 if(tab==='pick'){
