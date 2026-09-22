@@ -1600,7 +1600,7 @@ c.innerHTML=`
 Matchweek ${state.round}
 </div>
 
-<h2>Make my pick</h2>
+
 </div>
 </div>
 
