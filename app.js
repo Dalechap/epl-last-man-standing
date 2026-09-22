@@ -1964,7 +1964,7 @@ item.matches.length
         `).join('')
       }
     `;
-`const futureToggle=$('#toggleFutureMatchweeks');
+const futureToggle=$('#toggleFutureMatchweeks');
 
 if(futureToggle){
   futureToggle.onclick=()=>{
