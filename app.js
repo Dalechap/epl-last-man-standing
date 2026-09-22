@@ -1505,6 +1505,18 @@ notice(
 );
 });
 };
+  c.innerHTML += `
+    <div class='homeAdmin'>
+      <button id='homeAdminBtn' class='secondary'>
+        ⚙ Admin
+      </button>
+    </div>
+  `;
+
+  $('#homeAdminBtn').onclick=()=>{
+    tab='admin';
+    render();
+  };
 }
 
 if(tab==='pick'){
