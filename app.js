@@ -1408,7 +1408,7 @@ The competition continues until one player remains.
 </li>
 
 <li>
-Pick one EPL team each round. A team can only be used once by each player.
+Pick one EPL team each Matchweek. A team can only be used once by each player.
 </li>
 
 <li>
@@ -1424,7 +1424,7 @@ No pick before the deadline = eliminated.
 </li>
 
 <li>
-If every remaining player is eliminated in the same round, they all stay alive, but their selected teams still count as used.
+If every remaining player is eliminated in the same Matchweek, they all stay alive, but their selected teams still count as used.
 </li>
 </ul>
 </div>
