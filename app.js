@@ -1854,7 +1854,7 @@ if(tab==='fixtures'){
 </div>
 
 <p class='muted fixturesPlannerHelp'>
-  Tap the arrow to view the next 3 Matchweeks and plan your future team selections.
+ The current Matchweek is shown below. Tap the arrow to view the next 3 Matchweeks and plan your future team selections.
 </p>
         planner.map(item=>`
           <details class='card matchweekDropdown' ${item.matchweek===Number(state.round)?'open':''}>
