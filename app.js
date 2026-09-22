@@ -1318,6 +1318,9 @@ Enable Notifications
 :''
 }
 
+${
+!state.registrationClosed
+?`
 <div class='card'>
 <h2>Join Competition</h2>
 
@@ -1337,6 +1340,10 @@ Join Competition
 <p class='muted joinExisting'>
   Already joined? Use Make Pick to sign in.
 </p>
+</div>
+`
+:''
+}
 ${
 w
 ?`<div class='winnerCard'>
