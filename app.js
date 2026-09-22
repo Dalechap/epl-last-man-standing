@@ -1511,64 +1511,74 @@ notice(
 }
 
 if(tab==='pick'){
- if(!authenticatedPlayer){
-  const selectedName=prompt('Enter your player name:');
+  if(!authenticatedPlayer){
+    const login=
+      await playerLoginModal();
 
-  if(!selectedName){
-    tab='home';
-    render();
-    return;
+    if(!login){
+      tab='home';
+      render();
+      return;
+    }
+
+    const selected=
+      state.players.find(
+        p=>
+          p.alive &&
+          p.name.toLowerCase()===
+          login.name.toLowerCase()
+      );
+
+    if(!selected){
+      notice(
+        'Player not found or already eliminated.',
+        'warn'
+      );
+      tab='home';
+      render();
+      return;
+    }
+
+    try{
+      const response=
+        await fetch('/api/auth',{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json'
+          },
+          body:JSON.stringify({
+            playerName:selected.name,
+            pin:login.pin
+          })
+        });
+
+      const data=
+        await response.json();
+
+      if(!response.ok){
+        notice(
+          data.error||'Incorrect PIN.',
+          'warn'
+        );
+        tab='home';
+        render();
+        return;
+      }
+
+      authenticatedPlayer=selected.name;
+      authenticatedPin=login.pin;
+      state.selectedPlayer=selected.name;
+
+    }catch(error){
+      notice(
+        'Unable to authenticate. Please try again.',
+        'warn'
+      );
+      tab='home';
+      render();
+      return;
+    }
   }
-
-  const selected=state.players.find(
-    p=>p.alive && p.name.toLowerCase()===selectedName.trim().toLowerCase()
-  );
-
-  if(!selected){
-    notice('Player not found or already eliminated.','warn');
-    tab='home';
-    render();
-    return;
-  }
-
-const pin=prompt(`Enter PIN for ${selected.name}:`);
-
-if(!pin){
-  tab='home';
-  render();
-  return;
-}
-
-try{
-  const response=await fetch('/api/auth',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      playerName:selected.name,
-      pin:pin
-    })
-  });
-
-  const data=await response.json();
-
-  if(!response.ok){
-    notice(data.error||'Incorrect PIN.','warn');
-    tab='home';
-    render();
-    return;
-  }
-
-  authenticatedPlayer=selected.name;
-  authenticatedPin=pin;
-  state.selectedPlayer=selected.name;
-
-}catch(error){
-  notice('Unable to authenticate. Please try again.','warn');
-  tab='home';
-  render();
-  return;
-}
-}
 const p=player();
 
 const current=
