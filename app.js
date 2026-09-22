@@ -1854,22 +1854,23 @@ if(tab==='fixtures'){
       ${
         planner.map(item=>`
           <details class='card matchweekDropdown' ${item.matchweek===Number(state.round)?'open':''}>
-            <div class='sectionHead'>
-              <div>
-                <div class='eyebrow dark'>
-                  ${
-                    item.matchweek===Number(state.round)
-                      ?'CURRENT MATCHWEEK'
-                      :'UPCOMING'
-                  }
-                </div>
+            <summary class='matchweekSummary'>
+  <div class='sectionHead'>
+    <div>
+      <div class='eyebrow dark'>
+        ${
+          item.matchweek===Number(state.round)
+            ?'CURRENT MATCHWEEK'
+            :'UPCOMING'
+        }
+      </div>
 
-                <h2>
-                  Matchweek ${item.matchweek}
-                </h2>
-              </div>
-            </div>
-
+      <h2>
+        Matchweek ${item.matchweek}
+      </h2>
+    </div>
+  </div>
+</summary>
             <div class='fixtures'>
               ${
 item.matches.length
