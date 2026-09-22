@@ -189,7 +189,12 @@
 
 .homeAdmin button{
   width:auto;
-  padding:8px 16px;
+  padding:6px 10px;
   font-size:14px;
-  opacity:.7;
+  font-weight:600;
+  color:#6f6278;
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  opacity:.75;
 }
