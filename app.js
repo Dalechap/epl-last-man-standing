@@ -1773,11 +1773,11 @@ b.dataset.team
 
 if(tab==='fixtures'){
     const fixturesTabAtLoad = tab;
-    if(!authenticatedPlayer){
-    const selectedName=
-      prompt('Enter your player name:');
+  if(!authenticatedPlayer){
+    const login=
+      await playerLoginModal();
 
-    if(!selectedName){
+    if(!login){
       tab='home';
       render();
       return;
@@ -1788,7 +1788,7 @@ if(tab==='fixtures'){
         p=>
           p.alive &&
           p.name.toLowerCase()===
-          selectedName.trim().toLowerCase()
+          login.name.toLowerCase()
       );
 
     if(!selected){
@@ -1796,15 +1796,6 @@ if(tab==='fixtures'){
         'Player not found or already eliminated.',
         'warn'
       );
-      tab='home';
-      render();
-      return;
-    }
-
-    const pin=
-      prompt(`Enter PIN for ${selected.name}:`);
-
-    if(!pin){
       tab='home';
       render();
       return;
@@ -1819,7 +1810,7 @@ if(tab==='fixtures'){
           },
           body:JSON.stringify({
             playerName:selected.name,
-            pin:pin
+            pin:login.pin
           })
         });
 
@@ -1837,7 +1828,7 @@ if(tab==='fixtures'){
       }
 
       authenticatedPlayer=selected.name;
-      authenticatedPin=pin;
+      authenticatedPin=login.pin;
 
     }catch(error){
       notice(
