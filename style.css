@@ -198,3 +198,33 @@
   box-shadow:none;
   opacity:.75;
 }
+.fixturesPlannerHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.fixturesPlannerHead h2{
+  margin:0;
+}
+
+.futureMatchweeksToggle{
+  width:54px;
+  height:54px;
+  min-width:54px;
+  padding:0;
+  border-radius:14px;
+  font-size:30px;
+  font-weight:800;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.fixturesPlannerHelp{
+  margin-top:12px;
+  margin-bottom:24px;
+}
