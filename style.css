@@ -171,3 +171,14 @@
   line-height:1.25;
   margin:12px 0 24px;
 }
+.joinIntro{
+  font-size:18px;
+  line-height:1.4;
+  margin:12px 0 22px;
+}
+
+.joinExisting{
+  text-align:center;
+  font-size:15px;
+  margin:18px 0 0;
+}
