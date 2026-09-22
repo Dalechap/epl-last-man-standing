@@ -567,9 +567,6 @@ notice(
 'warn'
 );
 });
-notice(
-`${p.name} selected ${team} for Matchweek ${state.round}.`
-);
 
 render();
 }
