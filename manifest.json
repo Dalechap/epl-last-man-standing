@@ -4,6 +4,20 @@
   "description": "Last Man Standing competition",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#111827"
+  "background_color": "#f6f3f8",
+  "theme_color": "#43105b",
+  "icons": [
+    {
+      "src": "/lms-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/lms-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
