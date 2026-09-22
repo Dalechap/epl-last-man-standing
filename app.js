@@ -1321,9 +1321,8 @@ Enable Notifications
 <div class='card'>
 <h2>Join Competition</h2>
 
-<p>
-<b>New player?</b>
-Register your name and create a 4-digit PIN.
+<p class='joinIntro'>
+  New here? Create your player profile and 4-digit PIN.
 </p>
 
 <button
@@ -1335,11 +1334,9 @@ Join Competition
 
 <div id='joinMessage'></div>
 
-<p class='muted'>
-<b>Already joined?</b>
-Tap Make Pick in the menu to choose your team.
+<p class='muted joinExisting'>
+  Already joined? Use Make Pick to sign in.
 </p>
-</div>
 ${
 w
 ?`<div class='winnerCard'>
