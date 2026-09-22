@@ -1120,19 +1120,15 @@ async function loadPlannerFixtures(){
           return await loadMatchweek(matchweek);
 
         }catch(secondError){
-  console.error(
-    `Could not load Matchweek ${matchweek}:`,
-    secondError
-  );
+          console.error(
+            `Could not load Matchweek ${matchweek}:`,
+            secondError
+          );
 
-  return {
-    matchweek,
-    matches:[],
-    loadError:
-      secondError.message ||
-      'Unknown fixture loading error'
-  };
-}
+          return {
+            matchweek,
+            matches:[]
+          };
         }
       }
     })
@@ -1839,8 +1835,8 @@ item.matches.length
   `;
 }).join('')
                   :`<p class='muted'>
-    Fixtures not available yet.
-  </p>`
+                      Fixtures not available yet.
+                    </p>`
               }
             </div>
           </div>
