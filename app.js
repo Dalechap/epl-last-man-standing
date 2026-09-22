@@ -1724,77 +1724,81 @@ if(tab==='fixtures'){
             <div class='fixtures'>
               ${
 item.matches.length
- ?item.matches.map(match=>`
+ ?item.matches.map(match=>{
+  const home=
+    match.homeTeam?.name || '';
+
+  const away=
+    match.awayTeam?.name || '';
+
+  const homeUsed=
+    plannerPlayer?.used?.some(
+      team=>
+        team.replace(/ FC$/,'')===
+        home.replace(/ FC$/,'')
+    );
+
+  const awayUsed=
+    plannerPlayer?.used?.some(
+      team=>
+        team.replace(/ FC$/,'')===
+        away.replace(/ FC$/,'')
+    );
+
+  return `
     <div class='fixtureCard'>
 
-      <div class='${
-  plannerPlayer?.used?.some(
-    team=>
-      team.replace(/ FC$/,'')===
-      (match.homeTeam?.name||'').replace(/ FC$/,'')
-  )
-    ?'plannerTeamUsed'
-    :''
-}'>
+      <div class='plannerTeam ${homeUsed?'plannerTeamUsed':''}'>
         ${
           match.homeTeam?.crest
             ?`<img
+                class='plannerCrest'
                 src='${esc(match.homeTeam.crest)}'
                 alt=''
-                width='28'
-                height='28'
               >`
             :''
         }
-       ${esc(match.homeTeam?.name || '')}
-${
-  plannerPlayer?.used?.some(
-    team=>
-      team.replace(/ FC$/,'')===
-      (match.homeTeam?.name||'').replace(/ FC$/,'')
-  )
-?` <span class='plannerUsed'>Used</span>`
-    :''
-}
+
+        <span class='plannerTeamName'>
+          ${esc(home)}
+        </span>
+
+        ${
+          homeUsed
+            ?`<span class='plannerUsed'>Used</span>`
+            :''
+        }
       </div>
 
       <div class='muted'>
         v
       </div>
 
-      <div class='${
-  plannerPlayer?.used?.some(
-    team=>
-      team.replace(/ FC$/,'')===
-      (match.awayTeam?.name||'').replace(/ FC$/,'')
-  )
-    ?'plannerTeamUsed'
-    :''
-}'>
+      <div class='plannerTeam ${awayUsed?'plannerTeamUsed':''}'>
         ${
           match.awayTeam?.crest
             ?`<img
+                class='plannerCrest'
                 src='${esc(match.awayTeam.crest)}'
                 alt=''
-                width='28'
-                height='28'
               >`
             :''
         }
-        ${esc(match.awayTeam?.name || '')}
-${
-  plannerPlayer?.used?.some(
-    team=>
-      team.replace(/ FC$/,'')===
-      (match.awayTeam?.name||'').replace(/ FC$/,'')
-  )
-   ?` <span class='plannerUsed'>Used</span>`
-    :''
-}
+
+        <span class='plannerTeamName'>
+          ${esc(away)}
+        </span>
+
+        ${
+          awayUsed
+            ?`<span class='plannerUsed'>Used</span>`
+            :''
+        }
       </div>
 
     </div>
-`).join('')
+  `;
+}).join('')
                   :`<p class='muted'>
                       Fixtures not available yet.
                     </p>`
