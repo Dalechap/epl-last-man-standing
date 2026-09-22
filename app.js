@@ -1839,11 +1839,7 @@ item.matches.length
   `;
 }).join('')
                   :`<p class='muted'>
-    ${
-      item.loadError
-        ?`ERROR: ${esc(item.loadError)}`
-        :'Fixtures not available yet.'
-    }
+    Fixtures not available yet.
   </p>`
               }
             </div>
