@@ -1848,8 +1848,9 @@ if(tab==='fixtures'){
       <h2>Fixtures</h2>
 
       <p class='muted'>
-        Current Matchweek plus the next three.
-      </p>
+  Current Matchweek plus the next three.<br>
+  Tap a Matchweek below to view its fixtures.
+</p>
 
       ${
         planner.map(item=>`
