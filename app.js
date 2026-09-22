@@ -1160,6 +1160,113 @@ async function loadPlannerFixtures(){
 
   return plannerFixturesCache;
 }
+function playerLoginModal(){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+    overlay.className='loginOverlay';
+
+    overlay.innerHTML=`
+      <div class='loginModal'>
+        <div class='eyebrow dark'>PLAYER LOGIN</div>
+
+        <h2>Welcome back</h2>
+
+        <p class='muted'>
+          Enter your player name and 4-digit PIN.
+        </p>
+
+        <label class='loginLabel'>
+          Player name
+        </label>
+
+        <input
+          id='loginPlayerName'
+          class='loginInput'
+          type='text'
+          autocomplete='name'
+          placeholder='Your name'
+        >
+
+        <label class='loginLabel'>
+          PIN
+        </label>
+
+        <input
+          id='loginPlayerPin'
+          class='loginInput'
+          type='password'
+          inputmode='numeric'
+          maxlength='4'
+          autocomplete='off'
+          placeholder='••••'
+        >
+
+        <div id='loginError' class='loginError'></div>
+
+        <button id='loginContinue' class='loginContinue'>
+          Continue
+        </button>
+
+        <button id='loginCancel' class='loginCancel'>
+          Cancel
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const nameInput=
+      overlay.querySelector('#loginPlayerName');
+
+    const pinInput=
+      overlay.querySelector('#loginPlayerPin');
+
+    const finish=value=>{
+      overlay.remove();
+      resolve(value);
+    };
+
+    overlay
+      .querySelector('#loginContinue')
+      .onclick=()=>{
+        const name=nameInput.value.trim();
+        const pin=pinInput.value.trim();
+
+        if(!name || !pin){
+          overlay.querySelector('#loginError')
+            .textContent=
+              'Enter your player name and PIN.';
+          return;
+        }
+
+        finish({
+          name,
+          pin
+        });
+      };
+
+    overlay
+      .querySelector('#loginCancel')
+      .onclick=()=>finish(null);
+
+    pinInput.addEventListener(
+      'keydown',
+      e=>{
+        if(e.key==='Enter'){
+          overlay
+            .querySelector('#loginContinue')
+            .click();
+        }
+      }
+    );
+
+    setTimeout(
+      ()=>nameInput.focus(),
+      50
+    );
+  });
+}
+
 async function render(){
 syncDeadline();
 
