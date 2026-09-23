@@ -1477,6 +1477,66 @@ The competition is complete.
 :''
 }
 
+${
+authenticatedPlayer
+?(()=>{
+  const me=
+    state.players.find(
+      p=>
+        p.name===authenticatedPlayer
+    );
+
+  if(!me){
+    return '';
+  }
+
+  const myPick=
+    me.picks?.[state.round]||'';
+
+  return `
+    <div class='card'>
+      <div class='eyebrow dark'>
+        MY COMPETITION
+      </div>
+
+      <h2>
+        ${esc(me.name)}
+        ${me.alive?'— Alive':'— Eliminated'}
+      </h2>
+
+      <p>
+        <b>Matchweek ${state.round}</b>
+      </p>
+
+      <p>
+        ${
+          myPick
+          ?`Pick: <b>${esc(myPick)}</b> ✓`
+          :me.alive
+            ?`<b>No pick submitted</b>`
+            :''
+        }
+      </p>
+
+      <p class='muted'>
+        <b>Teams used:</b>
+        ${
+          me.used?.length
+          ?me.used.map(esc).join(', ')
+          :'None yet'
+        }
+      </p>
+${
+  me.alive
+  ?myPick
+    ?`<p class='muted'>
+        Pick submitted — waiting for Matchweek ${state.round}.
+      </p>`
+    :''
+  :`<p class='muted'>
+      Eliminated in Matchweek ${me.eliminatedRound||''}.
+    </p>`
+}
 <div class='grid stats'>
 <div class='card'>
 <span>Current Matchweek</span>
