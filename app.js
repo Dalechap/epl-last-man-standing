@@ -1537,6 +1537,13 @@ ${
       Eliminated in Matchweek ${me.eliminatedRound||''}.
     </p>`
 }
+
+    </div>
+  `;
+})()
+:''
+}
+
 <div class='grid stats'>
 <div class='card'>
 <span>Current Matchweek</span>
