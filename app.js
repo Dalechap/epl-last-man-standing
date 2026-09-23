@@ -1742,18 +1742,7 @@ t=>
 t===current
 );
 
-const planner=
-  await loadPlannerFixtures();
-
-const currentPlanner=
-  planner.find(
-    item=>
-      Number(item.matchweek)===
-      Number(state.round)
-  );
-
-const fixtures=
-  currentPlanner?.matches||[];
+const fixtures=roundFixtures();
 
 c.innerHTML=`
 <section class='card formCard'>
