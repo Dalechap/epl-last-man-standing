@@ -45,10 +45,7 @@ AND COALESCE(
   (state->>'registrationClosed')::boolean,
   false
 ) = false
-AND COALESCE(
-  (state->>'round')::integer,
-  4
-) = 4
+
 AND COALESCE(
   (state->>'deadlinePassed')::boolean,
   false
