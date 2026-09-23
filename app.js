@@ -1264,6 +1264,120 @@ function playerLoginModal(){
   });
 }
 
+function joinCompetitionModal(){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+    overlay.className='loginOverlay';
+
+    overlay.innerHTML=`
+      <div class='loginModal'>
+        <div class='eyebrow dark'>JOIN COMPETITION</div>
+
+        <h2>Create your player</h2>
+
+        <p class='muted'>
+          Enter your name and create a 4-digit PIN.
+        </p>
+
+        <label class='loginLabel'>
+          Player name
+        </label>
+
+        <input
+          id='joinPlayerName'
+          class='loginInput'
+          type='text'
+          autocomplete='name'
+          placeholder='Your name'
+        >
+
+        <label class='loginLabel'>
+          Create PIN
+        </label>
+
+        <input
+          id='joinPlayerPin'
+          class='loginInput'
+          type='password'
+          inputmode='numeric'
+          maxlength='4'
+          autocomplete='off'
+          placeholder='••••'
+        >
+
+        <div id='joinError' class='loginError'></div>
+
+        <button id='joinContinue' class='loginContinue'>
+          Join Competition
+        </button>
+
+        <button id='joinCancel' class='loginCancel'>
+          Cancel
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const nameInput=
+      overlay.querySelector('#joinPlayerName');
+
+    const pinInput=
+      overlay.querySelector('#joinPlayerPin');
+
+    const error=
+      overlay.querySelector('#joinError');
+
+    const finish=value=>{
+      overlay.remove();
+      resolve(value);
+    };
+
+    overlay
+      .querySelector('#joinContinue')
+      .onclick=()=>{
+        const name=nameInput.value.trim();
+        const pin=pinInput.value.trim();
+
+        if(!name){
+          error.textContent=
+            'Enter your player name.';
+          return;
+        }
+
+        if(!/^\d{4}$/.test(pin)){
+          error.textContent=
+            'PIN must be exactly 4 digits.';
+          return;
+        }
+
+        finish({
+          name,
+          pin
+        });
+      };
+
+    overlay
+      .querySelector('#joinCancel')
+      .onclick=()=>finish(null);
+
+    pinInput.addEventListener(
+      'keydown',
+      e=>{
+        if(e.key==='Enter'){
+          overlay
+            .querySelector('#joinContinue')
+            .click();
+        }
+      }
+    );
+
+    setTimeout(
+      ()=>nameInput.focus(),
+      50
+    );
+  });
+}
 async function render(){
 syncDeadline();
 
@@ -1436,31 +1550,22 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
     </div>
   `;
 
-  if($('#joinBtn')) $('#joinBtn').onclick=()=>{
+  if($('#joinBtn')) $('#joinBtn').onclick=async ()=>{
 if(state.registrationClosed){
   $('#joinMessage').innerHTML=
     `<div class='notice warn'>Registration is closed. The competition has already started.</div>`;
   return;
 }
 
-const name=prompt(
-'Enter your name:'
-);
+const join=
+  await joinCompetitionModal();
 
-if(!name||!name.trim()){
-return;
+if(!join){
+  return;
 }
 
-const pin=prompt(
-'Create a 4-digit PIN:'
-);
-
-if(!/^\d{4}$/.test(pin||'')){
-return notice(
-'PIN must be exactly 4 digits.',
-'warn'
-);
-}
+const name=join.name;
+const pin=join.pin;
 
 if(
 state.players.some(
