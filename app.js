@@ -1977,7 +1977,13 @@ item.matches.length
 if(tab==='players'){
 c.innerHTML=`
 <h2>Players</h2>
-
+${
+  !state.deadlinePassed
+  ?`<p class='privacyNote'>
+      Current team selections stay hidden until the selection deadline is closed.
+    </p>`
+  :''
+}
 <div class='playerList'>
 ${
 state.players.map(p=>{
@@ -2071,13 +2077,6 @@ Object.keys(p.picks || {})
 }
 </div>
 
-${
-!state.deadlinePassed
-?`<p class='privacyNote'>
-Current team selections stay hidden until the selection deadline is closed.
-</p>`
-:''
-}
 `;
 }
 
