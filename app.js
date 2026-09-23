@@ -280,111 +280,71 @@ function pickedTeams(){
 return [...new Set(roundPicks())].sort();
 }
 
+
 function roundFixtures(){
-return state.fixtures[state.round]||[];
+  return state.fixtures[state.round]||[];
 }
 
 async function loadEplFixtures(){
-try{
-notice(`Loading EPL Matchweek ${state.round} fixtures...`);
+  try{
+    notice(`Loading EPL Matchweek ${state.round} fixtures...`);
 
-const r=await fetch(`/api/football?round=${state.round}`);
-const data=await r.json();
+    const r=await fetch(
+      `/api/football?round=${state.round}`
+    );
 
-if(!r.ok){
-throw new Error(
-data.error||'Could not load fixtures'
-);
-}
+    const data=await r.json();
 
-state.fixtures[state.round]=(data.matches||[]).map(m=>({
-home:m.homeTeam.name,
-away:m.awayTeam.name,
-homeCrest:m.homeTeam.crest,
-awayCrest:m.awayTeam.crest,
-kickoff:m.utcDate
-}));
+    if(!r.ok){
+      throw new Error(
+        data.error||'Could not load fixtures'
+      );
+    }
 
-const kickoffTimes=state.fixtures[state.round]
-.map(f=>new Date(f.kickoff).getTime())
-.filter(t=>Number.isFinite(t));
+    state.fixtures[state.round]=
+      (data.matches||[]).map(m=>({
+        home:m.homeTeam.name,
+        away:m.awayTeam.name,
+        homeCrest:m.homeTeam.crest,
+        awayCrest:m.awayTeam.crest,
+        kickoff:m.utcDate
+      }));
 
-if(kickoffTimes.length){
-state.deadline=
-new Date(Math.min(...kickoffTimes)).toISOString();
+    const kickoffTimes=
+      state.fixtures[state.round]
+        .map(
+          f=>new Date(f.kickoff).getTime()
+        )
+        .filter(
+          t=>Number.isFinite(t)
+        );
 
-state.deadlinePassed=false;
+    if(kickoffTimes.length){
+      state.deadline=
+        new Date(
+          Math.min(...kickoffTimes)
+        ).toISOString();
 
-syncDeadline();
-}
+      state.deadlinePassed=false;
 
-saveAdmin();
+      syncDeadline();
+    }
 
-notice(
-`Loaded ${state.fixtures[state.round].length} EPL fixtures for Matchweek ${state.round}.`
-);
+    saveAdmin();
 
-render();
+    notice(
+      `Loaded ${state.fixtures[state.round].length} EPL fixtures for Matchweek ${state.round}.`
+    );
 
-}catch(e){
-notice(
-e.message||'Could not load EPL fixtures.',
-'warn'
-);
-}
-}
+    render();
 
-function resultForTeam(match,team){
-if(match.status!=='FINISHED') return null;
-
-const h=match.score.fullTime.home;
-const a=match.score.fullTime.away;
-const isHome=match.homeTeam.name===team;
-const mine=isHome?h:a;
-const theirs=isHome?a:h;
-
-if(mine>theirs) return 'win';
-
-if(mine<theirs) return 'loss';
-
-if(mine===0&&theirs===0){
-return isHome?'zero-home':'zero-away';
-}
-
-return 'score-draw';
-}
-
-function matchForTeam(matches,team){
-return (matches||[]).find(m=>
-m.homeTeam.name===team ||
-m.awayTeam.name===team
-);
-}
-
-function updateResultsFromMatches(matches){
-let updated=0;
-
-pickedTeams().forEach(team=>{
-const match=matchForTeam(matches,team);
-
-if(!match) return;
-
-const result=resultForTeam(match,team);
-
-if(result && state.results[team]!==result){
-state.results[team]=result;
-updated++;
-}
-});
-
-return updated;
-}
-
-function selectedTeamMatchesFinished(matches){
-const selectedTeams=pickedTeams();
-
-if(selectedTeams.length===0){
-return true;
+  }catch(e){
+    notice(
+      e.message||
+      'Could not load EPL fixtures.',
+      'warn'
+    );
+  }
 }
 
 return selectedTeams.every(team=>{
