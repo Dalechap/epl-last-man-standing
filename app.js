@@ -1430,7 +1430,7 @@ Enable Notifications
 }
 
 ${
-!state.registrationClosed
+!state.registrationClosed && !winner()
 ?`
 <div class='card'>
 <h2>Join Competition</h2>
