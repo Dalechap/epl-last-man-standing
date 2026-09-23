@@ -1433,6 +1433,14 @@ ${
 !state.registrationClosed && !winner()
 ?`
 <div class='card'>
+${
+!authenticatedPlayer && !winner()
+?`
+<div class='card'>
+
+${
+!state.registrationClosed
+?`
 <h2>Join Competition</h2>
 
 <p class='joinIntro'>
@@ -1447,10 +1455,23 @@ Join Competition
 </button>
 
 <div id='joinMessage'></div>
+`
+:''
+}
 
-<p class='muted joinExisting'>
-  Already joined? Use Make Pick to sign in.
-</p>
+<div class='homeLogin'>
+  <p class='muted'>
+    Already playing?
+  </p>
+
+  <button
+  class='secondary'
+  id='homePlayerLogin'
+  >
+  Player Login
+  </button>
+</div>
+
 </div>
 `
 :''
@@ -1617,6 +1638,67 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
     </div>
   `;
 
+  if($('#homePlayerLogin')) $('#homePlayerLogin').onclick=async ()=>{
+  const login=await playerLoginModal();
+
+  if(!login){
+    return;
+  }
+
+  const selected=
+    state.players.find(
+      p=>
+        p.alive &&
+        p.name.toLowerCase()===
+        login.name.toLowerCase()
+    );
+
+  if(!selected){
+    notice(
+      'Player not found or already eliminated.',
+      'warn'
+    );
+    return;
+  }
+
+  try{
+    const response=
+      await fetch('/api/auth',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          playerName:selected.name,
+          pin:login.pin
+        })
+      });
+
+    const data=
+      await response.json();
+
+    if(!response.ok){
+      notice(
+        data.error||'Incorrect PIN.',
+        'warn'
+      );
+      return;
+    }
+
+    authenticatedPlayer=selected.name;
+    authenticatedPin=login.pin;
+    state.selectedPlayer=selected.name;
+
+    notice('');
+    render();
+
+  }catch(error){
+    notice(
+      'Unable to authenticate. Please try again.',
+      'warn'
+    );
+  }
+};
   if($('#joinBtn')) $('#joinBtn').onclick=async ()=>{
 if(state.registrationClosed){
   $('#joinMessage').innerHTML=
