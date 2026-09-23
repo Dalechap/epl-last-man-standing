@@ -1731,7 +1731,12 @@ if(tab==='pick'){
       return;
     }
   }
-const p=player();
+const p=
+  state.players.find(
+    player=>
+      player.name===authenticatedPlayer &&
+      player.alive
+  );
 
 const current=
 p.picks[state.round]||'';
