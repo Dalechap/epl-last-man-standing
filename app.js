@@ -1747,7 +1747,35 @@ t=>
 t===current
 );
 
-const fixtures=roundFixtures();
+let fixtures=roundFixtures();
+
+if(!fixtures.length){
+  try{
+    const response=
+      await fetch(
+        `/api/football?round=${state.round}`
+      );
+
+    const data=
+      await response.json();
+
+    if(response.ok){
+      fixtures=
+        (data.matches||[]).map(m=>({
+          home:m.homeTeam.name,
+          away:m.awayTeam.name,
+          homeCrest:m.homeTeam.crest,
+          awayCrest:m.awayTeam.crest,
+          kickoff:m.utcDate
+        }));
+    }
+  }catch(error){
+    console.error(
+      'Could not load Make Pick fixtures:',
+      error
+    );
+  }
+}
 
 c.innerHTML=`
 <section class='card formCard'>
