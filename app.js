@@ -1449,10 +1449,10 @@ ${
 </p>
 
 <button
-class='primary'
-id='joinBtn'
+  class='primary'
+  id='joinBtn'
 >
-Join Competition
+  Join Competition
 </button>
 
 <div id='joinMessage'></div>
@@ -1481,7 +1481,6 @@ Join Competition
 `
 :''
 }
-
 ${
 w
 ?`<div class='winnerCard'>
