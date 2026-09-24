@@ -1626,8 +1626,8 @@ COMPETITION
 ${renderStandings()}
 </div>
 
-<div class='card rules'>
-<h2>Competition rules</h2>
+<details class='card rules'>
+<summary><h2>Competition rules</h2></summary>
 
 <ul>
 <li>
@@ -1654,7 +1654,7 @@ No pick before the deadline = eliminated.
 If every remaining player is eliminated in the same Matchweek, they all stay alive, but their selected teams still count as used.
 </li>
 </ul>
-</div>
+</details>
 `;
 
 
