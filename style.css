@@ -246,3 +246,12 @@
   font-size:19px;
   line-height:1.45;
 }
+.homeLogin .secondary{
+  width:100%;
+  min-height:52px;
+  padding:14px 18px;
+  font-size:16px;
+  font-weight:700;
+  border-radius:14px;
+  margin-top:8px;
+}
