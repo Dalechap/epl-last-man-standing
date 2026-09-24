@@ -1535,6 +1535,12 @@ const myCrest=
         :myFixture.awayCrest
     )
     :'';
+ console.log('HOME CREST DEBUG',{
+  myPick,
+  myFixture,
+  myCrest
+});
+  
   const myCrestHtml=
   myCrest
     ?`<img
