@@ -1535,12 +1535,7 @@ const myCrest=
         :myFixture.awayCrest
     )
     :'';
- console.log('HOME CREST DEBUG',{
-  myPick,
-  myFixture,
-  myCrest
-});
-  
+ 
   const myCrestHtml=
   myCrest
     ?`<img
@@ -1568,7 +1563,7 @@ const myCrest=
       <p>
         ${
           myPick
-          ?`Pick: <b>${esc(myPick)}</b> ${myCrest ? `<img src="${esc(myCrest)}" style="width:40px;height:40px;object-fit:contain;vertical-align:middle;margin-left:10px">` : ''}`
+          ?`Pick: <b>${esc(myPick)}</b>`
           :me.alive
             ?`<b>No pick submitted</b>`
             :''
