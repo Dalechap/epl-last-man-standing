@@ -1518,9 +1518,32 @@ authenticatedPlayer
 
   const myPick=
     me.picks?.[state.round]||'';
+const myFixture=
+  roundFixtures().find(
+    f=>
+      f.home===myPick ||
+      f.away===myPick
+  );
 
+const myCrest=
+  myFixture
+    ?(
+      myFixture.home===myPick
+        ?myFixture.homeCrest
+        :myFixture.awayCrest
+    )
+    :'';
+  const myCrestHtml=
+  myCrest
+    ?`<img
+        class='myCompetitionCrest'
+        src='${esc(myCrest)}'
+        alt='${esc(myPick)} badge'
+      >`
+    :'';
   return `
     <div class='card'>
+      ${myCrestHtml}
       <div class='eyebrow dark'>
         MY COMPETITION
       </div>
