@@ -1515,14 +1515,15 @@ authenticatedPlayer
   if(!me){
     return '';
   }
-
-  const myPick=
-    me.picks?.[state.round]||'';
+const myPick=
+  me.picks?.[state.round]||'';
 const myFixture=
   roundFixtures().find(
     f=>
-      f.home===myPick ||
-      f.away===myPick
+      f.home.replace(/ FC$/,'')===
+        myPick.replace(/ FC$/,'') ||
+      f.away.replace(/ FC$/,'')===
+        myPick.replace(/ FC$/,'')
   );
 
 const myCrest=
