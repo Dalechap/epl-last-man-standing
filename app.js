@@ -1568,7 +1568,7 @@ const myCrest=
       <p>
         ${
           myPick
-          ?`Pick: <b>${esc(myPick)}</b> ✓`
+          ?`Pick: <b>${esc(myPick)}</b>`
           :me.alive
             ?`<b>No pick submitted</b>`
             :''
