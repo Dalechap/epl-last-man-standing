@@ -3,6 +3,7 @@ const defaults=[];
 
 const freshState=()=>({
 round:4,
+startRound:null,
 registrationClosed:false,
 selectedPlayer:'',
 deadlinePassed:false,
@@ -23,6 +24,9 @@ let state=JSON.parse(localStorage.getItem('lms-state')||'null')||freshState();
 
 if(state.registrationClosed===undefined){
   state.registrationClosed=state.round>4 || state.deadlinePassed===true;
+}
+if(state.startRound===undefined || state.startRound===null){
+  state.startRound=state.round;
 }
 if(state.deadlinePassed===undefined) state.deadlinePassed=false;
 if(state.deadline===undefined) state.deadline=null;
@@ -189,8 +193,8 @@ function syncDeadline(){
 if(!state.deadlinePassed && deadlineTimePassed()){
   state.deadlinePassed=true;
 
-  if(state.round===4){
-    state.registrationClosed=true;
+  if(state.round===state.startRound){
+  state.registrationClosed=true;
   }
 
   return true;
@@ -2837,10 +2841,11 @@ if(
 confirm(
 'Reset all players, picks, fixtures and used teams?'
 )
-){const nextRound=Number(state.round)+1;
+const nextRound=Number(state.round)+1;
 
 state=freshState();
 state.round=nextRound;
+state.startRound=nextRound;
 
 saveAdmin();
 notice(
