@@ -1529,7 +1529,8 @@ const myFixture=
 const myCrest=
   myFixture
     ?(
-      myFixture.home===myPick
+      myFixture.home.replace(/ FC$/,'')===
+        myPick.replace(/ FC$/,'')
         ?myFixture.homeCrest
         :myFixture.awayCrest
     )
