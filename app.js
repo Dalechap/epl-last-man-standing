@@ -1554,7 +1554,7 @@ authenticatedPlayer
       </p>
 ${
   me.alive
-  ?myPick
+  ?''
    
   :`<p class='muted'>
       Eliminated in Matchweek ${me.eliminatedRound||''}.
