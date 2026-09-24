@@ -1518,7 +1518,22 @@ authenticatedPlayer
 
   const myPick=
     me.picks?.[state.round]||'';
+const myFixture=
+  roundFixtures().find(
+    f=>
+      f.home===myPick ||
+      f.away===myPick
+  );
 
+    :'';
+const myCrest=
+  myFixture
+    ?(
+      myFixture.home===myPick
+        ?myFixture.homeCrest
+        :myFixture.awayCrest
+    )
+    :'';
   return `
     <div class='card'>
       <div class='eyebrow dark'>
@@ -1537,7 +1552,16 @@ authenticatedPlayer
       <p>
         ${
           myPick
-          ?`Pick: <b>${esc(myPick)}</b> ✓`
+         ?`Pick:
+  ${myCrest
+    ?`<img
+        src='${esc(myCrest)}'
+        alt='${esc(myPick)} badge'
+        style='width:32px;height:32px;object-fit:contain;vertical-align:middle;margin:0 8px;'
+      >`
+    :''
+  }
+  <b>${esc(myPick)}</b> ✓`
           :me.alive
             ?`<b>No pick submitted</b>`
             :''
