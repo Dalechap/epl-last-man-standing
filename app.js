@@ -1751,6 +1751,8 @@ throw new Error(data.error||'Could not join competition');
 
 if(data.state){
   state=data.state;
+  authenticatedPlayer=name.trim();
+  authenticatedPin=pin;
   state.selectedPlayer=authenticatedPlayer;
   localStorage.setItem('lms-state',JSON.stringify(state));
 }
