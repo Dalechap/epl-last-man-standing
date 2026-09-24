@@ -1156,7 +1156,9 @@ async function loadPlannerFixtures(){
   plannerFixturesCacheRound = currentRound;
 
   return plannerFixturesCache;
-}
+
+        finish({
+          name,}
 function playerLoginModal(){
   return new Promise(resolve=>{
     const overlay=document.createElement('div');
@@ -1237,10 +1239,10 @@ function playerLoginModal(){
         }
 
         finish({
-          name,
-          pin
-        });
-      };
+  name,
+  pin
+});
+};
 
     overlay
       .querySelector('#loginCancel')
