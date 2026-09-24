@@ -1157,8 +1157,7 @@ async function loadPlannerFixtures(){
 
   return plannerFixturesCache;
 
-        finish({
-          name,}
+       }
 function playerLoginModal(){
   return new Promise(resolve=>{
     const overlay=document.createElement('div');
