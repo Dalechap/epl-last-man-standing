@@ -1555,10 +1555,7 @@ authenticatedPlayer
 ${
   me.alive
   ?myPick
-    ?`<p class='muted'>
-        Pick submitted — waiting for Matchweek ${state.round}.
-      </p>`
-    :''
+   
   :`<p class='muted'>
       Eliminated in Matchweek ${me.eliminatedRound||''}.
     </p>`
