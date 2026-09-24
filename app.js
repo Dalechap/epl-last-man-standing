@@ -1431,10 +1431,6 @@ Enable Notifications
 }
 
 ${
-!state.registrationClosed && !winner()
-?`
-<div class='card'>
-${
 !authenticatedPlayer && !winner()
 ?`
 <div class='card'>
@@ -1462,14 +1458,18 @@ Join Competition
 
 <div class='homeLogin'>
   <p class='muted'>
-    Already playing?
+    ${
+      !state.registrationClosed
+      ?'Already playing?'
+      :'Already playing? Sign in below.'
+    }
   </p>
 
   <button
-  class='secondary'
-  id='homePlayerLogin'
+    class='secondary'
+    id='homePlayerLogin'
   >
-  Player Login
+    Player Login
   </button>
 </div>
 
@@ -1477,6 +1477,7 @@ Join Competition
 `
 :''
 }
+
 ${
 w
 ?`<div class='winnerCard'>
