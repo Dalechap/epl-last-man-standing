@@ -1568,7 +1568,7 @@ const myCrest=
       <p>
         ${
           myPick
-          ?`Pick: <b>${esc(myPick)}</b>`
+          ?`Pick: <b>${esc(myPick)}</b> ${myCrest ? `<img src="${esc(myCrest)}" style="width:40px;height:40px;object-fit:contain;vertical-align:middle;margin-left:10px">` : ''}`
           :me.alive
             ?`<b>No pick submitted</b>`
             :''
