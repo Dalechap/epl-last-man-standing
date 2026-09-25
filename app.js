@@ -2162,12 +2162,9 @@ if(tab==='fixtures'){
     c.innerHTML=`
    <h2>Fixtures</h2>
 
-<p class='muted fixturesPlannerHelp'>
-  The current Matchweek is shown below. Scroll down further to see future Matchweeks and plan future selections.
-</p>
    ${    
         planner.map(item=>`
-          <details class='card matchweekDropdown' ${item.matchweek===Number(state.round)?'open':''}>
+         <details class='card matchweekDropdown'>
             <summary class='matchweekSummary'>
   <div class='sectionHead'>
     <div>
@@ -2175,7 +2172,7 @@ if(tab==='fixtures'){
         ${
   item.matchweek===Number(state.round)
     ?'CURRENT MATCHWEEK'
-    :'UPCOMING · VIEW FIXTURES ▼'
+  :'UPCOMING'
 }
       </div>
 
