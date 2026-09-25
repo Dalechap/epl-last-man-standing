@@ -2292,7 +2292,7 @@ c.innerHTML=`
 ${
   !state.deadlinePassed
   ?`<p class='privacyNote'>
-      Current team selections stay hidden until the selection deadline is closed.
+     Selections hidden until Matchweek commences
     </p>`
   :''
 }
