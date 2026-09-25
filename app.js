@@ -2377,11 +2377,28 @@ Object.keys(p.picks || {})
     matchweek < Number(state.round)
   )
   .sort((a,b) => a-b)
-  .map(matchweek =>
-    `MW${matchweek}: ${esc(p.picks[matchweek])}`
-  )
-  .join(' · ')
-  || 'None'
+  .map(matchweek => {
+  const pick=p.picks[matchweek];
+  const fixture=(state.fixtures[matchweek]||[]).find(
+    f=>
+      f.home.replace(/ FC$/,'')===pick.replace(/ FC$/,'') ||
+      f.away.replace(/ FC$/,'')===pick.replace(/ FC$/,'')
+  );
+
+  const crest=fixture
+    ?(
+      fixture.home.replace(/ FC$/,'')===pick.replace(/ FC$/,'')
+        ?fixture.homeCrest
+        :fixture.awayCrest
+    )
+    :'';
+
+  return crest
+    ?`MW${matchweek}: <img class='historyCrest' src='${esc(crest)}' alt='${esc(pick)} badge'>`
+    :`MW${matchweek}: ${esc(pick)}`;
+})
+.join(' · ')
+|| 'None'
 }
 </div>
 </div>`;
