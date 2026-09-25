@@ -1567,15 +1567,6 @@ const myCrest=
         <b>Matchweek ${state.round}</b>
       </p>
 
-      <p>
-        ${
-          myPick
-          ?`Pick: <b>${esc(myPick)}</b>`
-          :me.alive
-            ?`<b>No pick submitted</b>`
-            :''
-        }
-      </p>
 
       <p class='muted'>
         <b>Teams used:</b>
