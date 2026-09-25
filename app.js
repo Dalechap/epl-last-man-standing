@@ -868,7 +868,7 @@ let statusText=!p.alive
 :'Alive');
 
 return `<div class='standingRow'>
-<div class='pos'>${i+1}</div>
+
 <div class='standingName'>
 <strong>${esc(p.name)}</strong>
 <span>${statusText}</span>
@@ -1617,7 +1617,7 @@ ${state.deadlinePassed?'Closed':'Open'}
 COMPETITION
 </div>
 
-<h2>Standings</h2>
+<h2>Player Status</h2>
 </div>
 </div>
 
