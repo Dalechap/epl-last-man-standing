@@ -254,4 +254,57 @@
   font-weight:700;
   border-radius:14px;
   margin-top:8px;
+}
+/* Player Status layout fix */
+.standingRow{
+  display:grid;
+  grid-template-columns:minmax(120px,1fr) minmax(160px,1.5fr) 12px;
+  gap:14px;
+  align-items:center;
+}
 
+.standingName{
+  display:flex;
+  flex-direction:column;
+}
+
+.standingInfo{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  color:#82768a;
+  font-size:12px;
+}
+
+.standingRow>.dot{
+  justify-self:end;
+}
+
+@media(max-width:560px){
+  .standingRow{
+    grid-template-columns:minmax(110px,1fr) minmax(150px,1.4fr) 12px;
+    gap:12px;
+  }
+
+  .standingName{
+    grid-column:auto;
+    grid-row:auto;
+  }
+
+  .standingInfo{
+    grid-column:auto;
+    grid-row:auto;
+    justify-content:flex-start;
+    gap:12px;
+  }
+
+  .standingInfo span+span::before{
+    content:"";
+  }
+
+  .standingRow>.dot{
+    grid-column:auto;
+    grid-row:auto;
+    align-self:center;
+  }
+}
