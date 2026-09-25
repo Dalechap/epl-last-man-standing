@@ -873,9 +873,14 @@ return `<div class='standingRow'>
 <strong>${esc(p.name)}</strong>
 <span>${statusText}</span>
 </div>
-<div class='standingPick'>${esc(shown)}</div>
-<div class='usedCount'>${p.used.length} used</div>
+
+<div class='standingInfo'>
+<span>${esc(shown)}</span>
+<span>${p.used.length} used</span>
+</div>
+
 <span class='dot ${liveStatus==='pending-elimination'?'off':(p.alive?'on':'off')}'></span>
+
 </div>`;
 }).join('')
 }</div>`;
