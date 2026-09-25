@@ -1546,7 +1546,14 @@ const myCrest=
     :'';
   return `
     <div class='card'>
-      ${myCrestHtml}
+  <div class='homePickDisplay'>
+    ${myCrestHtml}
+    ${
+      myPick
+        ?`<div class='homePickText'>Pick: <b>${esc(myPick)}</b></div>`
+        :''
+    }
+  </div>
       <div class='eyebrow dark'>
         MY COMPETITION
       </div>
