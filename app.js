@@ -2882,7 +2882,7 @@ if(
 confirm(
 'Reset all players, picks, fixtures and used teams?'
 )){
-const nextRound=6;
+const nextRound=4;
 
 state=freshState();
 state.round=nextRound;
