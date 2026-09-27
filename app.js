@@ -2913,6 +2913,14 @@ if(!pin){
 return;
 }
 
+const processBtn = document.getElementById('process');
+
+if (processBtn) {
+  processBtn.onclick = async () => {
+    await processRound();
+  };
+}
+  
 try{
 const response=await fetch('/api/admin-auth',{
 method:'POST',
