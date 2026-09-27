@@ -292,7 +292,7 @@ async function loadEplFixtures(){
 try{
 notice(`Loading EPL Matchweek ${state.round} fixtures...`);
 
-const r=await fetch(`/api/football?round=${state.round}`);
+const r=await fetch(`/api/football?round=3`);
 const data=await r.json();
 
 if(!r.ok){
