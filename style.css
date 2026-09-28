@@ -308,3 +308,19 @@
     align-self:center;
   }
 }
+/* Home screen cosmetic tweaks */
+
+.homeLogin .muted{
+  text-align:center;
+  font-size:18px;
+}
+
+@media(max-width:560px){
+  .stats span{
+    font-size:14px;
+  }
+
+  .stats strong{
+    font-size:28px;
+  }
+}
