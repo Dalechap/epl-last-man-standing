@@ -59,7 +59,7 @@ let plannerFixturesCacheRound=null;
 
 let authenticatedAdminPin=null;
 
-const COMPETITION_CODE='lms3973';
+const COMPETITION_CODE='lmsmw8';
 let competitionUnlocked=
 localStorage.getItem('lms-access')===COMPETITION_CODE;
 
