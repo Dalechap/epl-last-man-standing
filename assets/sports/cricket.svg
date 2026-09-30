@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="Cricket">
+  <rect width="80" height="80" rx="18" fill="#1d4e89"/>
+  <path d="M28 58l24-34" stroke="#f4e2b4" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="56" cy="24" r="7" fill="#f4f4f4" stroke="#c23b3b" stroke-width="3"/>
+</svg>

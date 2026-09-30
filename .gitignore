@@ -1,0 +1,26 @@
+# Local agent and editor files
+.agent/
+.cursor/
+.github/
+
+# Dependencies
+node_modules/
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+
+# Vercel local files
+.vercel/
+
+# Generated knowledge graph
+graphify-out/
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.idea/
+.vscode/

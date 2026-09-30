@@ -1,6 +1,11 @@
 {
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
+    "postgres": "^3.4.7",
     "web-push": "^3.6.7"
   }
 }

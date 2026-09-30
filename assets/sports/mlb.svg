@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="MLB">
+  <rect width="80" height="80" rx="18" fill="#1d3557"/>
+  <circle cx="40" cy="40" r="18" fill="#f8f4ee" stroke="#c4a574" stroke-width="3"/>
+  <path d="M28 28c6 8 6 16 0 24M52 28c-6 8-6 16 0 24" fill="none" stroke="#b23a3a" stroke-width="2.5"/>
+</svg>

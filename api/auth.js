@@ -1,6 +1,9 @@
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL);
+import { sql } from '../lib/db.js';
+import {
+  cleanSportId,
+  loadRoot,
+  readSlice
+} from '../lib/competition.js';
 
 export default async function handler(req, res) {
   try {
@@ -11,7 +14,7 @@ export default async function handler(req, res) {
     }
 
     const { playerName, pin } = req.body || {};
-
+    const sportId = cleanSportId(req.body?.sport);
     const cleanName = String(playerName || '').trim();
     const cleanPin = String(pin || '').trim();
 
@@ -21,22 +24,23 @@ export default async function handler(req, res) {
       });
     }
 
-    const rows = await sql`
-      SELECT player
-      FROM competition_state,
-      jsonb_array_elements(state->'players') AS player
-      WHERE id = 1
-        AND lower(player->>'name') = lower(${cleanName}::text)
-      LIMIT 1
-    `;
+    const { root, missing } = await loadRoot(sql);
+    const slice = missing
+      ? null
+      : readSlice(root, sportId, req.body?.league);
+    const players = Array.isArray(slice?.players)
+      ? slice.players
+      : [];
 
-    if (!rows.length) {
+    const player = players.find(
+      item => item.name.toLowerCase() === cleanName.toLowerCase()
+    );
+
+    if (!player) {
       return res.status(404).json({
         error: 'Player not found'
       });
     }
-
-    const player = rows[0].player;
 
     if (String(player.pin) !== cleanPin) {
       return res.status(403).json({
@@ -52,9 +56,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: true,
-      playerName: player.name
+      playerName: player.name,
+      sport: sportId
     });
-
   } catch (error) {
     console.error(error);
 

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="MLS">
+  <rect width="80" height="80" rx="18" fill="#0a3161"/>
+  <rect y="34" width="80" height="12" fill="#b31942"/>
+  <circle cx="28" cy="28" r="3" fill="#fff"/>
+  <circle cx="40" cy="24" r="3" fill="#fff"/>
+  <circle cx="52" cy="28" r="3" fill="#fff"/>
+  <circle cx="40" cy="58" r="10" fill="#fff"/>
+</svg>

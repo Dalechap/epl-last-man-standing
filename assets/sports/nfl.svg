@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="NFL">
+  <rect width="80" height="80" rx="18" fill="#1f4e3d"/>
+  <ellipse cx="40" cy="40" rx="26" ry="16" fill="#c46a2b" stroke="#f3e2cf" stroke-width="3"/>
+  <path d="M40 28v24M34 34h12M34 40h12M34 46h12" fill="none" stroke="#f3e2cf" stroke-width="2"/>
+</svg>

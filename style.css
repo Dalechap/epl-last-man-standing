@@ -71,6 +71,16 @@
   font-weight:800;
   color:#777;
 }
+
+#content .fixtures .plannerTeamChoosing{
+  background:#f0e2f5;
+  color:#2d2035;
+}
+
+#content .fixtures .plannerChoosing,
+.teamPick.selected small{
+  color:#5b1978;
+}
 .loginOverlay{
   position:fixed;
   inset:0;
@@ -189,14 +199,20 @@
 
 .homeAdmin button{
   width:auto;
-  padding:6px 10px;
+  padding:8px 14px;
   font-size:14px;
-  font-weight:600;
-  color:#6f6278;
-  background:transparent;
-  border:none;
+  font-weight:700;
+  color:#43105b;
+  background:#f4eef8;
+  border:1px solid #e4d5ee;
+  border-radius:999px;
   box-shadow:none;
-  opacity:.75;
+  cursor:pointer;
+}
+
+.homeAdmin button:hover{
+  background:#efe4f6;
+  border-color:#5b1978;
 }
 .fixturesPlannerHead{
   display:flex;
@@ -253,7 +269,7 @@
   font-size:16px;
   font-weight:700;
   border-radius:14px;
-  margin-top:8px;
+  margin-top:0;
 }
 /* Player Status layout fix */
 .standingRow{
@@ -310,9 +326,17 @@
 }
 /* Home screen cosmetic tweaks */
 
+.homeLoginSplit{
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid #eee7f1;
+}
+
 .homeLogin .muted{
-  text-align:center;
-  font-size:18px;
+  text-align:left;
+  font-size:15px;
+  line-height:1.4;
+  margin:0 0 12px;
 }
 
 @media(max-width:560px){
@@ -323,4 +347,611 @@
   .stats strong{
     font-size:28px;
   }
+}
+
+.stats{
+  margin-top:16px;
+}
+
+#content > .card + .card,
+#content > .card + details.card,
+#content > details.card + .card,
+#content > .winnerCard + .card,
+#content > .card + .winnerCard{
+  margin-top:16px;
+}
+
+button,
+summary,
+.termsCheck,
+.changeSport,
+.sportBtn,
+.gateBack{
+  cursor:pointer;
+}
+
+button:disabled{
+  cursor:not-allowed;
+}
+
+.adminModes{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+.adminModes .primary,
+.adminModes .secondary{
+  width:100%;
+  min-height:52px;
+  margin:0;
+}
+
+.adminState{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:12px 0;
+}
+
+.adminState button{
+  width:auto;
+  margin:0;
+}
+
+.adminTools{
+  margin-top:18px;
+  padding:14px;
+  border:1px solid #eee7f1;
+  border-radius:14px;
+  background:#faf7fb;
+}
+
+.adminTools summary{
+  font-weight:800;
+  list-style:none;
+}
+
+.adminTools summary::-webkit-details-marker{
+  display:none;
+}
+
+.adminTools summary::before{
+  content:'▸ ';
+}
+
+.adminTools[open] summary::before{
+  content:'▾ ';
+}
+
+.toolRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.toolRow .secondary{
+  width:auto;
+  margin:0;
+  min-height:44px;
+  padding:10px 14px;
+}
+
+.logOutBtn{
+  width:100%;
+  margin-top:16px;
+  min-height:48px;
+  border:0;
+  border-radius:14px;
+  background:#f3e8f6;
+  color:#43105b;
+  font-size:16px;
+  font-weight:800;
+}
+
+.kickoffLine{
+  grid-column:1 / -1;
+  margin:0;
+  padding:8px 10px 10px;
+  text-align:center;
+  font-size:13px;
+  font-weight:700;
+  color:#3d3146;
+  background:#fff;
+}
+
+.fixtureCard{
+  overflow:visible;
+}
+
+#content .fixtures .fixtureCard{
+  overflow:visible;
+  grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr);
+}
+
+.plannerScore{
+  font-size:18px;
+  font-weight:900;
+  color:#20152b;
+}
+
+.pickStep{
+  margin-top:18px;
+  padding-top:8px;
+}
+
+.pickStep .full,
+.adminTools .danger.full{
+  margin-top:10px;
+}
+
+.statusPill{
+  display:inline-block;
+  margin:8px 0;
+}
+
+.adminTools .toolRow{
+  display:block;
+}
+
+.formCard button{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  border-radius:12px;
+  box-shadow:none;
+  font-weight:800;
+}
+
+.formCard .danger,
+.adminTools .danger{
+  min-height:48px;
+  padding:13px 16px;
+  font-size:16px;
+  background:#fbe3e1;
+  color:#9d2923;
+}
+
+.adminModes .secondary{
+  background:#eee4f2;
+  color:#4e285e;
+}
+
+.tabs{
+  display:flex;
+  width:100%;
+}
+
+.tabs button{
+  flex:1 1 0;
+  min-height:44px;
+  transition:transform .16s ease, background .16s ease, color .16s ease;
+}
+
+.tabs button[hidden]{
+  display:none;
+}
+
+.tabs button:active{
+  transform:scale(.98);
+}
+
+.card{
+  animation:none;
+}
+
+.heroMeta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+}
+
+.deadlineClock{
+  display:inline-flex;
+  align-items:baseline;
+  gap:7px;
+  margin:0;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.14);
+  color:#fff;
+  line-height:1;
+  max-width:100%;
+}
+
+.deadlineClock .kickLabel{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  opacity:.72;
+}
+
+.deadlineClock .kickTime{
+  font-size:14px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.deadlineClock .kickZone{
+  margin-left:6px;
+  font-size:12px;
+  font-weight:700;
+  opacity:.72;
+}
+
+.deadlineClock[hidden]{
+  display:none;
+}
+
+.changeSport{
+  margin-top:0;
+  border:1px solid rgba(255,255,255,.45);
+  border-radius:999px;
+  padding:7px 12px;
+  background:rgba(255,255,255,.18);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.changeSport:hover{
+  background:rgba(255,255,255,.28);
+}
+
+.changeSport:active{
+  background:rgba(255,255,255,.34);
+}
+
+.sportGrid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
+  margin-top:18px;
+}
+
+.sportBtn{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:92px;
+  padding:14px 16px;
+  border:2px solid transparent;
+  border-radius:16px;
+  background:#f7f2fa;
+  color:#43105b;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:0 6px 16px rgba(42,11,61,.06);
+  transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.sportIcon{
+  width:46px;
+  height:46px;
+  border-radius:12px;
+  object-fit:cover;
+  flex-shrink:0;
+  background:#fff;
+}
+
+.sportBtn .sportName{
+  display:block;
+  font-size:17px;
+  font-weight:800;
+}
+
+.sportBtn .sportHint{
+  display:block;
+  margin-top:4px;
+  color:#755786;
+  font-size:13px;
+  font-weight:600;
+}
+
+.sportBtn:hover{
+  transform:translateY(-2px);
+  border-color:#d8c4e4;
+}
+
+.sportBtn.isSelected{
+  border-color:#5b1978;
+  background:#efe4f6;
+  box-shadow:0 10px 22px rgba(67,16,91,.16);
+}
+
+.gateKicker{
+  margin:0 0 6px;
+  color:#755786;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.gateChoice{
+  margin-top:0;
+}
+
+.gateBack{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:40px;
+  margin:0 0 14px;
+  padding:8px 14px;
+  border:1px solid #e4d5ee;
+  border-radius:999px;
+  background:#f7f2fa;
+  color:#43105b;
+  font-weight:800;
+  cursor:pointer;
+  transition:background .16s ease, border-color .16s ease, transform .16s ease;
+}
+
+.gateBack:hover{
+  background:#efe4f6;
+  border-color:#5b1978;
+}
+
+.gateBack:active{
+  transform:translateX(-2px);
+}
+
+.termsList{
+  margin:8px 0 16px;
+  padding-left:18px;
+  color:#3d3146;
+  line-height:1.45;
+}
+
+.termsCheck{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:8px 0 16px;
+  font-weight:700;
+  line-height:1.35;
+}
+
+.termsCheck input{
+  width:18px;
+  height:18px;
+  margin:0;
+  padding:0;
+  border:0;
+  flex:0 0 18px;
+  accent-color:#43105b;
+}
+
+.primary:disabled,
+.gateCard .primary:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.gateCard.gateStep{
+  animation:gate-step .28s ease;
+}
+
+.gateCard .primary{
+  width:100%;
+  min-height:52px;
+  margin-top:8px;
+}
+
+#toastStack{
+  position:fixed;
+  top:16px;
+  right:16px;
+  z-index:10000;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  width:min(94vw, 360px);
+  pointer-events:none;
+}
+
+.toast{
+  pointer-events:auto;
+  position:relative;
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  gap:10px;
+  align-items:start;
+  overflow:hidden;
+  padding:14px 12px 16px;
+  border:1px solid #eee7f1;
+  border-radius:12px;
+  background:#fff;
+  color:#20152b;
+  box-shadow:0 12px 32px rgba(9,30,66,.14);
+  animation:toast-in .28s ease;
+}
+
+.toast.toastOut{
+  animation:toast-out .22s ease forwards;
+}
+
+.toastIcon{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-weight:800;
+}
+
+.toast.ok .toastIcon{
+  background:rgba(34,160,107,.12);
+  color:#22a06b;
+}
+
+.toast.warn .toastIcon{
+  background:rgba(230,161,0,.16);
+  color:#8a5a00;
+}
+
+.toastMessage{
+  margin:6px 0 0;
+  font-weight:700;
+  line-height:1.35;
+}
+
+.toastClose{
+  border:0;
+  background:transparent;
+  color:#6e6174;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.toastProgress{
+  position:absolute;
+  left:0;
+  bottom:0;
+  height:3px;
+  width:100%;
+  transform-origin:left center;
+  animation:toast-bar 4.5s linear forwards;
+}
+
+.toast.ok .toastProgress{
+  background:#22a06b;
+}
+
+.toast.warn .toastProgress{
+  background:#e6a100;
+}
+
+@media(min-width:900px){
+  .shell{
+    max-width:1040px;
+  }
+}
+
+@media(max-width:560px){
+  .sportGrid{
+    grid-template-columns:1fr;
+  }
+
+  .hero{
+    align-items:flex-start;
+  }
+
+  .deadlineClock{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:4px;
+    border-radius:14px;
+  }
+}
+
+@keyframes gate-step{
+  from{opacity:0; transform:translateY(10px)}
+  to{opacity:1; transform:none}
+}
+
+@keyframes card-in{
+  from{opacity:0; transform:translateY(6px)}
+  to{opacity:1; transform:none}
+}
+
+@keyframes toast-in{
+  from{opacity:0; transform:translateY(-16px)}
+  to{opacity:1; transform:none}
+}
+
+@keyframes toast-out{
+  from{opacity:1; transform:none}
+  to{opacity:0; transform:translateY(10px)}
+}
+
+@keyframes tab-in{
+  from{opacity:0; transform:translateY(8px)}
+  to{opacity:1; transform:none}
+}
+
+@keyframes row-in{
+  from{opacity:0; transform:translateY(8px)}
+  to{opacity:1; transform:none}
+}
+
+@keyframes pick-pop{
+  0%{box-shadow:inset 0 0 0 0 #5b1978}
+  55%{box-shadow:inset 0 0 0 4px #5b1978}
+  100%{box-shadow:inset 0 0 0 2px #5b1978}
+}
+
+@keyframes clock-blink{
+  50%{opacity:.4}
+}
+
+#content.tabIn{
+  animation:tab-in .28s ease;
+}
+
+#content.tabIn .fixtures .fixtureCard{
+  animation:row-in .32s ease both;
+}
+
+#content.tabIn .fixtures .fixtureCard:nth-child(2){animation-delay:.04s}
+#content.tabIn .fixtures .fixtureCard:nth-child(3){animation-delay:.08s}
+#content.tabIn .fixtures .fixtureCard:nth-child(4){animation-delay:.12s}
+#content.tabIn .fixtures .fixtureCard:nth-child(5){animation-delay:.16s}
+#content.tabIn .fixtures .fixtureCard:nth-child(6){animation-delay:.2s}
+#content.tabIn .fixtures .fixtureCard:nth-child(7){animation-delay:.24s}
+#content.tabIn .fixtures .fixtureCard:nth-child(8){animation-delay:.28s}
+#content.tabIn .fixtures .fixtureCard:nth-child(9){animation-delay:.32s}
+#content.tabIn .fixtures .fixtureCard:nth-child(10){animation-delay:.36s}
+#content.tabIn .fixtures .fixtureCard:nth-child(n+11){animation-delay:.4s}
+
+.teamPick.justChosen{
+  animation:pick-pop .32s ease;
+}
+
+.deadlineClock.urgent{
+  animation:clock-blink 1s ease-in-out infinite;
+}
+
+button:not(:disabled):active{
+  transform:translateY(1px);
+}
+
+@keyframes toast-bar{
+  from{transform:scaleX(1)}
+  to{transform:scaleX(0)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .card,
+  .toast,
+  .tabs button,
+  .sportBtn,
+  .gateCard,
+  .toastProgress,
+  #content,
+  .fixtureCard,
+  .teamPick,
+  .deadlineClock,
+  button{
+    animation:none;
+    transition:none;
+  }
+}
+
+.ball[hidden]{
+  display:none !important;
+}
+
+.adminSeparate{
+  margin-top:16px;
 }

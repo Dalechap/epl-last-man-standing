@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="AFL">
+  <rect width="80" height="80" rx="18" fill="#8b1e3f"/>
+  <ellipse cx="40" cy="40" rx="16" ry="22" fill="#f4c430" stroke="#3d0f1c" stroke-width="3"/>
+  <path d="M40 20v40M32 28h16M32 52h16" fill="none" stroke="#3d0f1c" stroke-width="2"/>
+</svg>

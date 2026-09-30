@@ -1,6 +1,11 @@
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL);
+import { sql } from '../lib/db.js';
+import {
+  cleanSportId,
+  loadRoot,
+  markDeadline,
+  readSlice,
+  saveRoot
+} from '../lib/competition.js';
 
 export default async function handler(req, res) {
   try {
@@ -10,65 +15,40 @@ export default async function handler(req, res) {
       });
     }
 
-    const rows = await sql`
-      SELECT state
-      FROM competition_state
-      WHERE id = 1
-    `;
+    const sportId = cleanSportId(req.body?.sport);
+    const { root, missing } = await loadRoot(sql);
 
-    if (!rows.length) {
+    if (missing) {
       return res.status(404).json({
         error: 'Competition state not found'
       });
     }
 
-    const state = rows[0].state;
+    const slice = readSlice(root, sportId, req.body?.league);
 
-    if (!state.deadline) {
+    if (!slice) {
+      return res.status(404).json({
+        error: 'Competition state not found'
+      });
+    }
+
+    if (!slice.deadline) {
       return res.status(200).json({
         ok: true,
         changed: false
       });
     }
 
-    const deadlineTime =
-      new Date(state.deadline).getTime();
+    const changed = markDeadline(slice);
 
-    if (
-      !Number.isFinite(deadlineTime) ||
-      Date.now() < deadlineTime
-    ) {
-      return res.status(200).json({
-        ok: true,
-        changed: false
-      });
+    if (changed) {
+      await saveRoot(sql, root);
     }
-
-    if (state.deadlinePassed === true) {
-      return res.status(200).json({
-        ok: true,
-        changed: false
-      });
-    }
-
-    state.deadlinePassed = true;
-
-    if (Number(state.round) === 4) {
-      state.registrationClosed = true;
-    }
-
-    await sql`
-      UPDATE competition_state
-      SET state = ${state},
-          updated_at = NOW()
-      WHERE id = 1
-    `;
 
     return res.status(200).json({
       ok: true,
-      changed: true
+      changed
     });
-
   } catch (error) {
     console.error(error);
 

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="NHL">
+  <rect width="80" height="80" rx="18" fill="#0b1f33"/>
+  <ellipse cx="40" cy="42" rx="22" ry="14" fill="#d7e7f5"/>
+  <rect x="36" y="28" width="8" height="16" rx="2" fill="#111"/>
+  <path d="M22 42h36" stroke="#111" stroke-width="2"/>
+</svg>

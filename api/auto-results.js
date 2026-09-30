@@ -1,9 +1,189 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from '../lib/db.js';
+import {
+  outcomeSurvives,
+  scoreOutcome
+} from '../lib/sports.js';
+import {
+  loadRoot,
+  markDeadline,
+  saveRoot
+} from '../lib/competition.js';
+import { loadSportFixtures } from '../lib/fixtures.js';
 
-const sql = neon(process.env.DATABASE_URL);
+// Apply finished matches and open the next round for one sport.
+async function processSlice(slice, sportId) {
+  let changed = false;
 
-function outcomeSurvives(outcome) {
-  return outcome === 'win' || outcome === 'zero-away';
+  if (markDeadline(slice)) {
+    changed = true;
+  }
+
+  if (!slice.deadlinePassed) {
+    return { changed, openedNext: false };
+  }
+
+  if (slice.roundProcessed) {
+    return { changed: false, openedNext: false };
+  }
+
+  if (slice.resultMode === 'manual') {
+    return { changed, openedNext: false };
+  }
+
+  const loaded = await loadSportFixtures(
+    slice.sport || sportId,
+    slice.round,
+    slice.league || 'PL'
+  );
+
+  if (!loaded.ok) {
+    return {
+      changed,
+      openedNext: false,
+      error: loaded.error
+    };
+  }
+
+  const matches = loaded.matches;
+  slice.results = slice.results || {};
+
+  const active = (slice.players || []).filter(
+    player => player.alive
+  );
+  const pickedTeams = [
+    ...new Set(
+      active
+        .map(player => player.picks?.[slice.round])
+        .filter(Boolean)
+    )
+  ];
+
+  for (const team of pickedTeams) {
+    const match = matches.find(
+      item =>
+        item.homeTeam?.name === team ||
+        item.awayTeam?.name === team
+    );
+
+    if (!match || match.status !== 'FINISHED') {
+      continue;
+    }
+
+    const result = scoreOutcome(
+      slice.sport || sportId,
+      team,
+      match
+    );
+
+    if (!result) {
+      continue;
+    }
+
+    if (slice.results[team] !== result) {
+      slice.results[team] = result;
+      changed = true;
+    }
+  }
+
+  const allPickedMatchesFinished = pickedTeams.every(team => {
+    const match = matches.find(
+      item =>
+        item.homeTeam?.name === team ||
+        item.awayTeam?.name === team
+    );
+
+    return match && match.status === 'FINISHED';
+  });
+
+  if (!allPickedMatchesFinished) {
+    return { changed, openedNext: false };
+  }
+
+  const wouldEliminate = [];
+
+  for (const player of active) {
+    const pick = player.picks?.[slice.round];
+
+    if (!pick || !outcomeSurvives(sportId, slice.results[pick])) {
+      wouldEliminate.push(player);
+    }
+  }
+
+  slice.processSnapshot = {
+    alive: Object.fromEntries(
+      slice.players.map(player => [player.name, player.alive])
+    ),
+    eliminatedRound: Object.fromEntries(
+      slice.players.map(player => [
+        player.name,
+        player.eliminatedRound || null
+      ])
+    ),
+    results: { ...slice.results }
+  };
+
+  if (
+    wouldEliminate.length !== active.length ||
+    active.length === 0
+  ) {
+    for (const player of wouldEliminate) {
+      player.alive = false;
+      player.eliminatedRound = slice.round;
+    }
+  }
+
+  slice.roundProcessed = true;
+  changed = true;
+
+  const survivors = slice.players.filter(player => player.alive);
+
+  if (survivors.length === 1) {
+    return {
+      changed: true,
+      openedNext: false,
+      winner: survivors[0].name
+    };
+  }
+
+  const nextRound = Number(slice.round) + 1;
+  const nextLoaded = await loadSportFixtures(
+    slice.sport || sportId,
+    nextRound,
+    slice.league || 'PL'
+  );
+
+  if (!nextLoaded.ok || !nextLoaded.matches.length) {
+    return { changed: true, openedNext: false };
+  }
+
+  if (!slice.fixtures || Array.isArray(slice.fixtures)) {
+    slice.fixtures = {};
+  }
+
+  slice.round = nextRound;
+  slice.fixtures[nextRound] = nextLoaded.matches.map(match => ({
+    home: match.homeTeam?.name || match.name,
+    away: match.awayTeam?.name || '',
+    homeCrest: match.homeTeam?.crest || '',
+    awayCrest: match.awayTeam?.crest || '',
+    kickoff: match.utcDate,
+    kind: match.kind || 'match',
+    position: match.position || null
+  }));
+
+  const kickoffTimes = slice.fixtures[nextRound]
+    .map(fixture => new Date(fixture.kickoff).getTime())
+    .filter(Number.isFinite);
+
+  slice.deadline = kickoffTimes.length
+    ? new Date(Math.min(...kickoffTimes)).toISOString()
+    : null;
+  slice.deadlinePassed = false;
+  slice.roundProcessed = false;
+  slice.results = {};
+  slice.processSnapshot = null;
+
+  return { changed: true, openedNext: true };
 }
 
 export default async function handler(req, res) {
@@ -14,339 +194,47 @@ export default async function handler(req, res) {
       });
     }
 
-    const rows = await sql`
-      SELECT state
-      FROM competition_state
-      WHERE id = 1
-    `;
+    const { root, missing } = await loadRoot(sql);
 
-    if (!rows.length) {
+    if (missing) {
       return res.status(404).json({
         error: 'Competition state not found'
       });
     }
 
-    const state = rows[0].state;
-
-    if (!state) {
-      return res.status(200).json({
-        ok: true,
-        changed: false,
-        message: 'No competition state'
-      });
-    }
-
-    if (state.roundProcessed) {
-      return res.status(200).json({
-        ok: true,
-        changed: false,
-        message: 'Round already processed'
-      });
-    }
-
     let changed = false;
+    let openedNext = false;
+    let winner = null;
 
-    /*
-      IMPORTANT:
-      Close the deadline on the server if kickoff
-      has already passed. This means automatic
-      processing does not depend on somebody
-      having the app open at kickoff.
-    */
-    if (!state.deadlinePassed && state.deadline) {
-      const deadlineTime =
-        new Date(state.deadline).getTime();
-
-      if (
-        Number.isFinite(deadlineTime) &&
-        Date.now() >= deadlineTime
-      ) {
-        state.deadlinePassed = true;
-
-        if (Number(state.round) === 4) {
-          state.registrationClosed = true;
-        }
-
-        changed = true;
-      }
-    }
-
-    /*
-      If the deadline still has not passed,
-      save any deadline-related change and stop.
-    */
-    if (!state.deadlinePassed) {
-      if (changed) {
-        await sql`
-          UPDATE competition_state
-          SET state = ${state},
-              updated_at = NOW()
-          WHERE id = 1
-        `;
-      }
-
-
-      
-      return res.status(200).json({
-        ok: true,
-        changed,
-        message: 'Deadline has not passed'
-      });
-    }
-
-    const apiKey =
-      process.env.FOOTBALL_DATA_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({
-        error: 'Football API key is not configured'
-      });
-    }
-
-    const response = await fetch(
-      `https://api.football-data.org/v4/competitions/PL/matches?season=2026&matchday=${state.round}`,
-      {
-        headers: {
-          'X-Auth-Token': apiKey
-        }
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Football API error: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-    const matches = data.matches || [];
-
-    state.results = state.results || {};
-
-    const active =
-      state.players.filter(p => p.alive);
-
-    const pickedTeams = [
-      ...new Set(
-        active
-          .map(p => p.picks?.[state.round])
-          .filter(Boolean)
-      )
-    ];
-
-    for (const team of pickedTeams) {
-      const match = matches.find(
-        m =>
-          m.homeTeam?.name === team ||
-          m.awayTeam?.name === team
-      );
-
-      if (!match || match.status !== 'FINISHED') {
+    for (const slice of Object.values(root.competitions || {})) {
+      if (!slice || typeof slice !== 'object' || !slice.sport) {
         continue;
       }
 
-      const home =
-        match.score?.fullTime?.home;
+      const result = await processSlice(slice, slice.sport);
 
-      const away =
-        match.score?.fullTime?.away;
-
-      if (home == null || away == null) {
-        continue;
-      }
-
-      let result;
-
-      if (home === 0 && away === 0) {
-        result =
-          match.awayTeam.name === team
-            ? 'zero-away'
-            : 'zero-home';
-
-      } else if (home === away) {
-        result = 'score-draw';
-
-      } else {
-        const winner =
-          home > away
-            ? match.homeTeam.name
-            : match.awayTeam.name;
-
-        result =
-          winner === team
-            ? 'win'
-            : 'loss';
-      }
-
-      if (state.results[team] !== result) {
-        state.results[team] = result;
+      if (result.changed) {
         changed = true;
       }
-    }
 
-    const allPickedMatchesFinished =
-      pickedTeams.every(team => {
-        const match = matches.find(
-          m =>
-            m.homeTeam?.name === team ||
-            m.awayTeam?.name === team
-        );
-
-        return (
-          match &&
-          match.status === 'FINISHED'
-        );
-      });
-
-    if (allPickedMatchesFinished) {
-      const wouldEliminate = [];
-
-      for (const player of active) {
-        const pick =
-          player.picks?.[state.round];
-
-        if (
-          !pick ||
-          !outcomeSurvives(
-            state.results[pick]
-          )
-        ) {
-          wouldEliminate.push(player);
-        }
+      if (result.openedNext) {
+        openedNext = true;
       }
 
-      state.processSnapshot = {
-        alive: Object.fromEntries(
-          state.players.map(
-            p => [p.name, p.alive]
-          )
-        ),
-
-        eliminatedRound:
-          Object.fromEntries(
-            state.players.map(
-              p => [
-                p.name,
-                p.eliminatedRound || null
-              ]
-            )
-          ),
-
-        results: {
-          ...state.results
-        }
-      };
-
-      /*
-        Special LMS rule:
-        if every remaining player fails,
-        everybody stays alive.
-      */
-      if (
-        wouldEliminate.length !== active.length ||
-        active.length === 0
-      ) {
-        for (const player of wouldEliminate) {
-          player.alive = false;
-          player.eliminatedRound =
-            state.round;
-        }
-      }
-
-state.roundProcessed = true;
-changed = true;
-
-// Save the completed Matchweek before doing anything else.
-// This protects the results and eliminations if loading
-// the next Matchweek fails.
-await sql`
-  UPDATE competition_state
-  SET state = ${state},
-      updated_at = NOW()
-  WHERE id = 1
-`;
-
-// Stop here if processing has produced a winner
-const survivors = state.players.filter(
-  player => player.alive
-);
-
-if (survivors.length === 1) {
-  return res.status(200).json({
-    ok: true,
-    changed: true,
-    deadlinePassed: true,
-    roundProcessed: true,
-    winner: survivors[0].name
-  });
-}
-
-// Automatically prepare the next Matchweek
-const nextRound = Number(state.round) + 1;
-
-  let openedNextMatchweek = false;
-
-try {
-  const nextResponse = await fetch(
-    `https://api.football-data.org/v4/competitions/PL/matches?season=2026&matchday=${nextRound}`,
-    {
-      headers: {
-        'X-Auth-Token': apiKey
+      if (result.winner) {
+        winner = result.winner;
       }
     }
-  );
 
-  if (nextResponse.ok) {
-    const nextData = await nextResponse.json();
-    const nextMatches = nextData.matches || [];
-
-    if (nextMatches.length) {
-      state.round = nextRound;
-
-      state.fixtures = nextMatches.map(match => ({
-        home: match.homeTeam.name,
-        away: match.awayTeam.name,
-        kickoff: match.utcDate
-      }));
-
-      const kickoffTimes = state.fixtures
-        .map(f => new Date(f.kickoff).getTime())
-        .filter(Number.isFinite);
-
-      state.deadline = kickoffTimes.length
-        ? new Date(Math.min(...kickoffTimes)).toISOString()
-        : null;
-
-state.deadlinePassed = false;
-state.roundProcessed = false;
-state.results = {};
-state.processSnapshot = null;
-openedNextMatchweek = true;
-    }
-  }
-} catch (error) {
-  console.error(
-    'Could not automatically load next Matchweek:',
-    error
-  );
-}
-
-}
     if (changed) {
-      await sql`
-        UPDATE competition_state
-        SET state = ${state},
-            updated_at = NOW()
-        WHERE id = 1
-      `;
+      await saveRoot(sql, root);
     }
-    if (openedNextMatchweek) {
+
+    if (openedNext) {
       try {
         await fetch(
           'https://lastmanstandingsports.com/api/notifications',
-          {
-            method: 'POST'
-          }
+          { method: 'POST' }
         );
       } catch (error) {
         console.error(
@@ -355,15 +243,14 @@ openedNextMatchweek = true;
         );
       }
     }
+
     return res.status(200).json({
       ok: true,
       changed,
-      deadlinePassed:
-        state.deadlinePassed === true,
-      roundProcessed:
-        state.roundProcessed === true
+      winner,
+      deadlinePassed: true,
+      roundProcessed: changed
     });
-
   } catch (error) {
     console.error(error);
 

@@ -1,15 +1,23 @@
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL);
+import { sql } from '../lib/db.js';
+import {
+  cleanSportId,
+  ensureSlice,
+  loadRoot,
+  publicSlice,
+  saveRoot
+} from '../lib/competition.js';
 
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
+      return res.status(405).json({
+        error: 'Method not allowed'
+      });
     }
 
     const { name, pin } = req.body || {};
-
+    const sportId = cleanSportId(req.body?.sport);
+    const league = req.body?.league;
     const cleanName = String(name || '').trim();
     const cleanPin = String(pin || '').trim();
 
@@ -19,82 +27,56 @@ export default async function handler(req, res) {
       });
     }
 
-    const rows = await sql`
-      UPDATE competition_state
-      SET
-        state = jsonb_set(
-          state,
-          '{players}',
-          COALESCE(state->'players', '[]'::jsonb)
-          ||
-          jsonb_build_array(
-            jsonb_build_object(
-              'name', ${cleanName}::text,
-              'pin', ${cleanPin}::text,
-              'alive', true,
-              'picks', '{}'::jsonb,
-              'used', '[]'::jsonb,
-              'eliminatedRound', null
-            )
-          ),
-          true
-        ),
-        updated_at = NOW()
-      WHERE id = 1
-AND COALESCE(
-  (state->>'registrationClosed')::boolean,
-  false
-) = false
+    const { root } = await loadRoot(sql);
+    const slice = ensureSlice(root, sportId, league);
 
-AND COALESCE(
-  (state->>'deadlinePassed')::boolean,
-  false
-) = false
-        AND NOT EXISTS (
-          SELECT 1
-          FROM jsonb_array_elements(
-            COALESCE(state->'players', '[]'::jsonb)
-          ) AS player
-          WHERE lower(player->>'name') = lower(${cleanName}::text)
-        )
-      RETURNING state
-    `;
+    if (!slice) {
+      return res.status(400).json({
+        error: 'Unknown sport'
+      });
+    }
 
-if (!rows.length) {
-  const check = await sql`
-    SELECT state
-    FROM competition_state
-    WHERE id = 1
-  `;
+    if (
+      slice.registrationClosed ||
+      slice.deadlinePassed
+    ) {
+      return res.status(403).json({
+        error: 'Registration is closed. The competition has already started.'
+      });
+    }
 
-  const currentState = check.length ? check[0].state : null;
+    const players = Array.isArray(slice.players)
+      ? slice.players
+      : [];
 
-  if (currentState?.registrationClosed) {
-    return res.status(403).json({
-      error: 'Registration is closed. The competition has already started.'
+    if (
+      players.some(
+        player => player.name.toLowerCase() === cleanName.toLowerCase()
+      )
+    ) {
+      return res.status(409).json({
+        error: 'That player name is already in the competition'
+      });
+    }
+
+    slice.players = [
+      ...players,
+      {
+        name: cleanName,
+        pin: cleanPin,
+        alive: true,
+        picks: {},
+        used: [],
+        eliminatedRound: null
+      }
+    ];
+
+    await saveRoot(sql, root);
+
+    return res.status(200).json({
+      ok: true,
+      state: publicSlice(slice)
     });
-  }
-
-  return res.status(409).json({
-    error: 'That player name is already in the competition'
-  });
-}
-
-const publicState = structuredClone(rows[0].state);
-
-if (Array.isArray(publicState.players)) {
-  publicState.players =
-    publicState.players.map(player => {
-      const { pin, ...safePlayer } = player;
-      return safePlayer;
-    });
-}
-
-return res.status(200).json({
-  ok: true,
-  state: publicState
-});
-
   } catch (error) {
     console.error(error);
 

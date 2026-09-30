@@ -1,8 +1,283 @@
 const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Leeds United','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sunderland','Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'];
+
+const SPORTS=[
+  {
+    id:'football',
+    label:'Football',
+    image:'/EPL.jpg',
+    pickNoun:'team',
+    leagues:[
+      {id:'PL',label:'Premier League',image:'/EPL.jpg'},
+      {id:'PD',label:'La Liga',image:'/assets/sports/leagues/laliga.svg'},
+      {id:'SA',label:'Serie A',image:'/assets/sports/leagues/seriea.svg'},
+      {id:'BL1',label:'Bundesliga',image:'/assets/sports/leagues/bundesliga.svg'},
+      {id:'FL1',label:'Ligue 1',image:'/assets/sports/leagues/ligue1.svg'},
+      {id:'ELC',label:'Championship',image:'/assets/sports/leagues/championship.svg'},
+      {id:'MLS',label:'MLS',image:'/assets/sports/leagues/mls.svg'},
+      {id:'APL',label:'A-League',image:'/assets/sports/leagues/aleague.svg'}
+    ],
+    rules:[
+      'The competition continues until one player remains.',
+      'Pick one team each Matchweek. A team can only be used once by each player.',
+      'Win = survive. Loss or score draw = eliminated.',
+      'For a 0–0 draw, the away-team picker survives; the home-team picker is eliminated.',
+      'No pick before the deadline = eliminated.',
+      'If every remaining player is eliminated in the same Matchweek, they all stay alive, but their selected teams still count as used.'
+    ]
+  },
+  {
+    id:'nba',
+    label:'NBA',
+    image:'/assets/sports/nba.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:[
+      'The competition continues until one player remains.',
+      'Pick one team each round. A team can only be used once.',
+      'Win = survive. Loss or tie = eliminated.',
+      'No pick before the deadline = eliminated.',
+      'If every remaining player fails in the same round, they all stay alive, but their picks still count as used.'
+    ]
+  },
+  {
+    id:'nfl',
+    label:'NFL',
+    image:'/assets/sports/nfl.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:[
+      'The competition continues until one player remains.',
+      'Pick one team each round. A team can only be used once.',
+      'Win = survive. Loss or tie = eliminated.',
+      'No pick before the deadline = eliminated.',
+      'If every remaining player fails in the same round, they all stay alive, but their picks still count as used.'
+    ]
+  },
+  {
+    id:'tennis',
+    label:'Tennis',
+    image:'/assets/sports/tennis.svg',
+    pickNoun:'player',
+    leagues:[],
+    rules:[
+      'The competition continues until one player remains.',
+      'Pick one player in a match. A player can only be used once.',
+      'Your player must win the match or you are eliminated.',
+      'No pick before the deadline = eliminated.',
+      'If every remaining player fails in the same round, they all stay alive, but their picks still count as used.'
+    ]
+  },
+  {
+    id:'f1',
+    label:'Formula 1',
+    image:'/assets/sports/f1.svg',
+    pickNoun:'driver',
+    leagues:[],
+    rules:[
+      'The competition continues until one player remains.',
+      'Pick one driver for the race. A driver can only be used once.',
+      'Only the race winner survives.',
+      'No pick before the deadline = eliminated.',
+      'If every remaining player fails in the same race, they all stay alive, but their picks still count as used.'
+    ]
+  },
+  {
+    id:'cricket',
+    label:'Cricket',
+    image:'/assets/sports/cricket.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:[
+      'The competition continues until one player remains.',
+      'Pick one team to win the match. A team can only be used once.',
+      'A loss eliminates you. If there is no result, you stay alive and the team still counts as used.',
+      'No pick before the deadline = eliminated.',
+      'If every remaining player fails in the same round, they all stay alive, but their picks still count as used.'
+    ]
+  }
+];
+
+// Shared survival rules for team sports.
+function teamSportRules(){
+  return [
+    'The competition continues until one player remains.',
+    'Pick one team each round. A team can only be used once.',
+    'Win = survive. Loss or tie = eliminated.',
+    'No pick before the deadline = eliminated.',
+    'If every remaining player fails in the same round, they all stay alive, but their picks still count as used.'
+  ];
+}
+
+SPORTS.push(
+  {
+    id:'mlb',
+    label:'MLB',
+    image:'/assets/sports/mlb.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:teamSportRules()
+  },
+  {
+    id:'nhl',
+    label:'NHL',
+    image:'/assets/sports/nhl.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:teamSportRules()
+  },
+  {
+    id:'afl',
+    label:'AFL',
+    image:'/assets/sports/afl.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:teamSportRules()
+  },
+  {
+    id:'nrl',
+    label:'NRL',
+    image:'/assets/sports/nrl.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:teamSportRules()
+  },
+  {
+    id:'rugby',
+    label:'Rugby Union',
+    image:'/assets/sports/rugby.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:teamSportRules()
+  },
+  {
+    id:'superleague',
+    label:'Super League',
+    image:'/assets/sports/superleague.svg',
+    pickNoun:'team',
+    leagues:[],
+    rules:teamSportRules()
+  }
+);
+
+let selectedSport=localStorage.getItem('lms-sport')||'';
+let selectedLeague=localStorage.getItem('lms-league')||'PL';
+const TERMS_KEY='lms-terms';
+
+// Find one sport in the catalog.
+function sportById(id){
+  return SPORTS.find(sport=>sport.id===id)||null;
+}
+
+// The word used for one round in this sport.
+function roundNoun(){
+  const id=selectedSport||'football';
+
+  if(id==='f1'){
+    return 'Race';
+  }
+
+  if(id==='football'){
+    return 'Matchweek';
+  }
+
+  return 'Round';
+}
+
+// A round label such as Race 3 or Matchweek 4.
+function roundTitle(round){
+  return `${roundNoun()} ${round}`;
+}
+
+// Show a kickoff in the viewer's local time, with the zone name.
+function kickoffLabel(value){
+  const date=new Date(value);
+
+  if(!Number.isFinite(date.getTime())){
+    return '';
+  }
+
+  return date.toLocaleString('en-GB',{
+    day:'numeric',
+    month:'short',
+    hour:'2-digit',
+    minute:'2-digit',
+    timeZoneName:'short'
+  });
+}
+
+// Split a kickoff into a short local time and its zone name.
+function kickoffParts(value){
+  const date=new Date(value);
+
+  if(!Number.isFinite(date.getTime())){
+    return {when:'', zone:''};
+  }
+
+  const parts=new Intl.DateTimeFormat('en-GB',{
+    day:'numeric',
+    month:'short',
+    hour:'2-digit',
+    minute:'2-digit',
+    timeZoneName:'short'
+  }).formatToParts(date);
+  const pick=type=>parts.find(part=>part.type===type)?.value||'';
+
+  return {
+    when:`${pick('day')} ${pick('month')} · ${pick('hour')}:${pick('minute')}`,
+    zone:pick('timeZoneName')
+  };
+}
+
+// True after the player accepts the terms.
+function termsAccepted(){
+  return localStorage.getItem(TERMS_KEY)==='accepted';
+}
+
+// Shared terms text. The checkbox is only on the accept step.
+function termsMarkup(checkId){
+  const check=checkId
+    ?`
+      <label class='termsCheck'>
+        <input id='${checkId}' type='checkbox'>
+        <span>I have read this and I agree before I join or make a pick.</span>
+      </label>
+    `
+    :'';
+
+  return `
+    <ul class='termsList'>
+      <li>This website is only a sports prediction and entertainment game.</li>
+      <li>You may choose a sport, choose a team or player, make a prediction, and see results, history, and scores.</li>
+      <li>There is no betting, no deposits, no withdrawals, no odds, no betting pools, and no cash prizes.</li>
+      <li>This app does not collect, hold, manage, or transfer money between players.</li>
+      <li>Picks and scores have no cash value.</li>
+    </ul>
+    ${check}
+  `;
+}
+
+// Save or clear the terms tick in this browser.
+function saveTermsAcceptance(accepted){
+  if(accepted===false){
+    localStorage.removeItem(TERMS_KEY);
+    return;
+  }
+
+  localStorage.setItem(TERMS_KEY, 'accepted');
+}
+
+// Query string for the sport and league now in use.
+function fixtureQuery(){
+  const sport=selectedSport||'football';
+  const league=(typeof state!=='undefined'&&state.league)||selectedLeague||'PL';
+  return `sport=${encodeURIComponent(sport)}&league=${encodeURIComponent(league)}`;
+}
 const defaults=[];
 
 const freshState=()=>({
-round:8,
+sport:selectedSport||'football',
+league:selectedLeague||'PL',
+round:(selectedSport||'football')==='football'&&(selectedLeague||'PL')==='PL'?8:1,
 startRound:null,
 registrationClosed:false,
 selectedPlayer:'',
@@ -17,7 +292,8 @@ alive:true,
 picks:{},
 used:[],
 eliminatedRound:null
-}))
+})),
+resultMode:'live'
 });
 
 let state=JSON.parse(localStorage.getItem('lms-state')||'null')||freshState();
@@ -54,6 +330,55 @@ let adminUnlocked=false;
 let authenticatedPlayer=null;
 let authenticatedPin=null;
 
+// Key for the player saved in this browser.
+function playerSessionKey(){
+  return `lms-player:${selectedSport||'football'}:${selectedLeague||''}`;
+}
+
+// Keep the signed-in player after a refresh.
+function rememberPlayer(){
+  if(!authenticatedPlayer||!authenticatedPin){
+    localStorage.removeItem(playerSessionKey());
+    return;
+  }
+
+  localStorage.setItem(playerSessionKey(), JSON.stringify({
+    name:authenticatedPlayer,
+    pin:authenticatedPin
+  }));
+}
+
+// Sign the player out of this browser.
+function logOut(){
+  authenticatedPlayer=null;
+  authenticatedPin=null;
+  localStorage.removeItem(playerSessionKey());
+  tab='home';
+  notice('You are signed out.');
+  render();
+}
+
+// Sign in again from the name and PIN saved in this browser.
+function restorePlayer(){
+  try{
+    const saved=JSON.parse(
+      localStorage.getItem(playerSessionKey())||'null'
+    );
+
+    if(
+      saved?.name &&
+      saved.pin &&
+      state.players.some(player=>player.name===saved.name)
+    ){
+      authenticatedPlayer=saved.name;
+      authenticatedPin=saved.pin;
+    }
+  }catch{
+    authenticatedPlayer=null;
+    authenticatedPin=null;
+  }
+}
+
 let plannerFixturesCache=null;
 let plannerFixturesCacheRound=null;
 
@@ -66,6 +391,10 @@ localStorage.getItem('lms-access')===COMPETITION_CODE;
 const appShell=document.querySelector('.shell');
 
 if(appShell && !competitionUnlocked){
+appShell.style.display='none';
+}
+
+if(appShell && competitionUnlocked && (!selectedSport || !termsAccepted())){
 appShell.style.display='none';
 }
 
@@ -121,10 +450,7 @@ competitionUnlocked=true;
 localStorage.setItem('lms-access',COMPETITION_CODE);
 
 accessGate.remove();
-
-if(appShell){
-appShell.style.display='';
-}
+continueAfterAccess();
 
 };
 
@@ -190,6 +516,10 @@ return Number.isFinite(deadlineTime) && Date.now()>=deadlineTime;
 }
 
 function syncDeadline(){
+if(state.keepPicksOpen){
+  return false;
+}
+
 if(!state.deadlinePassed && deadlineTimePassed()){
   state.deadlinePassed=true;
 
@@ -203,14 +533,89 @@ if(!state.deadlinePassed && deadlineTimePassed()){
 return false;
 }
 
+// Earliest kickoff stored for the round that is open.
+function currentKickoff(){
+  const times=roundFixtures()
+    .map(fixture=>new Date(fixture.kickoff).getTime())
+    .filter(Number.isFinite);
+
+  if(!times.length){
+    return null;
+  }
+
+  return new Date(Math.min(...times));
+}
+
+// Turn the time left into a clock such as 02:14:09.
+function deadlineLeftLabel(endTime){
+  const left=new Date(endTime).getTime()-Date.now();
+
+  if(!Number.isFinite(left) || left<=0){
+    return '';
+  }
+
+  const total=Math.floor(left/1000);
+  const days=Math.floor(total/86400);
+  const hours=Math.floor((total%86400)/3600);
+  const minutes=Math.floor((total%3600)/60);
+  const seconds=total%60;
+  const pad=value=>String(value).padStart(2,'0');
+  const clock=`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+  return days?`${days}d ${clock}`:clock;
+}
+
+// Update the countdown under the title without redrawing the page.
+function paintDeadlineClock(){
+  const clock=document.getElementById('deadlineClock');
+
+  if(!clock){
+    return;
+  }
+
+  const endTime=state.deadline
+    ?new Date(state.deadline)
+    :currentKickoff();
+
+  if(!endTime || !Number.isFinite(endTime.getTime())){
+    clock.hidden=true;
+    return;
+  }
+
+  const label=deadlineLeftLabel(endTime);
+  const left=endTime.getTime()-Date.now();
+  const urgent=Boolean(label) && left>0 && left<60*60*1000;
+  clock.hidden=false;
+  clock.classList.toggle('urgent', !state.deadlinePassed && urgent);
+
+  if(state.deadlinePassed){
+    clock.innerHTML='<span class="kickLabel">Picks</span><span class="kickTime">Closed</span>';
+    return;
+  }
+
+  if(label){
+    if(!state.deadline){
+      state.deadline=endTime.toISOString();
+    }
+
+    clock.innerHTML=`<span class="kickLabel">Closes in</span><span class="kickTime">${esc(label)}</span>`;
+    return;
+  }
+
+  const parts=kickoffParts(endTime);
+  clock.innerHTML=`<span class="kickLabel">Kickoff</span><span class="kickTime">${esc(parts.when)}<span class="kickZone">${esc(parts.zone)}</span></span>`;
+}
+
 async function loadState(){
 try{
-const response=await fetch('/api/state');
+const response=await fetch(`/api/state?${fixtureQuery()}`);
 
 if(response.ok){
 const serverState=await response.json();
 
 if(serverState){
+if(serverState.sport) selectedSport=serverState.sport;
+if(serverState.league) selectedLeague=serverState.league;
 state=serverState;
 
   if(state.registrationClosed===undefined){
@@ -232,6 +637,8 @@ if(p.alive===undefined)p.alive=true;
 if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 });
 
+restorePlayer();
+
 syncDeadline();
 
 localStorage.setItem('lms-state',JSON.stringify(state));
@@ -244,12 +651,75 @@ console.error('Database load failed:',error);
 render();
 }
 
+// Show a short toast, or clear all toasts when the text is empty.
 function notice(t,type='ok'){
-const n=$('#notice');
+  const stack=document.getElementById('toastStack');
 
-n.innerHTML=t
-?`<div class='notice ${type==='warn'?'warn':''}'>${esc(t)}</div>`
-:'';
+  if(!stack){
+    return;
+  }
+
+  if(stack.parentElement!==document.body){
+    document.body.appendChild(stack);
+  }
+
+  if(!t){
+    stack.innerHTML='';
+    return;
+  }
+
+  const alreadyOpen=[...stack.querySelectorAll('.toastMessage')]
+    .some(node=>node.textContent===t);
+
+  if(alreadyOpen){
+    return;
+  }
+
+  const toast=document.createElement('div');
+  toast.className=`toast ${type==='warn'?'warn':'ok'}`;
+  toast.innerHTML=`
+    <div class='toastIcon' aria-hidden='true'>${type==='warn'?'!':'✓'}</div>
+    <p class='toastMessage'>${esc(t)}</p>
+    <button class='toastClose' type='button' aria-label='Close'>×</button>
+    <span class='toastProgress'></span>
+  `;
+
+  const remove=()=>{
+    if(toast.classList.contains('toastOut')){
+      return;
+    }
+
+    toast.classList.add('toastOut');
+    setTimeout(()=>toast.remove(), 220);
+  };
+  toast.querySelector('.toastClose').onclick=remove;
+  stack.appendChild(toast);
+  setTimeout(remove, 4500);
+}
+
+// Ask before a change that is hard to undo.
+function confirmModal(title, message){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+    overlay.className='loginOverlay';
+    overlay.innerHTML=`
+      <div class='loginModal'>
+        <h2>${esc(title)}</h2>
+        <p class='muted'>${esc(message)}</p>
+        <button id='confirmYes' class='loginContinue' type='button'>Yes, continue</button>
+        <button id='confirmNo' class='loginCancel' type='button'>Cancel</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close=value=>{
+      overlay.remove();
+      resolve(value);
+    };
+
+    overlay.querySelector('#confirmYes').onclick=()=>close(true);
+    overlay.querySelector('#confirmNo').onclick=()=>close(false);
+  });
 }
 
 function alivePlayers(){
@@ -284,15 +754,75 @@ function pickedTeams(){
 return [...new Set(roundPicks())].sort();
 }
 
+// List every team in the loaded matches.
+function fixtureTeams(){
+  return [...new Set(
+    roundFixtures().flatMap(item=>[item.home,item.away].filter(Boolean))
+  )].sort();
+}
+
 function roundFixtures(){
 return state.fixtures[state.round]||[];
 }
 
+// Copy one API match into the shape the screen uses.
+function mapApiMatch(match){
+  return {
+    home:match.homeTeam?.name||'',
+    away:match.awayTeam?.name||'',
+    homeCrest:match.homeTeam?.crest||'',
+    awayCrest:match.awayTeam?.crest||'',
+    kickoff:match.utcDate,
+    kind:match.kind||'match',
+    position:match.position||null,
+    homeScore:match.score?.fullTime?.home??null,
+    awayScore:match.score?.fullTime?.away??null
+  };
+}
+
+// Read the real result for one picked team from the loaded match.
+function outcomeFromFixture(team){
+  const fixture=roundFixtures().find(item=>
+    item.home===team || item.away===team
+  );
+
+  if(!fixture || fixture.homeScore==null || fixture.awayScore==null){
+    return '';
+  }
+
+  const isHome=fixture.home===team;
+  const mine=Number(isHome?fixture.homeScore:fixture.awayScore);
+  const theirs=Number(isHome?fixture.awayScore:fixture.homeScore);
+
+  if(mine>theirs){
+    return 'win';
+  }
+
+  if(mine<theirs){
+    return 'loss';
+  }
+
+  if(mine===0 && theirs===0){
+    return isHome?'zero-home':'zero-away';
+  }
+
+  return 'score-draw';
+}
+
+// Short words for a stored result.
+function resultWords(result){
+  if(result==='win') return 'Won';
+  if(result==='loss') return 'Lost';
+  if(result==='score-draw') return 'Draw';
+  if(result==='zero-home') return '0–0 at home';
+  if(result==='zero-away') return '0–0 away';
+  if(result==='no-result') return 'No result';
+  return '';
+}
+
 async function loadEplFixtures(){
 try{
-notice(`Loading EPL Matchweek ${state.round} fixtures...`);
-
-const r=await fetch(`/api/football?round=${state.round}`);
+const r=await fetch(`/api/football?round=${state.round}&${fixtureQuery()}`);
 const data=await r.json();
 
 if(!r.ok){
@@ -301,13 +831,7 @@ data.error||'Could not load fixtures'
 );
 }
 
-state.fixtures[state.round]=(data.matches||[]).map(m=>({
-home:m.homeTeam.name,
-away:m.awayTeam.name,
-homeCrest:m.homeTeam.crest,
-awayCrest:m.awayTeam.crest,
-kickoff:m.utcDate
-}));
+state.fixtures[state.round]=(data.matches||[]).map(mapApiMatch);
 
 const kickoffTimes=state.fixtures[state.round]
 .map(f=>new Date(f.kickoff).getTime())
@@ -325,7 +849,7 @@ syncDeadline();
 saveAdmin();
 
 notice(
-`Loaded ${state.fixtures[state.round].length} EPL fixtures for Matchweek ${state.round}.`
+`Loaded ${state.fixtures[state.round].length} matches for ${roundTitle(state.round)}.`
 );
 
 render();
@@ -400,9 +924,9 @@ return match && match.status==='FINISHED';
 
 async function loadEplResults(){
 try{
-notice(`Checking EPL Matchweek ${state.round} results...`);
+notice(`Checking EPL ${roundTitle(state.round)} results...`);
 
-const r=await fetch(`/api/football?round=${state.round}`);
+const r=await fetch(`/api/football?round=${state.round}&${fixtureQuery()}`);
 const data=await r.json();
 
 if(!r.ok){
@@ -432,8 +956,19 @@ e.message||'Could not load EPL results',
 }
 }
 
+// Decide if this result keeps the player in the game.
 function outcomeSurvives(outcome){
-return outcome==='win'||outcome==='zero-away';
+  const sport=selectedSport||state.sport||'football';
+
+  if(sport==='football'){
+    return outcome==='win'||outcome==='zero-away';
+  }
+
+  if(sport==='cricket'){
+    return outcome==='win'||outcome==='no-result';
+  }
+
+  return outcome==='win';
 }
 function livePlayerStatus(p){
   if(!p.alive){
@@ -465,7 +1000,13 @@ return t
 .toUpperCase();
 }
 
-function savePick(team){
+async function savePick(team){
+ if(!termsAccepted()){
+  return notice(
+    'Please read this and agree before you play.',
+    'warn'
+  );
+ }
  if(!authenticatedPlayer){
   return notice(
     'Please authenticate before making a pick.',
@@ -474,21 +1015,23 @@ function savePick(team){
 }
 if(syncDeadline()){
 fetch('/api/deadline',{
-  method:'POST'
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({sport:selectedSport||'football'})
 }).catch(error=>
   console.error('Deadline save failed:',error)
 );
 render();
 
 return notice(
-`Matchweek ${state.round} selections are closed because the first match has kicked off.`,
+`${roundTitle(state.round)} selections are closed because the first match has kicked off.`,
 'warn'
 );
 }
 
 if(state.deadlinePassed){
 return notice(
-`Selections are closed for Matchweek ${state.round}.`,
+`Selections are closed for ${roundTitle(state.round)}.`,
 'warn'
 );
 }
@@ -531,6 +1074,16 @@ return notice(
 );
 }
 
+const noun=(sportById(selectedSport)||{}).pickNoun||'team';
+const agreed=await confirmModal(
+  `Pick ${team}?`,
+  `This ${noun} cannot be used again in this competition.`
+);
+
+if(!agreed){
+  return;
+}
+
 const prev=p.picks[state.round];
 
 if(prev){
@@ -547,7 +1100,9 @@ body:JSON.stringify({
   playerName:p.name,
   team:team,
   round:state.round,
- pin:authenticatedPin
+  pin:authenticatedPin,
+  sport:selectedSport||'football',
+  league:selectedLeague||'PL'
 })
 })
 .then(async response=>{
@@ -563,6 +1118,7 @@ state.selectedPlayer=authenticatedPlayer;
 localStorage.setItem('lms-state',JSON.stringify(state));
 }
 
+pulseTeam=team;
 render();
 })
 .catch(error=>{
@@ -570,9 +1126,8 @@ notice(
 `Pick could not be saved: ${error.message}`,
 'warn'
 );
-});
-
 render();
+});
 }
 
 function processRound(automatic=false){
@@ -641,7 +1196,7 @@ render();
 
 notice(
 automatic
-?`Matchweek ${state.round} was processed automatically. Everyone failed, so all remaining players stay alive. Their selected teams still count as used.`
+?`${roundTitle(state.round)} was processed automatically. Everyone failed, so all remaining players stay alive. Their selected teams still count as used.`
 :'Everyone failed this Matchweek, so all remaining players stay alive. Their selected teams still count as used.'
 );
 
@@ -660,8 +1215,8 @@ render();
 
 notice(
 automatic
-?`Matchweek ${state.round} was processed automatically. ${alive()} player${alive()===1?'':'s'} remain alive.`
-:`Matchweek ${state.round} processed. ${alive()} player${alive()===1?'':'s'} remain alive.`
+?`${roundTitle(state.round)} was processed automatically. ${alive()} player${alive()===1?'':'s'} remain alive.`
+:`${roundTitle(state.round)} processed. ${alive()} player${alive()===1?'':'s'} remain alive.`
 );
 
 return true;
@@ -677,7 +1232,12 @@ async function autoCheckResults(){
   if(deadlineJustClosed){
     try{
       await fetch('/api/deadline',{
-        method:'POST'
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          sport:selectedSport||'football',
+  league:selectedLeague||'PL'
+        })
       });
     }catch(error){
       console.error(
@@ -807,8 +1367,8 @@ state.selectedPlayer=p.name;
 
 notice(
 state.deadlinePassed
-?`Matchweek ${state.round} processing undone. Selections remain closed because the deadline has passed.`
-:`Matchweek ${state.round} processing undone. Selections are open again.`
+?`${roundTitle(state.round)} processing undone. Selections remain closed because the deadline has passed.`
+:`${roundTitle(state.round)} processing undone. Selections are open again.`
 );
 saveAdmin();
 render();
@@ -839,7 +1399,7 @@ state.processSnapshot=null;
 await saveAdmin();
 
 notice(
-`Matchweek ${state.round} is now open. Loading EPL fixtures...`
+`${roundTitle(state.round)} is now open. Loading EPL fixtures...`
 );
 
 render();
@@ -885,16 +1445,38 @@ return `<div class='standingRow'>
 }).join('')
 }</div>`;
 }
-function fixtureCard(home,away,current,p,homeCrest,awayCrest){
+function fixtureCard(home,away,current,p,homeCrest,awayCrest,fixture){
 const hUsed=
 p.used.includes(home)&&current!==home;
 
 const aUsed=
 p.used.includes(away)&&current!==away;
+const when=kickoffLabel(fixture?.kickoff);
+const detail=fixture?.kind==='entry'
+  ?esc(away)
+  :'';
+const timeLine=when
+  ?`<p class='kickoffLine'>${esc(when)}</p>`
+  :'';
+
+if(fixture?.kind==='entry'){
+  return `<div class='fixtureCard entryCard'>
+<button
+class='teamPick ${current===home?'selected':''}${pulseTeam===home?' justChosen':''}'
+data-team='${esc(home)}'
+${hUsed?'disabled':''}
+>
+<span class='crest'>${shortTeam(home)}</span>
+<span>${esc(home)}</span>
+${current===home?`<small>Choosing</small>`:hUsed?`<small>Picked</small>`:''}
+</button>
+<p class='muted'>${detail}${timeLine}</p>
+</div>`;
+}
 
 return `<div class='fixtureCard'>
 <button
-class='teamPick ${current===home?'selected':''}'
+class='teamPick ${current===home?'selected':''}${pulseTeam===home?' justChosen':''}'
 data-team='${esc(home)}'
 ${hUsed?'disabled':''}
 >
@@ -907,13 +1489,13 @@ ${homeCrest
 
 <span>${esc(home)}</span>
 
-${hUsed?`<small>Used</small>`:''}
+${current===home?`<small>Choosing</small>`:hUsed?`<small>Picked</small>`:''}
 </button>
 
 <div class='vs'>v</div>
 
 <button
-class='teamPick ${current===away?'selected':''}'
+class='teamPick ${current===away?'selected':''}${pulseTeam===away?' justChosen':''}'
 data-team='${esc(away)}'
 ${aUsed?'disabled':''}
 >
@@ -926,8 +1508,9 @@ ${awayCrest
 
 <span>${esc(away)}</span>
 
-${aUsed?`<small>Used</small>`:''}
+${current===away?`<small>Choosing</small>`:aUsed?`<small>Picked</small>`:''}
 </button>
+${timeLine}
 </div>`;
 }
 
@@ -1009,31 +1592,17 @@ async function enableNotifications(){
         });
     }
 
-    const playerName=
-  prompt('Enter your player name');
+    const playerName=authenticatedPlayer;
+    const pin=authenticatedPin;
 
-if(!playerName){
-  notice(
-    'Notification setup cancelled.',
-    'warn'
-  );
-  render();
-  return;
-}
-
-const pin=
-  prompt(
-    `Enter the 4-digit PIN for ${playerName}`
-  );
-
-if(!pin){
-  notice(
-    'Notification setup cancelled.',
-    'warn'
-  );
-  render();
-  return;
-}
+    if(!playerName||!pin){
+      notice(
+        'Please log in before enabling notifications.',
+        'warn'
+      );
+      render();
+      return;
+    }
 
 const subscribeResponse=
   await fetch('/api/push-subscribe',{
@@ -1044,6 +1613,8 @@ const subscribeResponse=
     body:JSON.stringify({
       playerName,
       pin,
+      sport:selectedSport||'football',
+  league:selectedLeague||'PL',
       subscription:
         subscription.toJSON()
     })
@@ -1077,7 +1648,7 @@ render();
     );
 
     notice(
-      'Could not enable notifications.',
+      error.message || 'Could not enable notifications.',
       'warn'
     );
   }
@@ -1094,16 +1665,16 @@ async function loadPlannerFixtures(){
     return plannerFixturesCache;
   }
   
-  const matchweeks = [
-    Number(state.round),
-    Number(state.round) + 1,
-    Number(state.round) + 2,
-    Number(state.round) + 3
-  ];
+  const matchweeks = [];
+  const firstWeek = Math.max(1, currentRound - 8);
+
+  for (let week = currentRound; week >= firstWeek; week -= 1) {
+    matchweeks.push(week);
+  }
 
   async function loadMatchweek(matchweek){
     const response = await fetch(
-      `/api/football?round=${matchweek}`
+      `/api/football?round=${matchweek}&${fixtureQuery()}`
     );
 
     const data = await response.json();
@@ -1167,6 +1738,54 @@ async function loadPlannerFixtures(){
   return plannerFixturesCache;
 
        }
+// Ask for the admin PIN inside the page.
+function adminPinModal(){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+    overlay.className='loginOverlay';
+
+    overlay.innerHTML=`
+      <div class='loginModal'>
+        <div class='eyebrow dark'>ADMIN</div>
+        <h2>Admin PIN</h2>
+        <p class='muted'>Enter the admin PIN to continue.</p>
+        <input id='adminPinInput' class='loginInput' type='password' autocomplete='off' placeholder='PIN'>
+        <div id='adminPinError' class='loginError'></div>
+        <button id='adminPinContinue' class='loginContinue' type='button'>Continue</button>
+        <button id='adminPinCancel' class='loginCancel' type='button'>Cancel</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input=overlay.querySelector('#adminPinInput');
+
+    const finish=value=>{
+      overlay.remove();
+      resolve(value);
+    };
+
+    overlay.querySelector('#adminPinContinue').onclick=()=>{
+      const pin=input.value.trim();
+
+      if(!pin){
+        overlay.querySelector('#adminPinError').textContent='Enter the admin PIN.';
+        return;
+      }
+
+      finish(pin);
+    };
+
+    overlay.querySelector('#adminPinCancel').onclick=()=>finish(null);
+    input.addEventListener('keydown', event=>{
+      if(event.key==='Enter'){
+        overlay.querySelector('#adminPinContinue').click();
+      }
+    });
+    input.focus();
+  });
+}
+
 function playerLoginModal(){
   return new Promise(resolve=>{
     const overlay=document.createElement('div');
@@ -1388,22 +2007,83 @@ function joinCompetitionModal(){
     );
   });
 }
+let lastRenderedTab='';
+let pulseTeam='';
+
+// Draw the current tab. A new tab starts at the top.
 async function render(){
+const sameTab=lastRenderedTab===tab;
+const keepScroll=sameTab?window.scrollY:0;
+lastRenderedTab=tab;
+queueMicrotask(()=>window.scrollTo(0, keepScroll));
 syncDeadline();
+paintDeadlineClock();
+paintSport();
+
+const pickTab=document.querySelector('[data-tab="pick"]');
+if(pickTab){
+  pickTab.hidden=!authenticatedPlayer;
+}
+if(tab==='pick'&&!authenticatedPlayer){
+  tab='home';
+}
+
+const leagueName=sportById(selectedSport)
+  ?.leagues
+  ?.find(item=>item.id===selectedLeague)
+  ?.label;
 
 $('#summary').textContent=
-`Matchweek ${state.round} · ${alive()} player${alive()==1?'':'s'} alive`;
+`${leagueName?`${leagueName} · `:''}${roundTitle(state.round)} · ${alive()} player${alive()==1?'':'s'} alive`;
 
 document
 .querySelectorAll('.tabs button')
-.forEach(b=>
-b.classList.toggle(
-'active',
-b.dataset.tab===tab
-)
-);
+.forEach(b=>{
+  b.classList.toggle(
+    'active',
+    b.dataset.tab===tab
+  );
+
+  b.onclick=async ()=>{
+    if(b.dataset.tab==='admin' && !adminUnlocked){
+      const pin=await adminPinModal();
+
+      if(!pin){
+        return;
+      }
+
+      try{
+        const response=await fetch('/api/admin-auth',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({pin})
+        });
+        const data=await response.json();
+
+        if(!response.ok){
+          notice(data.error||'Incorrect Admin PIN.','warn');
+          return;
+        }
+
+        adminUnlocked=true;
+        authenticatedAdminPin=pin;
+      }catch(error){
+        notice('Unable to authenticate Admin. Please try again.','warn');
+        return;
+      }
+    }
+
+    tab=b.dataset.tab;
+    notice('');
+    render();
+  };
+});
 
 const c=$('#content');
+
+if(c){
+  c.classList.toggle('tabIn', !sameTab);
+}
 
 if(tab==='home'){
 const w=winner();
@@ -1420,7 +2100,18 @@ const notificationPlayer=
 c.innerHTML=`
 
 ${
-notificationsSupported&&!notificationPlayer
+!termsAccepted()
+?`
+<div class="card">
+<h2>Before you play</h2>
+<p class="gateChoice">Please read this, then tick the box.</p>
+${termsMarkup('homeTermsCheck')}
+<button class="primary" id="acceptTerms" type="button" disabled>
+I agree and want to play
+</button>
+</div>
+`
+:authenticatedPlayer&&notificationsSupported&&!notificationPlayer
 ?`
 <div class='card'>
 <h2>Notifications</h2>
@@ -1447,7 +2138,7 @@ ${
 ${
 !state.registrationClosed
 ?`
-<h2>Join Competition</h2>
+<h2>Join ${esc(leagueName||'the competition')}</h2>
 
 <p class='joinIntro'>
   New here? Create your player profile and 4-digit PIN.
@@ -1465,13 +2156,9 @@ ${
 :''
 }
 
-<div class='homeLogin'>
+<div class='homeLogin${!state.registrationClosed?' homeLoginSplit':''}'>
   <p class='muted'>
-    ${
-      !state.registrationClosed
-      ?'Already playing?'
-      :'Already playing? Sign in below.'
-    }
+    Already playing? Sign in with your name and PIN.
   </p>
 
   <button
@@ -1569,7 +2256,7 @@ const myCrest=
       </h2>
 
       <p>
-        <b>Matchweek ${state.round}</b>
+        <b>${roundTitle(state.round)}</b>
       </p>
 
 
@@ -1581,6 +2268,7 @@ const myCrest=
           :'None yet'
         }
       </p>
+      <button class='logOutBtn' id='logOutBtn' type='button'>Log out</button>
 ${
   me.alive
   ?''
@@ -1598,7 +2286,7 @@ ${
 
 <div class='grid stats'>
 <div class='card'>
-<span>Current Matchweek</span>
+<span>Current ${roundNoun()}</span>
 <strong>${state.round}</strong>
 </div>
 
@@ -1633,31 +2321,18 @@ ${renderStandings()}
 <summary><h2>Competition rules</h2></summary>
 
 <ul>
-<li>
-The competition continues until one player remains.
-</li>
-
-<li>
-Pick one EPL team each Matchweek. A team can only be used once by each player.
-</li>
-
-<li>
-Win = survive. Loss or score draw = eliminated.
-</li>
-
-<li>
-For a 0–0 draw, the away-team picker survives; the home-team picker is eliminated.
-</li>
-
-<li>
-No pick before the deadline = eliminated.
-</li>
-
-<li>
-If every remaining player is eliminated in the same Matchweek, they all stay alive, but their selected teams still count as used.
-</li>
+${
+(sportById(selectedSport)||sportById('football')).rules
+.map(rule=>`<li>${esc(rule)}</li>`)
+.join('')
+}
 </ul>
 </details>
+
+<div class='card'>
+  <h2>Before you play</h2>
+  ${termsMarkup()}
+</div>
 `;
 
 
@@ -1701,7 +2376,9 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
         },
         body:JSON.stringify({
           playerName:selected.name,
-          pin:login.pin
+          pin:login.pin,
+          sport:selectedSport||'football',
+  league:selectedLeague||'PL'
         })
       });
 
@@ -1718,6 +2395,7 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
 
     authenticatedPlayer=selected.name;
     authenticatedPin=login.pin;
+    rememberPlayer();
     state.selectedPlayer=selected.name;
 
     notice('');
@@ -1730,7 +2408,33 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
     );
   }
 };
+  if($('#acceptTerms')){
+    const homeCheck=$('#homeTermsCheck');
+
+    if(homeCheck){
+      homeCheck.onchange=()=>{
+        $('#acceptTerms').disabled=!homeCheck.checked;
+        saveTermsAcceptance(homeCheck.checked);
+      };
+    }
+
+    $('#acceptTerms').onclick=async ()=>{
+      if(!$('#homeTermsCheck')?.checked){
+        return;
+      }
+
+      saveTermsAcceptance();
+      notice('You can play now.','ok');
+      render();
+    };
+  }
   if($('#joinBtn')) $('#joinBtn').onclick=async ()=>{
+if(!termsAccepted()){
+  return notice(
+    'Please read this and agree before you play.',
+    'warn'
+  );
+}
 if(state.registrationClosed){
   $('#joinMessage').innerHTML=
     `<div class='notice warn'>Registration is closed. The competition has already started.</div>`;
@@ -1765,7 +2469,9 @@ method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({
 name:name.trim(),
-pin
+pin,
+sport:selectedSport||'football',
+league:selectedLeague||'PL'
 })
 })
 .then(async response=>{
@@ -1779,6 +2485,7 @@ if(data.state){
   state=data.state;
   authenticatedPlayer=name.trim();
   authenticatedPin=pin;
+  rememberPlayer();
   state.selectedPlayer=authenticatedPlayer;
   localStorage.setItem('lms-state',JSON.stringify(state));
 }
@@ -1804,9 +2511,13 @@ if(enableNotificationsBtn){
     enableNotifications;
 }
   
+  if($('#logOutBtn')){
+    $('#logOutBtn').onclick=logOut;
+  }
+
   $('#homeAdminBtn').onclick=async ()=>{
   if(!adminUnlocked){
-    const pin=prompt('Enter Admin PIN:');
+    const pin=await adminPinModal();
 
     if(!pin){
       return;
@@ -1845,73 +2556,10 @@ if(enableNotificationsBtn){
 }
 
 if(tab==='pick'){
-  if(!authenticatedPlayer){
-    const login=
-      await playerLoginModal();
-
-    if(!login){
-      tab='home';
-      render();
-      return;
-    }
-
-    const selected=
-      state.players.find(
-        p=>
-          p.alive &&
-          p.name.toLowerCase()===
-          login.name.toLowerCase()
-      );
-
-    if(!selected){
-      notice(
-        'Player not found or already eliminated.',
-        'warn'
-      );
-      tab='home';
-      render();
-      return;
-    }
-
-    try{
-      const response=
-        await fetch('/api/auth',{
-          method:'POST',
-          headers:{
-            'Content-Type':'application/json'
-          },
-          body:JSON.stringify({
-            playerName:selected.name,
-            pin:login.pin
-          })
-        });
-
-      const data=
-        await response.json();
-
-      if(!response.ok){
-        notice(
-          data.error||'Incorrect PIN.',
-          'warn'
-        );
-        tab='home';
-        render();
-        return;
-      }
-
-      authenticatedPlayer=selected.name;
-      authenticatedPin=login.pin;
-      state.selectedPlayer=selected.name;
-
-    }catch(error){
-      notice(
-        'Unable to authenticate. Please try again.',
-        'warn'
-      );
-      tab='home';
-      render();
-      return;
-    }
+  if(!authenticatedPlayer||!termsAccepted()){
+    tab='home';
+    render();
+    return;
   }
 const p=
   state.players.find(
@@ -1920,10 +2568,25 @@ const p=
       player.alive
   );
 
+if(!p){
+  authenticatedPlayer=null;
+  authenticatedPin=null;
+  tab='home';
+  notice('Please log in again before making a pick.','warn');
+  render();
+  return;
+}
+
 const current=
 p.picks[state.round]||'';
 
-const avail=teams.filter(
+const pickPool=
+  (selectedSport||'football')==='football' &&
+  (state.league||selectedLeague)==='PL'
+    ?teams
+    :[];
+
+const avail=pickPool.filter(
 t=>
 !p.used.includes(t) ||
 t===current
@@ -1935,7 +2598,7 @@ if(!fixtures.length){
   try{
     const response=
       await fetch(
-        `/api/football?round=${state.round}`
+        `/api/football?round=${state.round}&${fixtureQuery()}`
       );
 
     const data=
@@ -1943,13 +2606,8 @@ if(!fixtures.length){
 
     if(response.ok){
       fixtures=
-        (data.matches||[]).map(m=>({
-          home:m.homeTeam.name,
-          away:m.awayTeam.name,
-          homeCrest:m.homeTeam.crest,
-          awayCrest:m.awayTeam.crest,
-          kickoff:m.utcDate
-        }));
+        (data.matches||[]).map(mapApiMatch);
+      state.fixtures[state.round]=fixtures;
     }
   }catch(error){
     console.error(
@@ -1964,7 +2622,7 @@ c.innerHTML=`
 <div class='sectionHead'>
 <div>
 <div class='eyebrow dark'>
-Matchweek ${state.round}
+${roundTitle(state.round)}
 </div>
 
 
@@ -1972,7 +2630,7 @@ Matchweek ${state.round}
 </div>
 
 <div class='pickGreeting'>
-  Hi ${esc(authenticatedPlayer)}, choose your team for Matchweek ${state.round}.
+  Hi ${esc(authenticatedPlayer)}, choose your ${(sportById(selectedSport)||{}).pickNoun||'team'} for ${leagueName?`${esc(leagueName)} · `:''}${roundTitle(state.round)}.
 </div>
 
 ${
@@ -1987,7 +2645,7 @@ Current pick:
 ${
 state.deadlinePassed
 ?`<div class='closedBox'>
-Selections are closed for Matchweek ${state.round}.
+Selections are closed for ${roundTitle(state.round)}.
 </div>`
 :fixtures.length
 ?`<label>Fixtures</label>
@@ -2002,13 +2660,15 @@ f.away,
 current,
 p,
 f.homeCrest,
-f.awayCrest
+f.awayCrest,
+f
 )
 )
 .join('')
 }
 </div>`
-:`<label>Team</label>
+:selectedSport==='football'
+?`<label>Team</label>
 
 <select id='teamSel'>
 <option value=''>
@@ -2038,6 +2698,9 @@ Save Pick
 <p class='muted'>
 No fixtures entered yet — team-list mode is active.
 </p>`
+:`<p class='muted'>
+Fixtures for this round are not available yet.
+</p>`
 }
 
 <p class='usedTeams'>
@@ -2050,6 +2713,7 @@ p.used.length
 </p>
 </section>
 `;
+pulseTeam='';
 
 if(!state.deadlinePassed){
 if($('#savePick')){
@@ -2073,73 +2737,6 @@ b.dataset.team
 
 if(tab==='fixtures'){
     const fixturesTabAtLoad = tab;
-  if(!authenticatedPlayer){
-    const login=
-      await playerLoginModal();
-
-    if(!login){
-      tab='home';
-      render();
-      return;
-    }
-
-    const selected=
-      state.players.find(
-        p=>
-          p.alive &&
-          p.name.toLowerCase()===
-          login.name.toLowerCase()
-      );
-
-    if(!selected){
-      notice(
-        'Player not found or already eliminated.',
-        'warn'
-      );
-      tab='home';
-      render();
-      return;
-    }
-
-    try{
-      const response=
-        await fetch('/api/auth',{
-          method:'POST',
-          headers:{
-            'Content-Type':'application/json'
-          },
-          body:JSON.stringify({
-            playerName:selected.name,
-            pin:login.pin
-          })
-        });
-
-      const data=
-        await response.json();
-
-      if(!response.ok){
-        notice(
-          data.error||'Incorrect PIN.',
-          'warn'
-        );
-        tab='home';
-        render();
-        return;
-      }
-
-      authenticatedPlayer=selected.name;
-      authenticatedPin=login.pin;
-
-    }catch(error){
-      notice(
-        'Unable to authenticate. Please try again.',
-        'warn'
-      );
-      tab='home';
-      render();
-      return;
-    }
-  }
 
   const plannerPlayer=
     state.players.find(
@@ -2150,7 +2747,7 @@ if(tab==='fixtures'){
 
     <div class='card'>
       <p>
-        Loading the next four Matchweeks…
+        Loading this ${roundNoun().toLowerCase()} and earlier ones…
       </p>
     </div>
   `;
@@ -2167,20 +2764,20 @@ if(tab==='fixtures'){
 
    ${    
         planner.map(item=>`
-         <details class='card matchweekDropdown'>
+         <details class='card matchweekDropdown' ${item.matchweek===Number(state.round)?'open':''}>
             <summary class='matchweekSummary'>
   <div class='sectionHead'>
     <div>
       <div class='eyebrow dark'>
         ${
   item.matchweek===Number(state.round)
-    ?'CURRENT MATCHWEEK'
-  :'UPCOMING'
+    ?'THIS MATCHWEEK'
+  :'EARLIER'
 }
       </div>
 
       <h2>
-        Matchweek ${item.matchweek}
+        ${roundTitle(item.matchweek)}
       </h2>
     </div>
   </div>
@@ -2195,24 +2792,32 @@ item.matches.length
   const away=
     match.awayTeam?.name || '';
 
+  // Match team names with or without the FC suffix.
+  const sameClub=(left,right)=>
+    String(left||'').replace(/ FC$/,'')===
+    String(right||'').replace(/ FC$/,'');
+  const currentPick=
+    plannerPlayer?.picks?.[state.round]||'';
+  const weekIsCurrent=item.matchweek===Number(state.round);
   const homeUsed=
-    plannerPlayer?.used?.some(
-      team=>
-        team.replace(/ FC$/,'')===
-        home.replace(/ FC$/,'')
-    );
-
+    plannerPlayer?.used?.some(team=>sameClub(team,home));
   const awayUsed=
-    plannerPlayer?.used?.some(
-      team=>
-        team.replace(/ FC$/,'')===
-        away.replace(/ FC$/,'')
-    );
+    plannerPlayer?.used?.some(team=>sameClub(team,away));
+  const homeChoosing=
+    weekIsCurrent && sameClub(home,currentPick);
+  const awayChoosing=
+    weekIsCurrent && sameClub(away,currentPick);
+
+  const homeScore=match.score?.fullTime?.home;
+  const awayScore=match.score?.fullTime?.away;
+  const hasScore=homeScore!=null
+    && awayScore!=null
+    && (!weekIsCurrent || state.deadlinePassed);
 
   return `
     <div class='fixtureCard'>
 
-      <div class='plannerTeam ${homeUsed?'plannerTeamUsed':''}'>
+      <div class='plannerTeam ${homeChoosing?'plannerTeamChoosing':homeUsed?'plannerTeamUsed':''}'>
         ${
           match.homeTeam?.crest
             ?`<img
@@ -2226,10 +2831,13 @@ item.matches.length
         <span class='plannerTeamName'>
           ${esc(home)}
         </span>
+        ${hasScore?`<span class='plannerScore'>${esc(String(homeScore))}</span>`:''}
 
         ${
-          homeUsed
-            ?`<span class='plannerUsed'>Used</span>`
+          homeChoosing
+            ?`<span class='plannerUsed plannerChoosing'>Choosing</span>`
+            :homeUsed
+            ?`<span class='plannerUsed'>Picked</span>`
             :''
         }
       </div>
@@ -2238,7 +2846,7 @@ item.matches.length
         v
       </div>
 
-      <div class='plannerTeam ${awayUsed?'plannerTeamUsed':''}'>
+      <div class='plannerTeam ${awayChoosing?'plannerTeamChoosing':awayUsed?'plannerTeamUsed':''}'>
         ${
           match.awayTeam?.crest
             ?`<img
@@ -2252,10 +2860,13 @@ item.matches.length
         <span class='plannerTeamName'>
           ${esc(away)}
         </span>
+        ${hasScore?`<span class='plannerScore'>${esc(String(awayScore))}</span>`:''}
 
         ${
-          awayUsed
-            ?`<span class='plannerUsed'>Used</span>`
+          awayChoosing
+            ?`<span class='plannerUsed plannerChoosing'>Choosing</span>`
+            :awayUsed
+            ?`<span class='plannerUsed'>Picked</span>`
             :''
         }
       </div>
@@ -2279,12 +2890,15 @@ item.matches.length
       error
     );
 
+    notice(
+      error.message||'Could not load upcoming fixtures.',
+      'warn'
+    );
+
     c.innerHTML=`
       <h2>Fixtures</h2>
 
-      <div class='notice warn'>
-        Could not load upcoming fixtures.
-      </div>
+      <p class='muted'>Could not load upcoming fixtures.</p>
     `;
   }
 }
@@ -2367,48 +2981,13 @@ ${
 </div>
 
 <div class='pickLine'>
-Matchweek ${displayRound}:
+${roundTitle(displayRound)}:
 ${esc(shown)}
-</div>
-
-<div class='muted'>
-<strong>Pick history:</strong>
-${
-Object.keys(p.picks || {})
-  .map(Number)
-  .filter(matchweek =>
-    matchweek < Number(state.round)
-  )
-  .sort((a,b) => a-b)
-  .map(matchweek => {
-  const pick=p.picks[matchweek];
-  const fixture=(state.fixtures[matchweek]||[]).find(
-    f=>
-      f.home.replace(/ FC$/,'')===pick.replace(/ FC$/,'') ||
-      f.away.replace(/ FC$/,'')===pick.replace(/ FC$/,'')
-  );
-
-  const crest=fixture
-    ?(
-      fixture.home.replace(/ FC$/,'')===pick.replace(/ FC$/,'')
-        ?fixture.homeCrest
-        :fixture.awayCrest
-    )
-    :'';
-
-  return crest
-    ?`MW${matchweek}: <img class='historyCrest' src='${esc(crest)}' alt='${esc(pick)} badge'>`
-    :`MW${matchweek}: ${esc(pick)}`;
-})
-.join(' · ')
-|| 'None'
-}
 </div>
 </div>`;
 }).join('')
 }
 </div>
-
 `;
 }
 
@@ -2419,178 +2998,123 @@ notice('Admin access is locked.','warn');
 render();
 return;
 }
-const teamRows=
-pickedTeams().length
-?pickedTeams().map(t=>
-`<div class='resultRow'>
-<div class='resultTeam'>
-${esc(t)}
-</div>
+const manual=state.resultMode==='manual';
+const teams=manual?fixtureTeams():pickedTeams();
+const teamRows=teams.length
+?teams.map(t=>{
+  if(!manual){
+    const liveResult=outcomeFromFixture(t);
 
-<select
-class='resultSel'
-data-team='${esc(t)}'
-${state.roundProcessed?'disabled':''}
->
-<option value=''>
-Select result…
-</option>
+    if(liveResult){
+      state.results[t]=liveResult;
+    }
 
-<option
-value='win'
-${state.results[t]==='win'?'selected':''}
->
-Win
-</option>
+    const shown=state.results[t]||liveResult;
 
-<option
-value='loss'
-${state.results[t]==='loss'?'selected':''}
->
-Loss
-</option>
+    return `<div class='resultRow'>
+<div class='resultTeam'>${esc(t)}</div>
+<p class='muted'>${shown?esc(resultWords(shown)):'The match result is not in yet.'}</p>
+</div>`;
+  }
 
-<option
-value='score-draw'
-${state.results[t]==='score-draw'?'selected':''}
->
-Score draw
-</option>
+  const current=state.results[t]||'';
+  const options=selectedSport==='football'
+    ?[
+      ['','Select result…'],
+      ['win','Win'],
+      ['loss','Loss'],
+      ['score-draw','Score draw'],
+      ['zero-home','0–0 draw — this team was HOME'],
+      ['zero-away','0–0 draw — this team was AWAY']
+    ]
+    :[
+      ['','Select result…'],
+      ['win','Win'],
+      ['loss','Loss'],
+      ['score-draw','Draw']
+    ];
 
-<option
-value='zero-home'
-${state.results[t]==='zero-home'?'selected':''}
->
-0–0 draw — picked team was HOME
-</option>
-
-<option
-value='zero-away'
-${state.results[t]==='zero-away'?'selected':''}
->
-0–0 draw — picked team was AWAY
-</option>
+  return `<div class='resultRow'>
+<div class='resultTeam'>${esc(t)}</div>
+<select class='resultSel' data-team='${esc(t)}' ${state.roundProcessed?'disabled':''}>
+${options.map(([value,label])=>`<option value='${value}' ${current===value?'selected':''}>${label}</option>`).join('')}
 </select>
-</div>`
-).join('')
+</div>`;
+}).join('')
 :`<p class='muted'>
-No team selections have been made yet.
+${manual?'Download the matches first.':'No team selections have been made yet.'}
 </p>`;
 
 const w=winner();
 const fixtures=roundFixtures();
-const automaticClosed=
-deadlineTimePassed();
 
 c.innerHTML=`
 <section class='card formCard'>
-<h2>Admin</h2
-
+<h2>Admin</h2>
 
 <p class='muted'>
-${fixtures.length
-?`${fixtures.length} fixtures loaded for Matchweek ${state.round}.`
-:`No fixtures loaded for Matchweek ${state.round}.`
-}
+Run the current ${roundNoun().toLowerCase()} from here. Live mode uses the real match result. Manual mode lets you set who won.
 </p>
 
-<hr>
-
-<label>
-Matchweek ${state.round} selection deadline
-</label>
-
-${
-state.deadline
-?`<p class='muted'>
-Automatic cutoff:
-${esc(
-new Date(
-state.deadline
-).toLocaleString()
-)}
-</p>`
-:`<p class='muted'>
-Load EPL fixtures to set the automatic cutoff time.
-</p>`
-}
-
-<div class='adminState'>
-<span
-class='statusPill ${state.deadlinePassed?'closed':'open'}'
->
-${state.deadlinePassed?'Closed':'Open'}
-</span>
-
-<button
-id='deadlineBtn'
-class='${
-state.deadlinePassed
-?'success'
-:'danger'
-}'
-${
-state.roundProcessed ||
-automaticClosed
-?'disabled'
-:''
-}
->
-${
-automaticClosed
-?'Closed automatically'
-:state.deadlinePassed
-?'Re-open selections'
-:'Close selections'
-}
-</button>
+<div class='adminModes'>
+<button id='modeLive' class='${state.resultMode==='manual'?'secondary':'primary'}' type='button'>Use real results</button>
+<button id='modeManual' class='${state.resultMode==='manual'?'primary':'secondary'}' type='button'>Set results myself</button>
 </div>
 
 <p class='muted'>
-Selections close automatically when the first EPL match of the Matchweek kicks off.
+${fixtures.length
+?`${fixtures.length} matches are loaded for ${roundTitle(state.round)}.`
+:`No matches are loaded for ${roundTitle(state.round)} yet.`
+}
 </p>
 
 <hr>
 
-
-<details>
-<summary><b>Advanced / Emergency Controls</b></summary>
-
-<div style='margin-top:16px'>
-
+<div class='pickStep'>
+<p class='eyebrow dark'>Step 1</p>
+<label>When do picks close?</label>
+<p class='muted'>
+${
+state.deadline
+?`Picks close at ${esc(new Date(state.deadline).toLocaleString('en-GB',{timeZone:'Asia/Bangkok'}))} Thailand time.`
+:'Load the matches first. The closing time is the first kickoff.'
+}
+</p>
+<p class='statusPill ${state.deadlinePassed?'closed':'open'}'>
+${state.deadlinePassed?'Picks are closed':'Picks are open'}
+</p>
 <button
-class='primary'
-id='loadEpl'
+id='deadlineBtn'
+class='${state.deadlinePassed?'success':'danger'} full'
+type='button'
+${state.roundProcessed?'disabled':''}
 >
-Load EPL fixtures
+${state.deadlinePassed?'Re-open picks':'Close picks'}
 </button>
+<p class='muted'>The coloured words are a status. Press the button to open or close picks.</p>
+</div>
 
-<label>
-Match results
-</label>
+<div class='pickStep'>
+<p class='eyebrow dark'>Get the matches</p>
+<p class='muted'>This downloads who plays whom in ${roundTitle(state.round)}, and sets the closing time from the first kickoff. Press it when this round has no matches yet.</p>
+<button class='primary' id='loadEpl' type='button'>Download ${roundTitle(state.round)} matches</button>
+</div>
+
+<div class='pickStep'>
+<p class='eyebrow dark'>${manual?'Set each team':'Real results'}</p>
 
 <p class='muted'>
-Results are checked automatically after the deadline. The Matchweek processes automatically once all selected-team matches are finished.
+${manual
+?'Choose what happened for each team, then close this matchweek.'
+:'These are the real scores for the teams people picked.'}
 </p>
 
 ${teamRows}
 
 ${
-state.deadlinePassed &&
-!state.roundProcessed
-?`<button
-class='primary'
-id='process'
->
-Process Matchweek ${state.round}
-</button>`
-:''
-}
-
-${
 state.roundProcessed
 ?`<div class='processedBox'>
-Matchweek ${state.round} has been processed.
+${roundTitle(state.round)} has been processed.
 </div>
 
 ${
@@ -2608,7 +3132,7 @@ Competition complete.
 class='danger full'
 id='undoRound'
 >
-Undo Matchweek ${state.round} Processing
+Undo ${roundTitle(state.round)} Processing
 </button>
 
 ${
@@ -2621,14 +3145,48 @@ Open Matchweek ${state.round+1}
 </button>`
 :''
 }`
-:''
+:`<button class='danger full' id='closeWeek' type='button'>Close ${roundTitle(state.round)}</button>`
 }
 
 <hr>
 
 
 
-<label>Remove player</label>
+<hr>
+
+<details class='adminTools'>
+<summary>Testing tools</summary>
+<p class='muted'>
+Change the round to test. Players and their picks stay.
+</p>
+<div class='toolRow'>
+<button class='danger full' id='rewindRound' type='button'>
+Go back one ${roundNoun().toLowerCase()}
+</button>
+</div>
+<div class='toolRow'>
+<input id='debugRound' type='number' min='1' value='${state.round}'>
+<button class='danger full' id='setDebugRound' type='button'>
+Open ${roundNoun().toLowerCase()}
+</button>
+</div>
+</details>
+
+<hr>
+
+<button
+class='danger full'
+id='reset'
+type='button'
+>
+Reset competition
+</button>
+
+</section>
+
+<section class='card formCard adminSeparate'>
+<h2>Remove a player</h2>
+<p class='muted'>This takes one player out. The round and the other players stay.</p>
 
 <div class='row'>
 <select id='removePlayer'>
@@ -2648,31 +3206,27 @@ ${esc(p.name)}
 </select>
 
 <button
-class='danger'
-id='removePlayerBtn'
->
-Remove
-</button>
-</div>
-
-<hr>
-
-<button
 class='danger full'
-id='reset'
+id='removePlayerBtn'
+type='button'
 >
-Reset competition
+Remove player
 </button>
-
 </div>
-</details>
-
 </section>
 `;
 
 if($('#loadEpl')){
-$('#loadEpl').onclick=
-loadEplFixtures;
+$('#loadEpl').onclick=async ()=>{
+  const ok=await confirmModal(
+    'Load matches?',
+    'This replaces the match list for the current round and sets the closing time from the first kickoff.'
+  );
+
+  if(ok){
+    loadEplFixtures();
+  }
+};
 }
 
 if($('#loadResults')){
@@ -2734,61 +3288,43 @@ render();
 }
 
 document
-.querySelectorAll(
-'.removeFixture'
-)
-.forEach(
-b=>b.onclick=async ()=>{
-state.fixtures[state.round]=
-roundFixtures().filter(
-(_,i)=>
-i!==Number(
-b.dataset.i
-)
-);
+.querySelectorAll('.removeFixture')
+.forEach(b=>{
+  b.onclick=async ()=>{
+    state.fixtures[state.round]=
+      roundFixtures().filter(
+        (_,i)=>i!==Number(b.dataset.i)
+      );
 
-notice(
-'Fixture removed.'
-);
-saveAdmin();
-  
-render();
-}
-);
+    notice('Fixture removed.');
+    saveAdmin();
+    render();
+  };
+});
 
 if($('#deadlineBtn')){
-$('#deadlineBtn').onclick=()=>{
-if(deadlineTimePassed()){
-state.deadlinePassed=true;
-
-saveAdmin();
-
-notice(
-`Matchweek ${state.round} selections are closed because the first match has kicked off.`,
-'warn'
+$('#deadlineBtn').onclick=async ()=>{
+const opening=state.deadlinePassed;
+const ok=await confirmModal(
+  opening?'Open picks again?':'Close picks now?',
+  opening
+    ?'People can pick again, even if the first match has already started.'
+    :'People will not be able to make or change a pick.'
 );
 
-render();
-
-return;
+if(!ok){
+  return;
 }
 
-state.deadlinePassed=
-!state.deadlinePassed;
- 
+state.keepPicksOpen=opening;
+state.deadlinePassed=!opening;
 saveAdmin();
-  
 notice(
 state.deadlinePassed
-?`Matchweek ${state.round} selections are now closed and picks are revealed.`
-:`Matchweek ${state.round} selections have been re-opened.`
+?`${roundTitle(state.round)} is closed.`
+:`${roundTitle(state.round)} is open again.`
 );
-
-saveAdmin();
-  
 render();
-
- 
 };
 }
 
@@ -2807,30 +3343,82 @@ saveAdmin();
 );
 
 if($('#process')){
-$('#process').onclick=()=>
-processRound(false);
+$('#process').onclick=async ()=>{
+  const ok=await confirmModal(
+    'Record these results?',
+    'Players who did not win this round will be out, unless everyone failed together.'
+  );
+
+  if(ok){
+    processRound(false);
+  }
+};
+}
+
+// Close picks and record this matchweek from the results.
+async function closeMatchweek(){
+  const ok=await confirmModal(
+    `Close ${roundTitle(state.round)}?`,
+    'Picks close, and this matchweek is recorded from the results.'
+  );
+
+  if(!ok){
+    return;
+  }
+
+  state.keepPicksOpen=false;
+  state.deadlinePassed=true;
+
+  if(state.resultMode!=='manual'){
+    pickedTeams().forEach(team=>{
+      const result=outcomeFromFixture(team);
+
+      if(result){
+        state.results[team]=result;
+      }
+    });
+  }
+
+  saveAdmin();
+
+  if(!processRound(false)){
+    render();
+  }
+}
+
+if($('#closeWeek')){
+  $('#closeWeek').onclick=closeMatchweek;
 }
 
 if($('#undoRound')){
-$('#undoRound').onclick=()=>{
-if(
-confirm(
-`Undo Matchweek ${state.round} processing?`
-)
-){
-undoProcessedRound();
-}
+$('#undoRound').onclick=async ()=>{
+  const ok=await confirmModal(
+    'Undo this round?',
+    'Players go back to how they were before this round was recorded.'
+  );
+
+  if(ok){
+    undoProcessedRound();
+  }
 };
 }
 
 if($('#advance')){
-$('#advance').onclick=
-advanceRound;
+$('#advance').onclick=async ()=>{
+  const ok=await confirmModal(
+    'Open the next round?',
+    'People will pick for a new round. This round stays recorded.'
+  );
+
+  if(ok){
+    advanceRound();
+  }
+};
 }
 
 
 if($('#removePlayerBtn')){
-$('#removePlayerBtn').onclick=()=>{
+$('#removePlayerBtn').onclick=async ()=>{
 const name=
 $('#removePlayer').value;
 
@@ -2841,11 +3429,12 @@ return notice(
 );
 }
 
-if(
-!confirm(
-`Remove ${name} from the competition?`
-)
-){
+const ok=await confirmModal(
+  `Remove ${name}?`,
+  'This player and their picks will leave this competition.'
+);
+
+if(!ok){
 return;
 }
 
@@ -2877,16 +3466,22 @@ notice(
 render();
 };
 }
-$('#reset').onclick=()=>{
-if(
-confirm(
-'Reset all players, picks, fixtures and used teams?'
-)){
+$('#reset').onclick=async ()=>{
+const ok=await confirmModal(
+  'Reset the competition?',
+  'Players, picks, and matches for this sport or league will be cleared. This cannot be undone.'
+);
+
+if(!ok){
+  return;
+}
+
 const nextRound=Number(state.round)+1;
 
 state=freshState();
 state.round=nextRound;
 state.startRound=nextRound;
+state.resultMode='live';
 
 saveAdmin();
 notice(
@@ -2894,61 +3489,102 @@ notice(
 );
 
 render();
-}
 };
+
+// Save whether this competition uses real scores or admin results.
+async function setResultMode(mode){
+  const manual=mode==='manual';
+  const current=state.resultMode==='manual'?'manual':'live';
+
+  if(mode===current){
+    return;
+  }
+  const ok=await confirmModal(
+    manual?'Set results yourself?':'Use real results?',
+    manual
+      ?'The game will wait for you to choose win or loss.'
+      :'The game will use the real score when the match is finished.'
+  );
+
+  if(!ok){
+    return;
+  }
+
+  state.resultMode=manual?'manual':'live';
+  saveAdmin();
+  notice(manual?'Manual results are on.':'Real results are on.');
+  render();
 }
+
+if($('#modeLive')){
+  $('#modeLive').onclick=()=>setResultMode('live');
 }
 
-
-
-
-document
-.querySelectorAll('.tabs button')
-.forEach(
-b=>b.onclick=async ()=>{
-if(b.dataset.tab==='admin' && !adminUnlocked){
-const pin=prompt('Enter Admin PIN:');
-
-if(!pin){
-return;
+if($('#modeManual')){
+  $('#modeManual').onclick=()=>setResultMode('manual');
 }
 
-const processBtn = document.getElementById('process');
+if($('#rewindRound')){
+  $('#rewindRound').onclick=async ()=>{
+    if(Number(state.round)<=1){
+      notice('This is already the first round.','warn');
+      return;
+    }
 
-if (processBtn) {
-  processBtn.onclick = async () => {
-    await processRound();
+    const ok=await confirmModal(
+      'Go back one round?',
+      'The round number goes back. Players stay in the game. Use this for testing.'
+    );
+
+    if(!ok){
+      return;
+    }
+
+    state.round=Number(state.round)-1;
+    state.deadlinePassed=false;
+    state.roundProcessed=false;
+    state.results={};
+    saveAdmin();
+    render();
   };
 }
-  
-try{
-const response=await fetch('/api/admin-auth',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({pin})
-});
 
-const data=await response.json();
+if($('#setDebugRound')){
+  $('#setDebugRound').onclick=async ()=>{
+    const next=Number($('#debugRound').value);
 
-if(!response.ok){
-notice(data.error||'Incorrect Admin PIN.','warn');
-return;
+    if(!Number.isInteger(next)||next<1){
+      notice('Enter a round number of 1 or more.','warn');
+      return;
+    }
+
+    const ok=await confirmModal(
+      `Open ${roundTitle(next)}?`,
+      'The round number changes. Players and old picks stay saved.'
+    );
+
+    if(!ok){
+      return;
+    }
+
+    state.round=next;
+    state.deadlinePassed=false;
+    state.roundProcessed=false;
+    state.results={};
+    saveAdmin();
+    render();
+  };
 }
 
-adminUnlocked=true;
-authenticatedAdminPin=pin;
 
-}catch(error){
-notice('Unable to authenticate Admin. Please try again.','warn');
-return;
-}
+
+
+
 }
 
-tab=b.dataset.tab;
-notice('');
-render();
 }
-);
+
+setInterval(paintDeadlineClock, 1000);
 
 /*
 Check every 15 seconds in case the first match kicks off
@@ -2957,14 +3593,19 @@ while somebody has the app open.
 setInterval(()=>{
 if(syncDeadline()){
 fetch('/api/deadline',{
-  method:'POST'
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({
+    sport:selectedSport||'football',
+  league:selectedLeague||'PL'
+  })
 }).catch(error=>
   console.error('Deadline save failed:',error)
 );
 render();
 
 notice(
-`Matchweek ${state.round} selections are now closed.`
+`${roundTitle(state.round)} selections are now closed.`
 );
 
 autoCheckResults();
@@ -2980,15 +3621,343 @@ setInterval(()=>{
 autoCheckResults();
 },300000);
 
+// Open the next missing step, or the main screen when a sport is chosen.
+function continueAfterAccess(){
+  if(!selectedSport){
+    showSportGate();
+    return;
+  }
+
+  if(!termsAccepted()){
+    showTermsStep(selectedSport, selectedLeague);
+    return;
+  }
+
+  if(appShell){
+    appShell.style.display='';
+  }
+
+  paintSport();
+}
+
+// Update the title to the sport that is open.
+function paintSport(){
+  const sport=sportById(selectedSport);
+  const league=sport?.leagues?.find(item=>item.id===selectedLeague);
+  const title=document.querySelector('.hero h1');
+
+  if(title){
+    const leagueName=league?.label;
+
+    title.textContent=leagueName
+      ?`${leagueName} Last Man Standing`
+      :sport
+        ?`${sport.label} Last Man Standing`
+        :'Last Man Standing';
+  }
+
+  const ball=document.querySelector('.ball');
+  const mark=document.getElementById('sportMark');
+  const markImage=league?.image||sport?.image;
+
+  if(ball && mark && markImage){
+    ball.hidden=false;
+    mark.src=markImage;
+    mark.alt=league?.label||sport?.label||'';
+  }
+
+  const change=document.getElementById('changeSport');
+
+  if(change){
+    change.textContent=league?.label
+      ?`Change · ${league.label}`
+      :sport
+        ?`Change · ${sport.label}`
+        :'Change sport';
+    change.onclick=()=>{
+      authenticatedPlayer=null;
+      authenticatedPin=null;
+      showSportGate();
+    };
+  }
+}
+
+// Short line under a sport name.
+function sportHint(sport){
+  if(sport.leagues.length){
+    return 'Choose a league next';
+  }
+
+  if(sport.pickNoun==='driver'){
+    return 'Pick a driver';
+  }
+
+  if(sport.pickNoun==='player'){
+    return 'Pick a player';
+  }
+
+  return 'Pick a team';
+}
+
+// Create the gate shell once and hide the competition.
+function ensureSportGate(){
+  if(appShell){
+    appShell.style.display='none';
+  }
+
+  let gate=document.getElementById('sportGate');
+
+  if(!gate){
+    gate=document.createElement('main');
+    gate.id='sportGate';
+    gate.className='shell';
+    document.body.prepend(gate);
+  }
+
+  return gate;
+}
+
+// Replace the gate card and play the step animation again.
+function paintGate(html){
+  const gate=ensureSportGate();
+  gate.innerHTML=`
+    <section class='card formCard gateCard gateStep'>
+      ${html}
+    </section>
+  `;
+  const card=gate.querySelector('.gateCard');
+  card.classList.remove('gateStep');
+  void card.offsetWidth;
+  card.classList.add('gateStep');
+  return gate;
+}
+
+// Show one sport card at a time.
+function showSportGate(){
+  const gate=paintGate(`
+    <p class='gateKicker'>Step 1</p>
+    <h2>Choose a sport</h2>
+    <p>Each sport has its own players and results.</p>
+    <div class='sportGrid' id='sportGrid'></div>
+  `);
+  const grid=gate.querySelector('#sportGrid');
+
+  SPORTS.forEach(sport=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='sportBtn';
+    button.innerHTML=`
+      <img class='sportIcon' src='${esc(sport.image)}' alt=''>
+      <span>
+        <span class='sportName'>${esc(sport.label)}</span>
+        <span class='sportHint'>${esc(sportHint(sport))}</span>
+      </span>
+    `;
+    button.onclick=()=>{
+      button.classList.add('isSelected');
+
+      window.setTimeout(()=>{
+        if(sport.leagues.length){
+          showLeagues(sport);
+          return;
+        }
+
+        openChosenSport(sport.id, null);
+      }, 160);
+    };
+    grid.appendChild(button);
+  });
+}
+
+// Show football leagues on their own screen.
+function showLeagues(sport){
+  const gate=paintGate(`
+    <button class='gateBack' id='gateBack' type='button'>
+      <span aria-hidden='true'>←</span> Back
+    </button>
+    <p class='gateKicker'>Step 2</p>
+    <h2>Choose a league</h2>
+    <p>${esc(sport.label)} keeps one competition per league.</p>
+    <div class='sportGrid' id='leagueGrid'></div>
+  `);
+
+  gate.querySelector('#gateBack').onclick=()=>showSportGate();
+
+  const grid=gate.querySelector('#leagueGrid');
+
+  sport.leagues.forEach(league=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='sportBtn';
+    button.innerHTML=`
+      <img class='sportIcon' src='${esc(league.image||sport.image)}' alt=''>
+      <span>
+        <span class='sportName'>${esc(league.label)}</span>
+        <span class='sportHint'>Football league</span>
+      </span>
+    `;
+    button.onclick=()=>{
+      button.classList.add('isSelected');
+      window.setTimeout(()=>{
+        openChosenSport(sport.id, league.id);
+      }, 160);
+    };
+    grid.appendChild(button);
+  });
+}
+
+// Show the full terms before the competition opens.
+function showTermsStep(sportId, leagueId){
+  const sport=sportById(sportId);
+  const league=sport?.leagues?.find(item=>item.id===leagueId);
+  const choice=league
+    ?`${sport.label} · ${league.label}`
+    :sport?.label||'this sport';
+
+  const gate=paintGate(`
+    <button class='gateBack' id='gateBack' type='button'>
+      <span aria-hidden='true'>←</span> Back
+    </button>
+    <p class='gateKicker'>Step 3</p>
+    <h2>Before you play</h2>
+    <p class='gateChoice'>You chose <b>${esc(choice)}</b>.</p>
+    ${termsMarkup('gateTermsCheck')}
+    <button class='primary' id='gateAcceptTerms' type='button' disabled>
+      I agree and want to play
+    </button>
+  `);
+
+  gate.querySelector('#gateBack').onclick=()=>{
+    if(sport?.leagues?.length){
+      showLeagues(sport);
+      return;
+    }
+
+    showSportGate();
+  };
+
+  const gateCheck=gate.querySelector('#gateTermsCheck');
+  const gateAccept=gate.querySelector('#gateAcceptTerms');
+
+  gateCheck.onchange=()=>{
+    gateAccept.disabled=!gateCheck.checked;
+    saveTermsAcceptance(gateCheck.checked);
+  };
+
+  gateAccept.onclick=async ()=>{
+    if(!gateCheck.checked){
+      return;
+    }
+
+    saveTermsAcceptance();
+    chooseSport(sportId, leagueId);
+  };
+}
+
+// Open the sport, and ask for terms only the first time.
+function openChosenSport(sportId, leagueId){
+  if(termsAccepted()){
+    chooseSport(sportId, leagueId);
+    return;
+  }
+
+  showTermsStep(sportId, leagueId);
+}
+
+// Save the sport and load that competition.
+function chooseSport(id, league){
+  selectedSport=id;
+
+  if(league){
+    selectedLeague=league;
+  }
+
+  localStorage.setItem('lms-sport', selectedSport);
+  localStorage.setItem('lms-league', selectedLeague);
+
+  const sameSport=state.sport===id;
+  const sameLeague=!league||state.league===league;
+
+  if(!sameSport||!sameLeague){
+    if(!state.sport&&id==='football'&&(league||'PL')==='PL'){
+      state.sport='football';
+      state.league='PL';
+    }else{
+      state=freshState();
+      state.league=id==='football'?selectedLeague:null;
+    }
+  }
+
+  authenticatedPlayer=null;
+  authenticatedPin=null;
+  plannerFixturesCache=null;
+  plannerFixturesCacheRound=null;
+  document.getElementById('sportGate')?.remove();
+
+  if(appShell){
+    appShell.style.display='';
+  }
+
+  paintSport();
+  loadState();
+}
+
 /*
 Load the shared state, then immediately check results.
 This means if nobody had the app open when matches finished,
 the Matchweek will be processed the next time somebody opens it.
 */
-loadState().then(()=>{
-  autoCheckResults();
-  checkNotifications();
-});
+// Open the saved competition, or the next setup step.
+async function startApp(){
+  if(!competitionUnlocked){
+    return;
+  }
+
+  if(selectedSport&&termsAccepted()){
+    if(appShell){
+      appShell.style.display='';
+    }
+
+    await loadState();
+    autoCheckResults();
+    checkNotifications();
+    return;
+  }
+
+  if(selectedSport){
+    showTermsStep(selectedSport, selectedLeague);
+    return;
+  }
+
+  showSportGate();
+}
+
+let pullStartY=0;
+
+document.addEventListener('touchstart', event=>{
+  if(window.scrollY<=0){
+    pullStartY=event.touches[0].clientY;
+  }else{
+    pullStartY=0;
+  }
+}, {passive:true});
+
+document.addEventListener('touchend', event=>{
+  if(!pullStartY){
+    return;
+  }
+
+  const moved=event.changedTouches[0].clientY-pullStartY;
+  pullStartY=0;
+
+  if(window.scrollY<=0 && moved>80){
+    window.scrollTo(0, 0);
+    plannerFixturesCache=null;
+    loadState();
+  }
+}, {passive:true});
+
+startApp();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

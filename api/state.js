@@ -1,6 +1,11 @@
-import { neon } from '@neondatabase/serverless';
-
-const sql = neon(process.env.DATABASE_URL);
+import { sql } from '../lib/db.js';
+import {
+  cleanSportId,
+  loadRoot,
+  publicSlice,
+  readSlice
+} from '../lib/competition.js';
+import { freshSlice } from '../lib/sports.js';
 
 export default async function handler(req, res) {
   try {
@@ -10,29 +15,21 @@ export default async function handler(req, res) {
       });
     }
 
-    const rows = await sql`
-      SELECT state
-      FROM competition_state
-      WHERE id = 1
-    `;
+    const sportId = cleanSportId(req.query.sport);
+    const { root, missing } = await loadRoot(sql);
 
-    if (!rows.length) {
-      return res.status(200).json(null);
+    if (missing) {
+      return res.status(200).json(publicSlice(freshSlice(sportId)));
     }
 
-    const publicState =
-      structuredClone(rows[0].state);
+    const slice = readSlice(root, sportId, req.query.league)
+      || freshSlice(sportId);
 
-    if (Array.isArray(publicState.players)) {
-      publicState.players =
-        publicState.players.map(player => {
-          const { pin, ...safePlayer } = player;
-          return safePlayer;
-        });
+    if (sportId === 'football' && req.query.league) {
+      slice.league = String(req.query.league);
     }
 
-    return res.status(200).json(publicState);
-
+    return res.status(200).json(publicSlice(slice));
   } catch (error) {
     console.error(error);
 

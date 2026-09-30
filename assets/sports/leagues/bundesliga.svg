@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="Bundesliga">
+  <rect width="80" height="80" rx="18" fill="#111"/>
+  <rect y="18" width="80" height="10" fill="#dd0000"/>
+  <rect y="52" width="80" height="10" fill="#f4c400"/>
+  <circle cx="40" cy="40" r="12" fill="#fff"/>
+  <circle cx="40" cy="40" r="5" fill="#111"/>
+</svg>
