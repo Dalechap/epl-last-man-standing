@@ -519,7 +519,7 @@ function showPickConfirm(team){
   });
 }
 
-function savePick(team){
+async function savePick(team){
  if(!authenticatedPlayer){
   return notice(
     'Please authenticate before making a pick.',
@@ -585,11 +585,33 @@ return notice(
 );
 }
 
-  if(!confirm(
-  `Confirm Selection\n\nYou have chosen ${team} for Matchweek ${state.round}.\n\nDo you want to confirm this pick?`
-)){
+
+const confirmationRound=state.round;
+
+if(!(await showPickConfirm(team))){
   return;
 }
+
+if(state.round!==confirmationRound){
+  return notice(
+    'Matchweek has changed. Please select again.',
+    'warn'
+  );
+}
+
+if(syncDeadline() || state.deadlinePassed){
+  fetch('/api/deadline',{
+    method:'POST'
+  }).catch(error=>console.error('Deadline save failed:',error));
+
+  render();
+
+  return notice(
+    `Selections are closed for Matchweek ${state.round}.`,
+    'warn'
+  );
+}
+
 const prev=p.picks[state.round];
 
 if(prev){
