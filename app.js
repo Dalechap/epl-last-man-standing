@@ -519,6 +519,43 @@ function showPickConfirm(team){
   });
 }
 
+function showPickSuccess(team){
+  const overlay=document.createElement('div');
+
+  overlay.style.cssText=`
+    position:fixed;
+    inset:0;
+    background:rgba(20,10,30,.65);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:9999;
+  `;
+
+  overlay.innerHTML=`
+    <div class="loginModal" style="text-align:center;width:100%;max-width:380px;">
+      <div style="font-size:48px;color:#168653;margin-bottom:12px;">✓</div>
+      <h2>Pick confirmed!</h2>
+      <p style="font-size:20px;font-weight:700;margin:16px 0;">
+        ${esc(team)}
+      </p>
+      <p class="muted">
+        You can change your pick until the deadline.
+      </p>
+      <button class="loginContinue" id="pickDone" style="margin-top:20px;">
+        Done
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#pickDone').onclick=()=>{
+    overlay.remove();
+  };
+}
+
 async function savePick(team){
  if(!authenticatedPlayer){
   return notice(
@@ -646,9 +683,7 @@ localStorage.setItem('lms-state',JSON.stringify(state));
 
 render();
 
-  alert(
-  `Selection confirmed!\n\nYou have selected ${team} for Matchweek ${state.round}.\n\nYou can change your selection any time before the deadline.`
-);
+  showPickSuccess(team);
 })
 .catch(error=>{
 notice(
