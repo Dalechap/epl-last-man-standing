@@ -465,6 +465,60 @@ return t
 .toUpperCase();
 }
 
+function showPickConfirm(team){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+
+    overlay.style.cssText=`
+      position:fixed;
+      inset:0;
+      background:rgba(20,10,30,.65);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:9999;
+    `;
+
+    const fixture=(state.fixtures[state.round]||[])
+      .find(f=>f.home===team||f.away===team);
+
+    const crest=fixture
+      ?(fixture.home===team
+        ?fixture.homeCrest
+        :fixture.awayCrest)
+      :null;
+
+    overlay.innerHTML=`
+      <div class="loginModal" style="text-align:center;width:100%;max-width:380px;">
+        ${crest?`<img src="${crest}" alt="" style="width:76px;height:76px;object-fit:contain;margin:0 auto 16px;display:block;">`:''}
+
+        <h2>Confirm ${esc(team)}?</h2>
+        <p class="muted">Matchweek ${state.round}</p>
+
+        <div style="display:flex;gap:12px;margin-top:24px;">
+          <button class="loginCancel" id="pickCancel" style="flex:1;">
+            Cancel
+          </button>
+          <button class="loginContinue" id="pickConfirm" style="flex:1;">
+            Confirm
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const finish=value=>{
+      overlay.remove();
+      resolve(value);
+    };
+
+    overlay.querySelector('#pickCancel').onclick=()=>finish(false);
+    overlay.querySelector('#pickConfirm').onclick=()=>finish(true);
+  });
+}
+
 function savePick(team){
  if(!authenticatedPlayer){
   return notice(
