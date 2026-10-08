@@ -531,6 +531,11 @@ return notice(
 );
 }
 
+  if(!confirm(
+  `Confirm Selection\n\nYou have chosen ${team} for Matchweek ${state.round}.\n\nDo you want to confirm this pick?`
+)){
+  return;
+}
 const prev=p.picks[state.round];
 
 if(prev){
@@ -564,6 +569,10 @@ localStorage.setItem('lms-state',JSON.stringify(state));
 }
 
 render();
+
+  alert(
+  `Selection confirmed!\n\nYou have selected ${team} for Matchweek ${state.round}.\n\nYou can change your selection any time before the deadline.`
+);
 })
 .catch(error=>{
 notice(
