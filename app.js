@@ -2184,7 +2184,8 @@ if(!window.lmsTeamPickListenerAdded){
     if(!button || button.disabled || state.deadlinePassed){
       return;
     }
-
+alert('Team tapped: ' + button.dataset.team);
+    
     savePick(button.dataset.team);
   });
 }
