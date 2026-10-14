@@ -2362,7 +2362,12 @@ ${
 }
 <div class='playerList'>
 ${
-state.players.map(p=>{
+[...state.players]
+  .sort((a,b)=>
+    Number(b.alive)-Number(a.alive) ||
+    a.name.localeCompare(b.name)
+  )
+  .map(p=>{
 let displayRound=
 state.round;
 
