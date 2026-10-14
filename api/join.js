@@ -50,6 +50,21 @@ AND COALESCE(
   (state->>'deadlinePassed')::boolean,
   false
 ) = false
+
+AND NOT EXISTS (
+  SELECT 1
+  FROM jsonb_array_elements(
+    COALESCE(state->'players', '[]'::jsonb)
+  ) AS player
+  CROSS JOIN LATERAL jsonb_each_text(
+    COALESCE(player->'picks', '{}'::jsonb)
+  ) AS pick(round_number, team)
+  WHERE round_number ~ '^[0-9]+$'
+    AND round_number::integer < COALESCE(
+      (state->>'round')::integer,
+      0
+    )
+)
         AND NOT EXISTS (
           SELECT 1
           FROM jsonb_array_elements(
