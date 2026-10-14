@@ -480,8 +480,10 @@ function showPickConfirm(team){
       z-index:9999;
     `;
 
-    const fixture=(state.fixtures[state.round]||[])
-      .find(f=>f.home===team||f.away===team);
+   const fixture=(Array.isArray(state.fixtures)
+  ? state.fixtures
+  : (state.fixtures[state.round]||[]))
+  .find(f=>f.home===team||f.away===team);
 
     const crest=fixture
       ?(fixture.home===team
