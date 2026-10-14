@@ -2171,23 +2171,22 @@ p.used.length
 </section>
 `;
 
-if(!state.deadlinePassed){
 if($('#savePick')){
-$('#savePick').onclick=()=>
-savePick(
-$('#teamSel').value
-);
+  $('#savePick').onclick=()=>savePick($('#teamSel').value);
 }
 
-document
-.querySelectorAll('.teamPick')
-.forEach(
-b=>
-b.onclick=()=>
-savePick(
-b.dataset.team
-)
-);
+if(!window.lmsTeamPickListenerAdded){
+  window.lmsTeamPickListenerAdded=true;
+
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('.teamPick');
+
+    if(!button || button.disabled || state.deadlinePassed){
+      return;
+    }
+
+    savePick(button.dataset.team);
+  });
 }
 }
 
