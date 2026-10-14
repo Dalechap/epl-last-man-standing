@@ -971,7 +971,12 @@ await loadEplFixtures();
 
 function renderStandings(){
 return `<div class='standings'>${
-state.players.map((p,i)=>{
+[...state.players]
+  .sort((a,b)=>
+    Number(b.alive)-Number(a.alive) ||
+    a.name.localeCompare(b.name)
+  )
+  .map((p,i)=>{
 let r=p.alive
 ?state.round
 :(p.eliminatedRound||state.round);
