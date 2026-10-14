@@ -2438,7 +2438,9 @@ Object.keys(p.picks || {})
   .sort((a,b) => a-b)
   .map(matchweek => {
   const pick=p.picks[matchweek];
-  const fixture=(state.fixtures[matchweek]||[]).find(
+  const fixture=(Array.isArray(state.fixtures)
+  ? state.fixtures
+  : (state.fixtures[matchweek]||[])).find(
     f=>
       f.home.replace(/ FC$/,'')===pick.replace(/ FC$/,'') ||
       f.away.replace(/ FC$/,'')===pick.replace(/ FC$/,'')
