@@ -1567,7 +1567,7 @@ ${
 <div class='card'>
 
 ${
-!state.registrationClosed
+!state.registrationClosed && Number(state.round) === Number(state.startRound)
 ?`
 <h2>Join Competition</h2>
 
