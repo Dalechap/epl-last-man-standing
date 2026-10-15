@@ -1000,6 +1000,100 @@ return t
 .toUpperCase();
 }
 
+function showPickConfirm(team){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+
+    overlay.style.cssText=`
+      position:fixed;
+      inset:0;
+      background:rgba(20,10,30,.65);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:9999;
+    `;
+
+    const fixture=(state.fixtures[state.round]||[])
+      .find(f=>f.home===team||f.away===team);
+
+    const crest=fixture
+      ?(fixture.home===team
+        ?fixture.homeCrest
+        :fixture.awayCrest)
+      :null;
+
+    const noun=(sportById(selectedSport)||{}).pickNoun||'team';
+
+    overlay.innerHTML=`
+      <div class="loginModal" style="text-align:center;width:100%;max-width:380px;">
+        ${crest?`<img src="${crest}" alt="" style="width:76px;height:76px;object-fit:contain;margin:0 auto 16px;display:block;">`:''}
+
+        <h2>Confirm ${esc(team)}?</h2>
+        <p class="muted">${roundTitle(state.round)}</p>
+        <p class="muted" style="margin-top:8px;font-size:13px;">This ${noun} cannot be used again in this competition.</p>
+
+        <div style="display:flex;gap:12px;margin-top:24px;">
+          <button class="loginCancel" id="pickCancel" style="flex:1;">
+            Cancel
+          </button>
+          <button class="loginContinue" id="pickConfirm" style="flex:1;">
+            Confirm
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const finish=value=>{
+      overlay.remove();
+      resolve(value);
+    };
+
+    overlay.querySelector('#pickCancel').onclick=()=>finish(false);
+    overlay.querySelector('#pickConfirm').onclick=()=>finish(true);
+  });
+}
+
+function showPickSuccess(team){
+  const overlay=document.createElement('div');
+
+  overlay.style.cssText=`
+    position:fixed;
+    inset:0;
+    background:rgba(20,10,30,.65);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:9999;
+  `;
+
+  overlay.innerHTML=`
+    <div class="loginModal" style="text-align:center;width:100%;max-width:380px;">
+      <div style="font-size:48px;color:#168653;margin-bottom:12px;">✓</div>
+      <h2>Pick confirmed!</h2>
+      <p style="font-size:20px;font-weight:700;margin:16px 0;">
+        ${esc(team)}
+      </p>
+      <p class="muted">
+        You can change your pick until the deadline.
+      </p>
+      <button class="loginContinue" id="pickDone" style="margin-top:20px;">
+        Done
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#pickDone').onclick=()=>{
+    overlay.remove();
+  };
+}
+
 async function savePick(team){
  if(!termsAccepted()){
   return notice(
@@ -1074,16 +1168,33 @@ return notice(
 );
 }
 
-const noun=(sportById(selectedSport)||{}).pickNoun||'team';
-const agreed=await confirmModal(
-  `Pick ${team}?`,
-  `This ${noun} cannot be used again in this competition.`
-);
+const confirmationRound=state.round;
 
-if(!agreed){
+if(!(await showPickConfirm(team))){
   return;
 }
 
+if(state.round!==confirmationRound){
+  return notice(
+    `${roundTitle(confirmationRound)} has changed. Please select again.`,
+    'warn'
+  );
+}
+
+if(syncDeadline() || state.deadlinePassed){
+  fetch('/api/deadline',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sport:selectedSport||'football'})
+  }).catch(error=>console.error('Deadline save failed:',error));
+
+  render();
+
+  return notice(
+    `Selections are closed for ${roundTitle(state.round)}.`,
+    'warn'
+  );
+}
 const prev=p.picks[state.round];
 
 if(prev){
@@ -1120,6 +1231,8 @@ localStorage.setItem('lms-state',JSON.stringify(state));
 
 pulseTeam=team;
 render();
+
+  showPickSuccess(team);
 })
 .catch(error=>{
 notice(
