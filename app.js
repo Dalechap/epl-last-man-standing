@@ -1649,7 +1649,36 @@ authenticatedPlayer
   }
 const myPick=
   me.picks?.[state.round]||'';
-const myCrestHtml='';
+const crestIds={
+  'Arsenal':57,
+  'Aston Villa':58,
+  'Bournemouth':1044,
+  'Brentford':402,
+  'Brighton':397,
+  'Burnley':328,
+  'Chelsea':61,
+  'Crystal Palace':354,
+  'Everton':62,
+  'Fulham':63,
+  'Leeds United':341,
+  'Liverpool':64,
+  'Manchester City':65,
+  'Manchester United':66,
+  'Newcastle United':67,
+  'Nottingham Forest':351,
+  'Sunderland':71,
+  'Tottenham Hotspur':73,
+  'West Ham United':563,
+  'Wolverhampton Wanderers':76
+};
+
+const crestId=crestIds[String(myPick).replace(/ FC$/,'')];
+
+const myCrestHtml=crestId
+  ?`<img class='myCompetitionCrest'
+      src='https://crests.football-data.org/${crestId}.png'
+      alt='${esc(myPick)} badge'>`
+  :'';
   return `
     <div class='card'>
   <div class='homePickDisplay'>
