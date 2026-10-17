@@ -1593,16 +1593,8 @@ ${
 }
 
 <div class='homeLogin'>
-  <p class='muted'>
-    ${
-      !state.registrationClosed
-      ?'Already playing?'
-      :'Already playing? Sign in below.'
-    }
-  </p>
-
   <button
-    class='secondary'
+    class='primary'
     id='homePlayerLogin'
   >
     Player Login
