@@ -1,4 +1,4 @@
-roundFixtures().find(const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Leeds United','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sunderland','Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'];
+const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Leeds United','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sunderland','Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'];
 const defaults=[];
 
 const freshState=()=>({
@@ -1650,18 +1650,18 @@ authenticatedPlayer
 const myPick=
   me.picks?.[state.round]||'';
 const myFixture=
-  myPick ? roundFixtures().find(
+  roundFixtures().find(
     f=>
-      String(f?.home || '').replace(/ FC$/,'')===
+      f.home.replace(/ FC$/,'')===
         myPick.replace(/ FC$/,'') ||
-      String(f?.away || '').replace(/ FC$/,'')===
+      f.away.replace(/ FC$/,'')===
         myPick.replace(/ FC$/,'')
-  ) : null;
+  );
 
 const myCrest=
   myFixture
     ?(
-     String(myFixture.home || '').replace(/ FC$/,'')===
+      myFixture.home.replace(/ FC$/,'')===
         myPick.replace(/ FC$/,'')
         ?myFixture.homeCrest
         :myFixture.awayCrest
