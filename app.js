@@ -1649,29 +1649,7 @@ authenticatedPlayer
   }
 const myPick=
   me.picks?.[state.round]||'';
-const myFixture = myPick
-  ? roundFixtures().find(f =>
-      f &&
-      [f.home, f.away].some(team =>
-        typeof team === 'string' &&
-        team.replace(/ FC$/, '') === myPick.replace(/ FC$/, '')
-      )
-    )
-  : null;
-
-const myCrest = myFixture
-  ? (
-      myFixture.home?.replace(/ FC$/, '') === myPick.replace(/ FC$/, '')
-        ? myFixture.homeCrest
-        : myFixture.awayCrest
-    )
-  : null;
-
-const myCrestHtml = typeof myCrest === 'string' && myCrest
-  ? `<img class='myCompetitionCrest'
-          src='${esc(myCrest)}'
-          alt='${esc(myPick)} badge'>`
-  : '';
+const myCrestHtml='';
   return `
     <div class='card'>
   <div class='homePickDisplay'>
