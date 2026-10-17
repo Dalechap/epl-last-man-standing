@@ -1649,33 +1649,7 @@ authenticatedPlayer
   }
 const myPick=
   me.picks?.[state.round]||'';
-const myFixture=
-  roundFixtures().find(
-    f=>
-      f.home.replace(/ FC$/,'')===
-        myPick.replace(/ FC$/,'') ||
-      f.away.replace(/ FC$/,'')===
-        myPick.replace(/ FC$/,'')
-  );
-
-const myCrest=
-  myFixture
-    ?(
-      myFixture.home.replace(/ FC$/,'')===
-        myPick.replace(/ FC$/,'')
-        ?myFixture.homeCrest
-        :myFixture.awayCrest
-    )
-    :'';
- 
-  const myCrestHtml=
-  myCrest
-    ?`<img
-        class='myCompetitionCrest'
-        src='${esc(myCrest)}'
-        alt='${esc(myPick)} badge'
-      >`
-    :'';
+const myCrestHtml='';
   return `
     <div class='card'>
   <div class='homePickDisplay'>
