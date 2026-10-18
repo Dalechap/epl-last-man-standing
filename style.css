@@ -324,3 +324,27 @@
     font-size:28px;
   }
 }
+
+/* Players tab - compact pick history */
+.pickHistoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.pickHistoryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 48px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.historyCrest {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
