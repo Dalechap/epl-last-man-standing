@@ -1,4 +1,4 @@
-const teams=['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Leeds United','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sunderland','Tottenham Hotspur','West Ham United','Wolverhampton Wanderers'];
+let teams=[];
 const defaults=[];
 
 const freshState=()=>({
@@ -56,6 +56,96 @@ let authenticatedPin=null;
 
 let plannerFixturesCache=null;
 let plannerFixturesCacheRound=null;
+
+// One API-backed directory for team names and crests. Saved locally so
+// Pick History does not depend on visiting Fixtures first.
+const normaliseTeamName=name=>String(name||'')
+  .replace(/\s+FC$/i,'').trim().toLowerCase();
+let teamDirectory=new Map();
+let teamDirectoryRound=null;
+let teamDirectoryLoad=null;
+
+function teamCrest(name){
+  return teamDirectory.get(normaliseTeamName(name))?.crest || '';
+}
+
+function rememberTeams(matches){
+  let changed=false;
+  (matches||[]).forEach(match=>{
+    [match.homeTeam,match.awayTeam].forEach(team=>{
+      if(!team?.name) return;
+      const key=normaliseTeamName(team.name);
+      const previous=teamDirectory.get(key);
+      if(!previous || previous.crest!==team.crest){
+        teamDirectory.set(key,{name:team.name,crest:team.crest||''});
+        changed=true;
+      }
+    });
+  });
+  if(changed){
+    teams=[...teamDirectory.values()].map(team=>team.name).sort();
+    try{
+      localStorage.setItem('lms-team-directory',JSON.stringify({
+        round:Number(state.round),
+        teams:[...teamDirectory.values()]
+      }));
+    }catch(error){
+      console.warn('Could not cache team directory:',error);
+    }
+  }
+  return changed;
+}
+
+function restoreTeamDirectory(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('lms-team-directory')||'null');
+    if(saved?.round!==Number(state.round) || !Array.isArray(saved.teams)) return;
+    teamDirectory=new Map(saved.teams
+      .filter(team=>team && typeof team.name==='string')
+      .map(team=>[normaliseTeamName(team.name),team]));
+    teamDirectoryRound=Number(state.round);
+    teams=[...teamDirectory.values()].map(team=>team.name).sort();
+  }catch(error){
+    console.warn('Could not restore team directory:',error);
+  }
+}
+restoreTeamDirectory();
+
+function seedTeamDirectoryFromState(){
+  const round=Number(state.round);
+  if(teamDirectoryRound!==round){
+    teamDirectory.clear();
+    teams=[];
+    teamDirectoryRound=round;
+  }
+  const fixtures=state.fixtures?.[round]||[];
+  rememberTeams(fixtures.map(f=>({
+    homeTeam:{name:f.home,crest:f.homeCrest},
+    awayTeam:{name:f.away,crest:f.awayCrest}
+  })));
+}
+
+async function loadTeamDirectory(){
+  const round=Number(state.round);
+  if(teamDirectoryLoad) return teamDirectoryLoad;
+  teamDirectoryLoad=(async()=>{
+    // Fixtures already loads four rounds; reuse its API data and cache.
+    const planner=await loadPlannerFixtures();
+    if(Number(state.round)!==round) return;
+    if(teamDirectoryRound!==round){
+      teamDirectory.clear();
+      teams=[];
+      teamDirectoryRound=round;
+    }
+    const changed=rememberTeams(planner.flatMap(item=>item.matches||[]));
+    // Refresh only synchronous screens. Never interrupt a fixture/pick request.
+    if(changed && (tab==='home'||tab==='players')) render();
+  })().catch(error=>{
+    console.error('Could not load team directory:',error);
+  }).finally(()=>{teamDirectoryLoad=null;});
+  return teamDirectoryLoad;
+}
+
 
 let authenticatedAdminPin=null;
 
@@ -1641,34 +1731,10 @@ authenticatedPlayer
   }
 const myPick=
   me.picks?.[state.round]||'';
-const crestIds={
-  'Arsenal':57,
-  'Aston Villa':58,
-  'Bournemouth':1044,
-  'Brentford':402,
-  'Brighton':397,
-  'Burnley':328,
-  'Chelsea':61,
-  'Crystal Palace':354,
-  'Everton':62,
-  'Fulham':63,
-  'Leeds United':341,
-  'Liverpool':64,
-  'Manchester City':65,
-  'Manchester United':66,
-  'Newcastle United':67,
-  'Nottingham Forest':351,
-  'Sunderland':71,
-  'Tottenham Hotspur':73,
-  'West Ham United':563,
-  'Wolverhampton Wanderers':76
-};
-
-const crestId=crestIds[String(myPick).replace(/ FC$/,'')];
-
-const myCrestHtml=crestId
+const myCrest=teamCrest(myPick);
+const myCrestHtml=myCrest
   ?`<img class='myCompetitionCrest'
-      src='https://crests.football-data.org/${crestId}.png'
+      src='${esc(myCrest)}'
       alt='${esc(myPick)} badge'>`
   :'';
   return `
@@ -2064,6 +2130,7 @@ if(!fixtures.length){
       await response.json();
 
     if(response.ok){
+      rememberTeams(data.matches||[]);
       fixtures=
         (data.matches||[]).map(m=>({
           home:m.homeTeam.name,
@@ -2214,6 +2281,13 @@ if(tab==='fixtures'){
   try{
     const planner=
       await loadPlannerFixtures();
+
+    if(teamDirectoryRound!==Number(state.round)){
+      teamDirectory.clear();
+      teams=[];
+      teamDirectoryRound=Number(state.round);
+    }
+    rememberTeams(planner.flatMap(item=>item.matches||[]));
 
         if(tab !== fixturesTabAtLoad){
       return;
@@ -2444,24 +2518,7 @@ ${esc(shown)}
       .map(mw => {
         const pick = p.picks[mw];
         
-const normaliseTeam = name =>
-  String(name || '')
-    .replace(/ FC$/i, '')
-    .trim()
-    .toLowerCase();
-
-const matches = (plannerFixturesCache || [])
-  .flatMap(item => item.matches || []);
-
-const team = matches
-  .flatMap(match => [match.homeTeam, match.awayTeam])
-  .find(team =>
-    team &&
-    normaliseTeam(team.name) === normaliseTeam(pick)
-  );
-
-const crestUrl = team?.crest;
-
+const crestUrl=teamCrest(pick);
 
         return crestUrl
           ? `<div class='pickHistoryItem'>
@@ -3061,6 +3118,11 @@ This means if nobody had the app open when matches finished,
 the Matchweek will be processed the next time somebody opens it.
 */
 loadState().then(()=>{
+  // Render Home first; team/crest loading must never block navigation.
+  restoreTeamDirectory();
+  seedTeamDirectoryFromState();
+  if(tab==='home'||tab==='players') render();
+  loadTeamDirectory();
   autoCheckResults();
   checkNotifications();
 });
