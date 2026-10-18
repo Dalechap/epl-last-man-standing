@@ -2433,39 +2433,54 @@ ${esc(shown)}
 </div>
 
 <div class='muted'>
-<strong>Pick history:</strong>
-${
-Object.keys(p.picks || {})
-  .map(Number)
-  .filter(matchweek =>
-    matchweek < Number(state.round)
-  )
-  .sort((a,b) => a-b)
-  .map(matchweek => {
-  const pick=p.picks[matchweek];
-  const fixture=(Array.isArray(state.fixtures)
-  ? state.fixtures
-  : (state.fixtures[matchweek]||[])).find(
-    f=>
-      f.home.replace(/ FC$/,'')===pick.replace(/ FC$/,'') ||
-      f.away.replace(/ FC$/,'')===pick.replace(/ FC$/,'')
-  );
+  <strong>Pick history:</strong>
+  <div class='pickHistoryRow'>
+    ${
+      Object.keys(p.picks || {})
+      .map(Number)
+      .filter(mw => mw < Number(state.round))
+      .sort((a,b) => a-b)
+      .map(mw => {
+        const pick = p.picks[mw];
+        const crestIds = {
+          'Arsenal':57,
+          'Aston Villa':58,
+          'Bournemouth':1044,
+          'Brentford':402,
+          'Brighton':397,
+          'Burnley':328,
+          'Chelsea':61,
+          'Crystal Palace':354,
+          'Everton':62,
+          'Fulham':63,
+          'Leeds United':341,
+          'Liverpool':64,
+          'Manchester City':65,
+          'Manchester United':66,
+          'Newcastle United':67,
+          'Nottingham Forest':351,
+          'Sunderland':71,
+          'Tottenham Hotspur':73,
+          'West Ham United':563,
+          'Wolverhampton Wanderers':76
+        };
+        const crestId = crestIds[String(pick).replace(/ FC$/, '')];
 
-  const crest=fixture
-    ?(
-      fixture.home.replace(/ FC$/,'')===pick.replace(/ FC$/,'')
-        ?fixture.homeCrest
-        :fixture.awayCrest
-    )
-    :'';
-
-  return crest
-    ?`MW${matchweek}: <img class='historyCrest' src='${esc(crest)}' alt='${esc(pick)} badge'>`
-    :`MW${matchweek}: ${esc(pick)}`;
-})
-.join(' · ')
-|| 'None'
-}
+        return crestId
+          ? `<div class='pickHistoryItem'>
+               <img class='historyCrest'
+                    src='https://crests.football-data.org/${crestId}.png'
+                    alt='${esc(pick)}'>
+               <small>MW${mw}</small>
+             </div>`
+          : `<div class='pickHistoryItem'>
+               <small>${esc(pick)}</small>
+               <small>MW${mw}</small>
+             </div>`;
+      }).join('')
+      || 'None'
+    }
+  </div>
 </div>
 </div>`;
 }).join('')
