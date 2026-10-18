@@ -2346,6 +2346,28 @@ item.matches.length
 }
   
 if(tab==='players'){
+  let historyMatches = (
+    plannerFixturesCacheRound === Number(state.round)
+      ? (plannerFixturesCache || [])
+      : []
+  ).flatMap(item => item.matches || []);
+
+  if (!historyMatches.length) {
+    try {
+      const response = await fetch(`/api/football?round=${state.round}`);
+      if (response.ok) {
+        const data = await response.json();
+        historyMatches = data.matches || [];
+      }
+    } catch (error) {
+      console.error('Could not load player history crests:', error);
+    }
+  }
+
+  if (tab !== 'players') return;
+
+  c.innerHTML=`
+
  
   c.innerHTML=`
 <h2>Players</h2>
@@ -2450,8 +2472,7 @@ const normaliseTeam = name =>
     .trim()
     .toLowerCase();
 
-const matches = (plannerFixturesCache || [])
-  .flatMap(item => item.matches || []);
+const matches = historyMatches;
 
 const team = matches
   .flatMap(match => [match.homeTeam, match.awayTeam])
