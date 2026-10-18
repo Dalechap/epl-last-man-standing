@@ -2442,34 +2442,30 @@ ${esc(shown)}
       .sort((a,b) => a-b)
       .map(mw => {
         const pick = p.picks[mw];
-        const crestIds = {
-          'Arsenal':57,
-          'Aston Villa':58,
-          'Bournemouth':1044,
-          'Brentford':402,
-          'Brighton':397,
-          'Burnley':328,
-          'Chelsea':61,
-          'Crystal Palace':354,
-          'Everton':62,
-          'Fulham':63,
-          'Leeds United':341,
-          'Liverpool':64,
-          'Manchester City':65,
-          'Manchester United':66,
-          'Newcastle United':67,
-          'Nottingham Forest':351,
-          'Sunderland':71,
-          'Tottenham Hotspur':73,
-          'West Ham United':563,
-          'Wolverhampton Wanderers':76
-        };
-        const crestId = crestIds[String(pick).replace(/ FC$/, '')];
+        
+const normaliseTeam = name =>
+  String(name || '')
+    .replace(/ FC$/i, '')
+    .trim()
+    .toLowerCase();
 
-        return crestId
+const matches = (plannerFixturesCache || [])
+  .flatMap(item => item.matches || []);
+
+const team = matches
+  .flatMap(match => [match.homeTeam, match.awayTeam])
+  .find(team =>
+    team &&
+    normaliseTeam(team.name) === normaliseTeam(pick)
+  );
+
+const crestUrl = team?.crest;
+
+
+        return crestUrl
           ? `<div class='pickHistoryItem'>
                <img class='historyCrest'
-                    src='https://crests.football-data.org/${crestId}.png'
+                    src='${esc(crestUrl)}'
                     alt='${esc(pick)}'>
                <small>MW${mw}</small>
              </div>`
