@@ -2346,7 +2346,8 @@ item.matches.length
 }
   
 if(tab==='players'){
-c.innerHTML=`
+  await loadPlannerFixtures();
+  c.innerHTML=`
 <h2>Players</h2>
 ${
   !state.deadlinePassed
