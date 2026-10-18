@@ -2346,7 +2346,7 @@ item.matches.length
 }
   
 if(tab==='players'){
-  await loadPlannerFixtures();
+ 
   c.innerHTML=`
 <h2>Players</h2>
 ${
