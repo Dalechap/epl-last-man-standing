@@ -2420,7 +2420,16 @@ item.matches.length
 }
   
 if(tab==='players'){
- 
+
+  c.innerHTML=`
+    <h2>Players</h2>
+    <div class='card'>Loading club crests…</div>
+  `;
+
+  await loadTeamDirectory();
+
+  if(tab!=='players') return;
+
   c.innerHTML=`
 <h2>Players</h2>
 ${
