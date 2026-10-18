@@ -2423,7 +2423,7 @@ if(tab==='players'){
 
   c.innerHTML=`
     <h2>Players</h2>
-    <div class='card'>Loading club crests…</div>
+   <div class='card'>Loading…</div>
   `;
 
   await loadTeamDirectory();
