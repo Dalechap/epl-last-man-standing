@@ -2511,10 +2511,22 @@ ${
 </span>
 </div>
 
+
 <div class='pickLine'>
 Matchweek ${displayRound}:
-${esc(shown)}
+${
+  (state.deadlinePassed || !p.alive) &&
+  p.picks[displayRound] &&
+  teamCrest(p.picks[displayRound])
+    ? `<img
+         src='${esc(teamCrest(p.picks[displayRound]))}'
+         alt='${esc(p.picks[displayRound])}'
+         style='width:72px;height:72px;object-fit:contain;vertical-align:middle;margin-left:10px;'
+       >${shown.includes('Pending elimination') ? ' — Pending elimination' : ''}`
+    : esc(shown)
+}
 </div>
+
 
 <div class='muted'>
   <strong>Pick history:</strong>
