@@ -1304,19 +1304,34 @@ async function loadPlannerFixtures(){
 
     const currentRound = Number(state.round);
 
-  if(
-    plannerFixturesCache &&
-    plannerFixturesCacheRound === currentRound
-  ){
-    return plannerFixturesCache;
-  }
+
+const expectedFirstMatchweek =
+  !state.deadlinePassed && currentRound > 1
+    ? currentRound - 1
+    : currentRound;
+
+if(
+  plannerFixturesCache &&
+  plannerFixturesCacheRound === currentRound &&
+  plannerFixturesCache[0]?.matchweek === expectedFirstMatchweek
+){
+  return plannerFixturesCache;
+}
+
   
-  const matchweeks = [
-    Number(state.round),
-    Number(state.round) + 1,
-    Number(state.round) + 2,
-    Number(state.round) + 3
-  ];
+ 
+const firstMatchweek =
+  !state.deadlinePassed && currentRound > 1
+    ? currentRound - 1
+    : currentRound;
+
+const matchweeks = [
+  firstMatchweek,
+  firstMatchweek + 1,
+  firstMatchweek + 2,
+  firstMatchweek + 3
+];
+
 
   async function loadMatchweek(matchweek){
     const response = await fetch(
