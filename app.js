@@ -2364,9 +2364,17 @@ item.matches.length
         }
       </div>
 
-      <div class='muted'>
-        v
-      </div>
+     
+<div class='muted'>
+  ${
+    ['IN_PLAY', 'PAUSED', 'FINISHED'].includes(match.status) &&
+    match.score?.fullTime?.home != null &&
+    match.score?.fullTime?.away != null
+      ? `${match.score.fullTime.home} - ${match.score.fullTime.away}`
+      : 'v'
+  }
+</div>
+
 
       <div class='plannerTeam ${awayUsed?'plannerTeamUsed':''}'>
         ${
