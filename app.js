@@ -2318,7 +2318,9 @@ if(tab==='fixtures'){
     <div>
       <div class='eyebrow dark'>
  ${
-  item.matchweek===Number(state.round)
+ item.matchweek < Number(state.round)
+  ? 'PAST MATCHWEEK RESULTS'
+  : item.matchweek === Number(state.round)
     ? 'CURRENT MATCHWEEK'
     : 'UPCOMING'
 }
