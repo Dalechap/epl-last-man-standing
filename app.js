@@ -2317,14 +2317,10 @@ if(tab==='fixtures'){
   <div class='sectionHead'>
     <div>
       <div class='eyebrow dark'>
-        ${
- ${
  ${
   item.matchweek===Number(state.round)
     ? 'CURRENT MATCHWEEK'
     : 'UPCOMING'
-}
-}
 }
       </div>
 
