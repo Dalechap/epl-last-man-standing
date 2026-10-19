@@ -8,7 +8,7 @@
 
 #content .fixtures .fixtureCard{
   display:grid;
-  grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
+ grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);;
   align-items:stretch;
   gap:0;
   padding:0;
