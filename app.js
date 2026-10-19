@@ -2490,7 +2490,7 @@ if (!c.dataset.playerSearchBound) {
   <input
     id='playerSearch'
     type='search'
-    placeholder='Search players by name...'
+    placeholder='Search players'
     autocomplete='off'
     style='width:100%;padding:10px 14px 10px 42px;border:1px solid #ddd3e4;border-radius:14px;font-size:15px;box-sizing:border-box;background:#fff url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2720%27 height=%2720%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%237b6587%27 stroke-width=%272%27 stroke-linecap=%27round%27%3E%3Ccircle cx=%2711%27 cy=%2711%27 r=%278%27/%3E%3Cpath d=%27m21 21-4.35-4.35%27/%3E%3C/svg%3E") no-repeat 14px center;'
   >
