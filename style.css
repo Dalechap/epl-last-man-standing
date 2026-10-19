@@ -348,3 +348,22 @@
   height: 42px;
   object-fit: contain;
 }
+
+/* Players tab: tighter card spacing only */
+.playerList .player {
+  padding: 14px 16px;
+}
+
+.playerList .pickLine {
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.playerList .pickHistoryRow {
+  margin-top: 4px;
+  gap: 10px;
+}
+
+.playerList .pickHistoryItem {
+  gap: 2px;
+}
