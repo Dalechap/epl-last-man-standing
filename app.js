@@ -2514,8 +2514,7 @@ ${
 
 <div class='pickLine'>
 Matchweek ${displayRound}:
-${
-  (state.deadlinePassed || !p.alive) &&
+${p.alive && state.deadlinePassed &&
   p.picks[displayRound] &&
   teamCrest(p.picks[displayRound])
     ? `<img
