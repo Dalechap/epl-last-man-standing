@@ -2421,6 +2421,33 @@ item.matches.length
   
 if(tab==='players'){
 
+  
+if (!c.dataset.playerSearchBound) {
+  c.dataset.playerSearchBound = 'true';
+
+  c.addEventListener('input', event => {
+    if (event.target.id !== 'playerSearch') return;
+
+    const query = event.target.value.trim().toLowerCase();
+    const cards = [...c.querySelectorAll('.playerList .player')];
+    let visible = 0;
+
+    cards.forEach(card => {
+      const name = card.querySelector('strong')?.textContent.trim().toLowerCase() || '';
+      const matches = name.includes(query);
+
+      card.style.display = matches ? '' : 'none';
+      if (matches) visible++;
+    });
+
+    const counter = c.querySelector('#playerSearchCount');
+    if (counter) {
+      counter.textContent = `Showing ${visible} of ${cards.length} players`;
+    }
+  });
+}
+
+
   c.innerHTML=`
     <h2>Players</h2>
    <div class='card'>Loading…</div>
@@ -2432,6 +2459,21 @@ if(tab==='players'){
 
   c.innerHTML=`
 <h2>Players</h2>
+
+
+<div style='margin:12px 0'>
+  <input
+    id='playerSearch'
+    type='search'
+    placeholder='Search players by name...'
+    autocomplete='off'
+    style='width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:16px;box-sizing:border-box;'
+  >
+  <small id='playerSearchCount' class='muted'>
+    Showing ${state.players.length} of ${state.players.length} players
+  </small>
+</div>
+
 ${
   !state.deadlinePassed
   ?`<p class='privacyNote'>
