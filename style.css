@@ -363,7 +363,21 @@
   margin-top: 4px;
   gap: 10px;
 }
+/* Players tab: compact current pick */
+.playerList .pickLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  line-height: 1.2;
+  margin: 4px 0 6px;
+}
 
+.playerList .pickLine img {
+  width: 60px !important;
+  height: 60px !important;
+  margin-left: 0 !important;
+}
 .playerList .pickHistoryItem {
   gap: 2px;
 }
