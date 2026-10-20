@@ -3360,7 +3360,7 @@ function paintHomeLights() {
   }
 
   legend.textContent = !state.deadlinePassed
-    ? 'Grey = ALive and awaiting kickoff | Red = eliminated'
+    ? 'Grey = Alive and awaiting kickoff | Red = eliminated'
     : 'Grey = not started | Green = safe | Amber = drawing | Red = out' +
       (homeLightsUpdated
         ? ' | Checked: ' + homeLightsUpdated.toLocaleTimeString()
