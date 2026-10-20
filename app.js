@@ -3538,3 +3538,169 @@ window.addEventListener(
   homeLightsTick
 );
 
+
+// HOME LIVE SURVIVAL SUMMARY
+// Display only. Uses existing traffic-light score data.
+// Does not change picks, results or API polling.
+
+function updateHomeSurvivalSummary() {
+  const existing = document.getElementById('homeSurvivalSummary');
+
+  if (tab !== 'home' || !state.deadlinePassed) {
+    if (existing) existing.remove();
+    return;
+  }
+
+  const standings = document.querySelector('.standings');
+  if (!standings) return;
+
+  const round = Number(state.round);
+
+  // Include everyone who entered this Matchweek,
+  // including anyone eliminated during this round.
+  const players = state.players.filter(p =>
+    p.alive || Number(p.eliminatedRound) === round
+  );
+
+  if (!players.length) {
+    if (existing) existing.remove();
+    return;
+  }
+
+  const counts = {
+    winning: 0,
+    drawing: 0,
+    losing: 0,
+    through: 0,
+    out: 0,
+    waiting: 0,
+    unknown: 0
+  };
+
+  let anyMatchStarted = false;
+
+  for (const player of players) {
+    const pick = player.picks?.[round];
+
+    if (!pick) {
+      counts.out++;
+      continue;
+    }
+
+    const team = normaliseTeamName(pick);
+    const match = homeLightsMatches.find(m =>
+      normaliseTeamName(m.homeTeam?.name) === team ||
+      normaliseTeamName(m.awayTeam?.name) === team
+    );
+
+    if (!match) {
+      counts.unknown++;
+      continue;
+    }
+
+    if (!['IN_PLAY', 'PAUSED', 'FINISHED'].includes(match.status)) {
+      counts.waiting++;
+      continue;
+    }
+
+    anyMatchStarted = true;
+
+    const home = match.score?.fullTime?.home;
+    const away = match.score?.fullTime?.away;
+
+    if (home == null || away == null) {
+      counts.unknown++;
+      continue;
+    }
+
+    const isHome =
+      normaliseTeamName(match.homeTeam?.name) === team;
+
+    const mine = isHome ? home : away;
+    const theirs = isHome ? away : home;
+    const finished = match.status === 'FINISHED';
+
+    if (finished) {
+      // Special LMS rule: away team survives a 0-0 draw.
+      const survived =
+        mine > theirs ||
+        (home === 0 && away === 0 && !isHome);
+
+      if (survived) counts.through++;
+      else counts.out++;
+    } else if (mine > theirs) {
+      counts.winning++;
+    } else if (mine < theirs) {
+      counts.losing++;
+    } else {
+      counts.drawing++;
+    }
+  }
+
+  const complete =
+    counts.waiting === 0 &&
+    counts.unknown === 0 &&
+    counts.winning === 0 &&
+    counts.drawing === 0 &&
+    counts.losing === 0;
+
+  let heading;
+
+  if (complete) {
+    heading = `Matchweek ${round} — Final results`;
+  } else if (anyMatchStarted) {
+    heading = `Matchweek ${round} — Live update`;
+  } else {
+    heading = `Matchweek ${round} — Awaiting kickoff`;
+  }
+
+  const parts = [];
+
+  function add(count, label, colour) {
+    if (count > 0) {
+      parts.push(
+        `<span style="color:${colour};font-weight:600">` +
+        `${count} ${label}</span>`
+      );
+    }
+  }
+
+  add(counts.through, 'through', '#16a34a');
+  add(counts.winning, 'winning', '#16a34a');
+  add(counts.drawing, 'drawing', '#ca8a04');
+  add(counts.losing, 'losing', '#dc2626');
+  add(counts.out, 'out', '#dc2626');
+  add(counts.waiting, 'awaiting kickoff', '#64748b');
+  add(counts.unknown, 'awaiting score data', '#64748b');
+
+  let summary = existing;
+
+  if (!summary) {
+    summary = document.createElement('div');
+    summary.id = 'homeSurvivalSummary';
+  }
+
+  summary.style.cssText =
+    'background:#f5f1f8;' +
+    'border-radius:12px;' +
+    'padding:14px 16px;' +
+    'margin:14px 0;' +
+    'font-size:14px;' +
+    'line-height:1.7;';
+
+  summary.innerHTML =
+    `<div style="font-weight:700;color:#38104e;margin-bottom:5px">` +
+    heading +
+    `</div>` +
+    `<div style="display:flex;flex-wrap:wrap;gap:6px 16px">` +
+    parts.join('') +
+    `</div>`;
+
+  // Position below the existing legend and above player rows.
+  standings.parentNode.insertBefore(summary, standings);
+}
+
+// Read-only update every five seconds.
+// No additional football API requests.
+setInterval(updateHomeSurvivalSummary, 5000);
+updateHomeSurvivalSummary();
