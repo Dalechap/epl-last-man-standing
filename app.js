@@ -3332,3 +3332,190 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pageshow', () => {
   fixtureScoreTestTick();
 });
+
+
+// HOME TRAFFIC LIGHTS - read-only live-score display
+let homeLightsMatches = [];
+let homeLightsRound = null;
+let homeLightsLastCheck = 0;
+let homeLightsBusy = false;
+let homeLightsUpdated = null;
+
+function paintHomeLights() {
+  if (tab !== 'home') return;
+
+  const standings = document.querySelector('.standings');
+  if (!standings) return;
+
+  let legend = document.getElementById('homeLightsLegend');
+
+  if (!legend) {
+    legend = document.createElement('p');
+    legend.id = 'homeLightsLegend';
+    legend.className = 'muted';
+    standings.parentNode.insertBefore(legend, standings);
+  }
+
+  legend.textContent = !state.deadlinePassed
+    ? 'Traffic lights activate when selections close.'
+    : 'Grey: not started | Green: safe | Amber: drawing | Red: out' +
+      (homeLightsUpdated
+        ? ' | Scores checked: ' + homeLightsUpdated.toLocaleTimeString()
+        : '');
+
+  for (const row of standings.querySelectorAll('.standingRow')) {
+    const name = row.querySelector('.standingName strong')
+      ?.textContent.trim();
+
+    const player = state.players.find(p => p.name === name);
+    const dot = row.querySelector('.dot');
+    const info = row.querySelector('.standingInfo');
+
+    if (!player || !dot || !info) continue;
+
+    let scoreLabel = info.querySelector('[data-home-score]');
+
+    if (!scoreLabel) {
+      scoreLabel = document.createElement('span');
+      scoreLabel.dataset.homeScore = 'true';
+      info.prepend(scoreLabel);
+    }
+
+    let colour = '#94a3b8';
+    let description = 'Not started';
+
+    if (!player.alive) {
+      colour = '#dc2626';
+      description = 'Eliminated';
+    } else if (!state.deadlinePassed) {
+      description = 'Awaiting deadline';
+    } else {
+      const pick = player.picks?.[state.round];
+
+      if (!pick) {
+        colour = '#dc2626';
+        description = 'No pick';
+      } else {
+        const teamKey = normaliseTeamName(pick);
+
+        const match = homeLightsMatches.find(m =>
+          normaliseTeamName(m.homeTeam?.name) === teamKey ||
+          normaliseTeamName(m.awayTeam?.name) === teamKey
+        );
+
+        if (!match) {
+          description = 'Awaiting score';
+        } else {
+          const home = match.score?.fullTime?.home;
+          const away = match.score?.fullTime?.away;
+          const finished = match.status === 'FINISHED';
+
+          const playing = [
+            'IN_PLAY', 'PAUSED', 'FINISHED'
+          ].includes(match.status);
+
+          if (playing && home != null && away != null) {
+            const isHome =
+              normaliseTeamName(match.homeTeam?.name) === teamKey;
+
+            const mine = isHome ? home : away;
+            const theirs = isHome ? away : home;
+
+            description =
+              `${home}-${away} ${finished ? 'FT' : 'LIVE'}`;
+
+            if (mine > theirs) {
+              colour = '#16a34a';
+            } else if (mine < theirs) {
+              colour = '#dc2626';
+            } else if (!finished) {
+              colour = '#eab308';
+            } else {
+              // Special rule: away picker survives a final 0-0
+              colour = home === 0 && away === 0 && !isHome
+                ? '#16a34a'
+                : '#dc2626';
+            }
+          }
+        }
+      }
+    }
+
+    dot.style.backgroundColor = colour;
+    dot.title = description;
+    dot.setAttribute('aria-label', description);
+    scoreLabel.textContent = description;
+  }
+}
+
+async function fetchHomeLights() {
+  if (
+    homeLightsBusy ||
+    tab !== 'home' ||
+    document.hidden ||
+    !state.deadlinePassed
+  ) return;
+
+  const round = Number(state.round);
+  homeLightsBusy = true;
+  homeLightsLastCheck = Date.now();
+
+  try {
+    const response = await fetch(
+      `/api/football?round=${round}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (Number(state.round) !== round) return;
+
+    homeLightsMatches = data.matches || [];
+    homeLightsUpdated = new Date();
+    paintHomeLights();
+
+  } catch (error) {
+    console.warn('Home score refresh failed:', error);
+  } finally {
+    homeLightsBusy = false;
+  }
+}
+
+function homeLightsTick() {
+  if (tab !== 'home' || document.hidden) return;
+
+  const round = Number(state.round);
+
+  if (homeLightsRound !== round) {
+    homeLightsRound = round;
+    homeLightsMatches = [];
+    homeLightsLastCheck = 0;
+    homeLightsUpdated = null;
+  }
+
+  paintHomeLights();
+
+  if (
+    state.deadlinePassed &&
+    Date.now() - homeLightsLastCheck >= 60000
+  ) {
+    fetchHomeLights();
+  }
+}
+
+// Check the screen every 5 seconds.
+// Request football scores no more than once a minute per phone.
+setInterval(homeLightsTick, 5000);
+
+document.addEventListener(
+  'visibilitychange',
+  homeLightsTick
+);
+
+window.addEventListener(
+  'pageshow',
+  homeLightsTick
+);
