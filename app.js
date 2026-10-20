@@ -3226,3 +3226,79 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+
+
+// TEMPORARY LIVE-SCORE TEST: Fixtures only, once per minute.
+// This does not change player picks, competition state or Matchweek processing.
+let fixtureScoreTestBusy = false;
+let fixtureScoreTestLastScreen = null;
+
+async function refreshFixtureScoreTest() {
+  if (tab !== 'fixtures' || document.hidden || fixtureScoreTestBusy) return;
+
+  const round = Number(state.round);
+  const sections = [...document.querySelectorAll('details.matchweekDropdown')];
+  const currentSection = sections.find(section =>
+    section.querySelector('.matchweekSummary h2')?.textContent.trim() ===
+    `Matchweek ${round}`
+  );
+  if (!currentSection) return;
+
+  fixtureScoreTestBusy = true;
+  try {
+    const response = await fetch(`/api/football?round=${round}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (tab !== 'fixtures' || Number(state.round) !== round ||
+        !currentSection.isConnected) return;
+
+    for (const card of currentSection.querySelectorAll('.fixtureCard')) {
+      const names = [...card.querySelectorAll('.plannerTeamName')]
+        .map(element => normaliseTeamName(element.textContent));
+      if (names.length !== 2) continue;
+
+      const match = (data.matches || []).find(m =>
+        normaliseTeamName(m.homeTeam?.name) === names[0] &&
+        normaliseTeamName(m.awayTeam?.name) === names[1]
+      );
+      if (!match) continue;
+
+      const home = match.score?.fullTime?.home;
+      const away = match.score?.fullTime?.away;
+      const score = card.querySelector('.muted');
+      if (!score) continue;
+
+      score.textContent =
+        ['IN_PLAY', 'PAUSED', 'FINISHED'].includes(match.status) &&
+        home != null && away != null
+          ? `${home} - ${away}`
+          : 'v';
+    }
+
+    let checked = document.getElementById('fixtureScoreTestChecked');
+    if (!checked) {
+      checked = document.createElement('p');
+      checked.id = 'fixtureScoreTestChecked';
+      checked.className = 'muted';
+      currentSection.parentNode.insertBefore(checked, currentSection);
+    }
+    checked.textContent = `Scores checked: ${new Date().toLocaleTimeString()}`;
+  } catch (error) {
+    console.warn('Live score test failed:', error);
+  } finally {
+    fixtureScoreTestBusy = false;
+  }
+}
+
+// Detect entering or re-rendering Fixtures without extra API requests.
+setInterval(() => {
+  const firstSection = document.querySelector('details.matchweekDropdown');
+  if (tab === 'fixtures' && firstSection &&
+      firstSection !== fixtureScoreTestLastScreen) {
+    fixtureScoreTestLastScreen = firstSection;
+    refreshFixtureScoreTest();
+  }
+}, 1000);
+
+// Make one fresh request per minute while Fixtures is visible.
+setInterval(refreshFixtureScoreTest, 60000);
