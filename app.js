@@ -3290,15 +3290,45 @@ async function refreshFixtureScoreTest() {
   }
 }
 
-// Detect entering or re-rendering Fixtures without extra API requests.
-setInterval(() => {
-  const firstSection = document.querySelector('details.matchweekDropdown');
-  if (tab === 'fixtures' && firstSection &&
-      firstSection !== fixtureScoreTestLastScreen) {
+
+// Check whether a score refresh is due.
+// Only fetch once per 60 seconds while Fixtures is visible.
+let fixtureScoreTestLastAttempt = 0;
+
+function fixtureScoreTestTick() {
+  if (tab !== 'fixtures' || document.hidden) return;
+
+  const firstSection =
+    document.querySelector('details.matchweekDropdown');
+
+  if (!firstSection) return;
+
+  const now = Date.now();
+
+  const screenChanged =
+    firstSection !== fixtureScoreTestLastScreen;
+
+  const refreshDue =
+    now - fixtureScoreTestLastAttempt >= 60000;
+
+  if (screenChanged || refreshDue) {
     fixtureScoreTestLastScreen = firstSection;
+    fixtureScoreTestLastAttempt = now;
     refreshFixtureScoreTest();
   }
-}, 1000);
+}
 
-// Make one fresh request per minute while Fixtures is visible.
-setInterval(refreshFixtureScoreTest, 60000);
+// Check every 5 seconds, without making an API request
+// unless a refresh is due.
+setInterval(fixtureScoreTestTick, 5000);
+
+// Resume checking when the iPhone browser becomes active.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    fixtureScoreTestTick();
+  }
+});
+
+window.addEventListener('pageshow', () => {
+  fixtureScoreTestTick();
+});
