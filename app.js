@@ -2976,6 +2976,26 @@ if (!c.dataset.playerSearchBound) {
 
   if(tab!=='players') return;
 
+  
+const popularityPicks = state.players
+  .filter(p =>
+    p.picks &&
+    typeof p.picks[state.round] === 'string' &&
+    p.picks[state.round].trim()
+  )
+  .map(p => p.picks[state.round].trim());
+
+const popularityCounts = {};
+
+popularityPicks.forEach(team => {
+  popularityCounts[team] =
+    (popularityCounts[team] || 0) + 1;
+});
+
+const popularityTeams = Object.entries(popularityCounts)
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+  
   c.innerHTML=`
 <h2>Players</h2>
 
@@ -3000,6 +3020,44 @@ ${
     </p>`
   :''
 }
+
+
+${
+  state.deadlinePassed
+  ?`
+    <div class='card'>
+      <h3>Matchweek ${state.round} — Pick Popularity</h3>
+      ${
+        popularityPicks.length
+        ?`
+          <p class='muted'>
+            ${popularityPicks.length} selections submitted
+          </p>
+          ${popularityTeams.map(([team, count]) => {
+            const percentage =
+              Math.round(count / popularityPicks.length * 100);
+
+            return `
+              <div style='margin:14px 0'>
+                <div style='display:flex;justify-content:space-between;gap:8px;font-size:13px'>
+                  <strong>${esc(team)}</strong>
+                  <span>${count} (${percentage}%)</span>
+                </div>
+                <div style='height:10px;background:#e5e7eb;border-radius:8px;overflow:hidden;margin-top:6px'>
+                  <div style='width:${percentage}%;height:100%;background:#6478b8;border-radius:8px'></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        `
+        :`<p class='muted'>No selections submitted.</p>`
+      }
+    </div>
+  `
+  :''
+}
+
+
 <div class='playerList'>
 ${
 [...state.players]
