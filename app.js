@@ -1452,9 +1452,12 @@ async function refreshFixtureScoreTest() {
       checked = document.createElement('p');
       checked.id = 'fixtureScoreTestChecked';
       checked.className = 'muted';
-      currentSection.parentNode.insertBefore(checked, currentSection);
+      const fixturesContainer = currentSection.querySelector('.fixtures');
+if (fixturesContainer) {
+  fixturesContainer.parentNode.insertBefore(checked, fixturesContainer);
+}
     }
-    checked.textContent = `Scores checked: ${new Date().toLocaleTimeString()}`;
+    checked.textContent = `Time Updated: ${new Date().toLocaleTimeString()}`;
   } catch (error) {
     console.warn('Live score test failed:', error);
   } finally {
