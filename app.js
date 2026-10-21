@@ -2819,6 +2819,18 @@ item.matches.length
   const away=
     match.awayTeam?.name || '';
 
+   const kickoff =
+  item.matchweek === Number(state.round) && match.utcDate
+    ? new Date(match.utcDate).toLocaleString(undefined, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      })
+    : '';
+   
   const homeUsed=
     plannerPlayer?.used?.some(
       team=>
@@ -2834,7 +2846,12 @@ item.matches.length
     );
 
   return `
-    <div class='fixtureCard'>
+  ${kickoff
+    ? `<div class='muted' style='text-align:center;margin:12px 0 4px;font-size:12px;'>
+         ${esc(kickoff)}
+       </div>`
+    : ''}
+  <div class='fixtureCard'>
 
       <div class='plannerTeam ${homeUsed?'plannerTeamUsed':''}'>
         ${
