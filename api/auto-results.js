@@ -266,6 +266,30 @@ await sql`
   WHERE id = 1
 `;
 
+// Send Matchweek completion or winner notification
+// before advancing to the next Matchweek.
+try {
+  const notificationResponse = await fetch(
+    'https://lastmanstandingsports.com/api/notifications',
+    {
+      method: 'POST'
+    }
+  );
+
+  if (!notificationResponse.ok) {
+    console.error(
+      'Matchweek completion notification returned:',
+      notificationResponse.status
+    );
+  }
+} catch (error) {
+  console.error(
+    'Matchweek completion notification trigger failed:',
+    error
+  );
+}
+
+      
 // Stop here if processing has produced a winner
 const survivors = state.players.filter(
   player => player.alive
