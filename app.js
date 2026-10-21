@@ -3515,7 +3515,8 @@ function homeLightsTick() {
     homeLightsUpdated = null;
   }
 
-  paintHomeLights();
+   paintHomeLights();
+  updateHomeSurvivalSummary();
 
   if (
     state.deadlinePassed &&
@@ -3700,7 +3701,4 @@ function updateHomeSurvivalSummary() {
   standings.parentNode.insertBefore(summary, standings);
 }
 
-// Read-only update every five seconds.
-// No additional football API requests.
-setInterval(updateHomeSurvivalSummary, 5000);
-updateHomeSurvivalSummary();
+
