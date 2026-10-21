@@ -1452,9 +1452,9 @@ async function refreshFixtureScoreTest() {
       checked = document.createElement('p');
       checked.id = 'fixtureScoreTestChecked';
       checked.className = 'muted';
-      const fixturesContainer = currentSection.querySelector('.fixtures');
+     const fixturesContainer = currentSection.querySelector('.fixtures');
 if (fixturesContainer) {
-  fixturesContainer.parentNode.insertBefore(checked, fixturesContainer);
+  fixturesContainer.prepend(checked);
 }
     }
     checked.textContent = `Time Updated: ${new Date().toLocaleTimeString()}`;
