@@ -1059,6 +1059,374 @@ render();
 await loadEplFixtures();
 }
 
+// HOME TRAFFIC LIGHTS - Player Status
+// Read-only: does not change picks or competition results.
+
+let homeLightsMatches = [];
+let homeLightsRound = null;
+let homeLightsLastCheck = 0;
+let homeLightsBusy = false;
+let homeLightsUpdated = null;
+
+function paintHomeLights() {
+  if (tab !== 'home') return;
+
+  const standings = document.querySelector('.standings');
+  if (!standings) return;
+
+  let legend = document.getElementById('homeLightsLegend');
+
+  if (!legend) {
+    legend = document.createElement('p');
+    legend.id = 'homeLightsLegend';
+    legend.className = 'muted';
+    standings.parentNode.insertBefore(legend, standings);
+  }
+
+  legend.textContent = !state.deadlinePassed
+    ? 'Grey = Alive and awaiting kickoff | Red = eliminated'
+    : 'Grey = not started | Green = safe | Amber = drawing | Red = out' +
+      (homeLightsUpdated
+        ? ' | Checked: ' + homeLightsUpdated.toLocaleTimeString()
+        : '');
+
+  for (const row of standings.querySelectorAll('.standingRow')) {
+    const name = row.querySelector('.standingName strong')
+      ?.textContent.trim();
+
+    const player = state.players.find(p => p.name === name);
+    const dot = row.querySelector('.dot');
+    const pickCell = row.querySelector('.standingPick');
+
+    if (!player || !dot) continue;
+
+    let colour = '#94a3b8';
+    let description = 'Not started';
+    let scoreText = '';
+
+    if (!player.alive) {
+      colour = '#dc2626';
+      description = 'Eliminated';
+
+    } else if (!state.deadlinePassed) {
+      description = 'Awaiting kickoff';
+
+    } else {
+      const pick = player.picks?.[state.round];
+
+      if (!pick) {
+        colour = '#dc2626';
+        description = 'No pick';
+
+      } else {
+        const team = normaliseTeamName(pick);
+
+        const match = homeLightsMatches.find(m =>
+          normaliseTeamName(m.homeTeam?.name) === team ||
+          normaliseTeamName(m.awayTeam?.name) === team
+        );
+
+        if (match) {
+          const home = match.score?.fullTime?.home;
+          const away = match.score?.fullTime?.away;
+          const finished = match.status === 'FINISHED';
+
+          const started = [
+            'IN_PLAY', 'PAUSED', 'FINISHED'
+          ].includes(match.status);
+
+          if (started && home != null && away != null) {
+            const isHome =
+              normaliseTeamName(match.homeTeam?.name) === team;
+
+            const mine = isHome ? home : away;
+            const theirs = isHome ? away : home;
+
+            scoreText = `${home}-${away} ${finished ? 'FT' : 'LIVE'}`;
+            description = scoreText;
+
+            if (mine > theirs) {
+              colour = '#16a34a';
+            } else if (mine < theirs) {
+              colour = '#dc2626';
+            } else if (!finished) {
+              colour = '#eab308';
+            } else {
+              // Final 0-0: away team survives, home team is out.
+              colour = home === 0 && away === 0 && !isHome
+                ? '#16a34a'
+                : '#dc2626';
+            }
+          }
+        } else {
+          description = 'Awaiting fixture information';
+        }
+      }
+    }
+
+    // Use the EXISTING dot on the Home screen.
+    dot.style.backgroundColor = colour;
+    dot.style.background = colour;
+    dot.title = description;
+    dot.setAttribute('aria-label', description);
+
+    // Add a score only after the deadline.
+    if (pickCell) {
+      let scoreLabel = pickCell.querySelector('[data-live-score]');
+
+      if (!scoreLabel && scoreText) {
+        scoreLabel = document.createElement('small');
+        scoreLabel.dataset.liveScore = 'true';
+        scoreLabel.style.display = 'block';
+        scoreLabel.style.marginTop = '4px';
+        pickCell.appendChild(scoreLabel);
+      }
+
+      if (scoreLabel) {
+        scoreLabel.textContent = scoreText;
+      }
+    }
+  }
+}
+
+async function fetchHomeLights() {
+  if (
+    homeLightsBusy ||
+    tab !== 'home' ||
+    document.hidden ||
+    !state.deadlinePassed
+  ) return;
+
+  const round = Number(state.round);
+
+  homeLightsBusy = true;
+  homeLightsLastCheck = Date.now();
+
+  try {
+    const response = await fetch(
+      `/api/football?round=${round}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (Number(state.round) !== round) return;
+
+    homeLightsMatches = data.matches || [];
+    homeLightsUpdated = new Date();
+
+    paintHomeLights();
+
+  } catch (error) {
+    console.warn('Home traffic lights failed:', error);
+  } finally {
+    homeLightsBusy = false;
+  }
+}
+
+function homeLightsTick() {
+  if (tab !== 'home' || document.hidden) return;
+
+  const round = Number(state.round);
+
+  if (homeLightsRound !== round) {
+    homeLightsRound = round;
+    homeLightsMatches = [];
+    homeLightsLastCheck = 0;
+    homeLightsUpdated = null;
+  }
+
+   paintHomeLights();
+  updateHomeSurvivalSummary();
+
+  if (
+    state.deadlinePassed &&
+    Date.now() - homeLightsLastCheck >= 60000
+  ) {
+    fetchHomeLights();
+  }
+}
+
+// Check every 5 seconds; fetch scores at most once per minute.
+setInterval(homeLightsTick, 5000);
+
+document.addEventListener(
+  'visibilitychange',
+  homeLightsTick
+);
+
+window.addEventListener(
+  'pageshow',
+  homeLightsTick
+);
+
+
+// HOME LIVE SURVIVAL SUMMARY
+// Display only. Uses existing traffic-light score data.
+// Does not change picks, results or API polling.
+
+function updateHomeSurvivalSummary() {
+  const existing = document.getElementById('homeSurvivalSummary');
+
+  if (tab !== 'home' || !state.deadlinePassed) {
+    if (existing) existing.remove();
+    return;
+  }
+
+  const standings = document.querySelector('.standings');
+  if (!standings) return;
+
+  const round = Number(state.round);
+
+  // Include everyone who entered this Matchweek,
+  // including anyone eliminated during this round.
+  const players = state.players.filter(p =>
+    p.alive || Number(p.eliminatedRound) === round
+  );
+
+  if (!players.length) {
+    if (existing) existing.remove();
+    return;
+  }
+
+  const counts = {
+    winning: 0,
+    drawing: 0,
+    losing: 0,
+    through: 0,
+    out: 0,
+    waiting: 0,
+    unknown: 0
+  };
+
+  let anyMatchStarted = false;
+
+  for (const player of players) {
+    const pick = player.picks?.[round];
+
+    if (!pick) {
+      counts.out++;
+      continue;
+    }
+
+    const team = normaliseTeamName(pick);
+    const match = homeLightsMatches.find(m =>
+      normaliseTeamName(m.homeTeam?.name) === team ||
+      normaliseTeamName(m.awayTeam?.name) === team
+    );
+
+    if (!match) {
+      counts.unknown++;
+      continue;
+    }
+
+    if (!['IN_PLAY', 'PAUSED', 'FINISHED'].includes(match.status)) {
+      counts.waiting++;
+      continue;
+    }
+
+    anyMatchStarted = true;
+
+    const home = match.score?.fullTime?.home;
+    const away = match.score?.fullTime?.away;
+
+    if (home == null || away == null) {
+      counts.unknown++;
+      continue;
+    }
+
+    const isHome =
+      normaliseTeamName(match.homeTeam?.name) === team;
+
+    const mine = isHome ? home : away;
+    const theirs = isHome ? away : home;
+    const finished = match.status === 'FINISHED';
+
+    if (finished) {
+      // Special LMS rule: away team survives a 0-0 draw.
+      const survived =
+        mine > theirs ||
+        (home === 0 && away === 0 && !isHome);
+
+      if (survived) counts.through++;
+      else counts.out++;
+    } else if (mine > theirs) {
+      counts.winning++;
+    } else if (mine < theirs) {
+      counts.losing++;
+    } else {
+      counts.drawing++;
+    }
+  }
+
+  const complete =
+    counts.waiting === 0 &&
+    counts.unknown === 0 &&
+    counts.winning === 0 &&
+    counts.drawing === 0 &&
+    counts.losing === 0;
+
+  let heading;
+
+  if (complete) {
+    heading = `Matchweek ${round} — Final results`;
+  } else if (anyMatchStarted) {
+    heading = `Matchweek ${round} — Live update`;
+  } else {
+    heading = `Matchweek ${round} — Awaiting kickoff`;
+  }
+
+  const parts = [];
+
+  function add(count, label, colour) {
+    if (count > 0) {
+      parts.push(
+        `<span style="color:${colour};font-weight:600">` +
+        `${count} ${label}</span>`
+      );
+    }
+  }
+
+  add(counts.through, 'through', '#16a34a');
+  add(counts.winning, 'winning', '#16a34a');
+  add(counts.drawing, 'drawing', '#ca8a04');
+  add(counts.losing, 'losing', '#dc2626');
+  add(counts.out, 'out', '#dc2626');
+  add(counts.waiting, 'awaiting kickoff', '#64748b');
+  add(counts.unknown, 'awaiting score data', '#64748b');
+
+  let summary = existing;
+
+  if (!summary) {
+    summary = document.createElement('div');
+    summary.id = 'homeSurvivalSummary';
+  }
+
+  summary.style.cssText =
+    'background:#f5f1f8;' +
+    'border-radius:12px;' +
+    'padding:14px 16px;' +
+    'margin:14px 0;' +
+    'font-size:14px;' +
+    'line-height:1.7;';
+
+  summary.innerHTML =
+    `<div style="font-weight:700;color:#38104e;margin-bottom:5px">` +
+    heading +
+    `</div>` +
+    `<div style="display:flex;flex-wrap:wrap;gap:6px 16px">` +
+    parts.join('') +
+    `</div>`;
+
+  // Position below the existing legend and above player rows.
+  standings.parentNode.insertBefore(summary, standings);
+}
+
+
+
 function renderStandings(){
 return `<div class='standings'>${
 [...state.players]
@@ -3338,372 +3706,5 @@ if ('serviceWorker' in navigator) {
 
 
 
-
-
-// HOME TRAFFIC LIGHTS - Player Status
-// Read-only: does not change picks or competition results.
-
-let homeLightsMatches = [];
-let homeLightsRound = null;
-let homeLightsLastCheck = 0;
-let homeLightsBusy = false;
-let homeLightsUpdated = null;
-
-function paintHomeLights() {
-  if (tab !== 'home') return;
-
-  const standings = document.querySelector('.standings');
-  if (!standings) return;
-
-  let legend = document.getElementById('homeLightsLegend');
-
-  if (!legend) {
-    legend = document.createElement('p');
-    legend.id = 'homeLightsLegend';
-    legend.className = 'muted';
-    standings.parentNode.insertBefore(legend, standings);
-  }
-
-  legend.textContent = !state.deadlinePassed
-    ? 'Grey = Alive and awaiting kickoff | Red = eliminated'
-    : 'Grey = not started | Green = safe | Amber = drawing | Red = out' +
-      (homeLightsUpdated
-        ? ' | Checked: ' + homeLightsUpdated.toLocaleTimeString()
-        : '');
-
-  for (const row of standings.querySelectorAll('.standingRow')) {
-    const name = row.querySelector('.standingName strong')
-      ?.textContent.trim();
-
-    const player = state.players.find(p => p.name === name);
-    const dot = row.querySelector('.dot');
-    const pickCell = row.querySelector('.standingPick');
-
-    if (!player || !dot) continue;
-
-    let colour = '#94a3b8';
-    let description = 'Not started';
-    let scoreText = '';
-
-    if (!player.alive) {
-      colour = '#dc2626';
-      description = 'Eliminated';
-
-    } else if (!state.deadlinePassed) {
-      description = 'Awaiting kickoff';
-
-    } else {
-      const pick = player.picks?.[state.round];
-
-      if (!pick) {
-        colour = '#dc2626';
-        description = 'No pick';
-
-      } else {
-        const team = normaliseTeamName(pick);
-
-        const match = homeLightsMatches.find(m =>
-          normaliseTeamName(m.homeTeam?.name) === team ||
-          normaliseTeamName(m.awayTeam?.name) === team
-        );
-
-        if (match) {
-          const home = match.score?.fullTime?.home;
-          const away = match.score?.fullTime?.away;
-          const finished = match.status === 'FINISHED';
-
-          const started = [
-            'IN_PLAY', 'PAUSED', 'FINISHED'
-          ].includes(match.status);
-
-          if (started && home != null && away != null) {
-            const isHome =
-              normaliseTeamName(match.homeTeam?.name) === team;
-
-            const mine = isHome ? home : away;
-            const theirs = isHome ? away : home;
-
-            scoreText = `${home}-${away} ${finished ? 'FT' : 'LIVE'}`;
-            description = scoreText;
-
-            if (mine > theirs) {
-              colour = '#16a34a';
-            } else if (mine < theirs) {
-              colour = '#dc2626';
-            } else if (!finished) {
-              colour = '#eab308';
-            } else {
-              // Final 0-0: away team survives, home team is out.
-              colour = home === 0 && away === 0 && !isHome
-                ? '#16a34a'
-                : '#dc2626';
-            }
-          }
-        } else {
-          description = 'Awaiting fixture information';
-        }
-      }
-    }
-
-    // Use the EXISTING dot on the Home screen.
-    dot.style.backgroundColor = colour;
-    dot.style.background = colour;
-    dot.title = description;
-    dot.setAttribute('aria-label', description);
-
-    // Add a score only after the deadline.
-    if (pickCell) {
-      let scoreLabel = pickCell.querySelector('[data-live-score]');
-
-      if (!scoreLabel && scoreText) {
-        scoreLabel = document.createElement('small');
-        scoreLabel.dataset.liveScore = 'true';
-        scoreLabel.style.display = 'block';
-        scoreLabel.style.marginTop = '4px';
-        pickCell.appendChild(scoreLabel);
-      }
-
-      if (scoreLabel) {
-        scoreLabel.textContent = scoreText;
-      }
-    }
-  }
-}
-
-async function fetchHomeLights() {
-  if (
-    homeLightsBusy ||
-    tab !== 'home' ||
-    document.hidden ||
-    !state.deadlinePassed
-  ) return;
-
-  const round = Number(state.round);
-
-  homeLightsBusy = true;
-  homeLightsLastCheck = Date.now();
-
-  try {
-    const response = await fetch(
-      `/api/football?round=${round}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (Number(state.round) !== round) return;
-
-    homeLightsMatches = data.matches || [];
-    homeLightsUpdated = new Date();
-
-    paintHomeLights();
-
-  } catch (error) {
-    console.warn('Home traffic lights failed:', error);
-  } finally {
-    homeLightsBusy = false;
-  }
-}
-
-function homeLightsTick() {
-  if (tab !== 'home' || document.hidden) return;
-
-  const round = Number(state.round);
-
-  if (homeLightsRound !== round) {
-    homeLightsRound = round;
-    homeLightsMatches = [];
-    homeLightsLastCheck = 0;
-    homeLightsUpdated = null;
-  }
-
-   paintHomeLights();
-  updateHomeSurvivalSummary();
-
-  if (
-    state.deadlinePassed &&
-    Date.now() - homeLightsLastCheck >= 60000
-  ) {
-    fetchHomeLights();
-  }
-}
-
-// Check every 5 seconds; fetch scores at most once per minute.
-setInterval(homeLightsTick, 5000);
-
-document.addEventListener(
-  'visibilitychange',
-  homeLightsTick
-);
-
-window.addEventListener(
-  'pageshow',
-  homeLightsTick
-);
-
-
-// HOME LIVE SURVIVAL SUMMARY
-// Display only. Uses existing traffic-light score data.
-// Does not change picks, results or API polling.
-
-function updateHomeSurvivalSummary() {
-  const existing = document.getElementById('homeSurvivalSummary');
-
-  if (tab !== 'home' || !state.deadlinePassed) {
-    if (existing) existing.remove();
-    return;
-  }
-
-  const standings = document.querySelector('.standings');
-  if (!standings) return;
-
-  const round = Number(state.round);
-
-  // Include everyone who entered this Matchweek,
-  // including anyone eliminated during this round.
-  const players = state.players.filter(p =>
-    p.alive || Number(p.eliminatedRound) === round
-  );
-
-  if (!players.length) {
-    if (existing) existing.remove();
-    return;
-  }
-
-  const counts = {
-    winning: 0,
-    drawing: 0,
-    losing: 0,
-    through: 0,
-    out: 0,
-    waiting: 0,
-    unknown: 0
-  };
-
-  let anyMatchStarted = false;
-
-  for (const player of players) {
-    const pick = player.picks?.[round];
-
-    if (!pick) {
-      counts.out++;
-      continue;
-    }
-
-    const team = normaliseTeamName(pick);
-    const match = homeLightsMatches.find(m =>
-      normaliseTeamName(m.homeTeam?.name) === team ||
-      normaliseTeamName(m.awayTeam?.name) === team
-    );
-
-    if (!match) {
-      counts.unknown++;
-      continue;
-    }
-
-    if (!['IN_PLAY', 'PAUSED', 'FINISHED'].includes(match.status)) {
-      counts.waiting++;
-      continue;
-    }
-
-    anyMatchStarted = true;
-
-    const home = match.score?.fullTime?.home;
-    const away = match.score?.fullTime?.away;
-
-    if (home == null || away == null) {
-      counts.unknown++;
-      continue;
-    }
-
-    const isHome =
-      normaliseTeamName(match.homeTeam?.name) === team;
-
-    const mine = isHome ? home : away;
-    const theirs = isHome ? away : home;
-    const finished = match.status === 'FINISHED';
-
-    if (finished) {
-      // Special LMS rule: away team survives a 0-0 draw.
-      const survived =
-        mine > theirs ||
-        (home === 0 && away === 0 && !isHome);
-
-      if (survived) counts.through++;
-      else counts.out++;
-    } else if (mine > theirs) {
-      counts.winning++;
-    } else if (mine < theirs) {
-      counts.losing++;
-    } else {
-      counts.drawing++;
-    }
-  }
-
-  const complete =
-    counts.waiting === 0 &&
-    counts.unknown === 0 &&
-    counts.winning === 0 &&
-    counts.drawing === 0 &&
-    counts.losing === 0;
-
-  let heading;
-
-  if (complete) {
-    heading = `Matchweek ${round} — Final results`;
-  } else if (anyMatchStarted) {
-    heading = `Matchweek ${round} — Live update`;
-  } else {
-    heading = `Matchweek ${round} — Awaiting kickoff`;
-  }
-
-  const parts = [];
-
-  function add(count, label, colour) {
-    if (count > 0) {
-      parts.push(
-        `<span style="color:${colour};font-weight:600">` +
-        `${count} ${label}</span>`
-      );
-    }
-  }
-
-  add(counts.through, 'through', '#16a34a');
-  add(counts.winning, 'winning', '#16a34a');
-  add(counts.drawing, 'drawing', '#ca8a04');
-  add(counts.losing, 'losing', '#dc2626');
-  add(counts.out, 'out', '#dc2626');
-  add(counts.waiting, 'awaiting kickoff', '#64748b');
-  add(counts.unknown, 'awaiting score data', '#64748b');
-
-  let summary = existing;
-
-  if (!summary) {
-    summary = document.createElement('div');
-    summary.id = 'homeSurvivalSummary';
-  }
-
-  summary.style.cssText =
-    'background:#f5f1f8;' +
-    'border-radius:12px;' +
-    'padding:14px 16px;' +
-    'margin:14px 0;' +
-    'font-size:14px;' +
-    'line-height:1.7;';
-
-  summary.innerHTML =
-    `<div style="font-weight:700;color:#38104e;margin-bottom:5px">` +
-    heading +
-    `</div>` +
-    `<div style="display:flex;flex-wrap:wrap;gap:6px 16px">` +
-    parts.join('') +
-    `</div>`;
-
-  // Position below the existing legend and above player rows.
-  standings.parentNode.insertBefore(summary, standings);
-}
 
 
