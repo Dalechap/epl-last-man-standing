@@ -40,6 +40,120 @@ export default async function handler(req, res) {
 
     const state = rows[0].state;
 
+    // Send completed Matchweek updates to all subscribed players,
+// including players already eliminated.
+if (state.roundProcessed === true) {
+  const players = Array.isArray(state.players)
+    ? state.players
+    : [];
+
+  const previousAlive =
+    state.processSnapshot?.alive || {};
+
+  const hadSnapshot =
+    Object.keys(previousAlive).length > 0;
+
+  if (hadSnapshot) {
+    const survived = players.filter(
+      player => player.alive === true
+    ).length;
+
+    const eliminated = players.filter(
+      player =>
+        previousAlive[player.name] === true &&
+        player.alive !== true
+    ).length;
+
+    const winnerDeclared = survived === 1;
+
+    const notificationType = winnerDeclared
+      ? 'winner-declared'
+      : 'matchweek-completed';
+
+    const title = winnerDeclared
+      ? 'We have a winner! 🏆'
+      : `Matchweek ${state.round} completed!`;
+
+    const body = winnerDeclared
+      ? 'The competition is over. Open the app to discover the Last Man Standing!'
+      : `${survived} survived. ${eliminated} eliminated. Open the app to see who's still standing.`;
+
+    const subscriptions = await sql`
+      SELECT player_name, endpoint, p256dh, auth
+      FROM push_subscriptions
+      WHERE enabled = TRUE
+    `;
+
+    for (const subscription of subscriptions) {
+      const alreadySent = await sql`
+        SELECT id
+        FROM notification_log
+        WHERE lower(player_name) =
+          lower(${subscription.player_name}::text)
+          AND notification_type = ${notificationType}
+          AND matchweek = ${Number(state.round)}
+          AND endpoint = ${subscription.endpoint}
+        LIMIT 1
+      `;
+
+      if (alreadySent.length) {
+        continue;
+      }
+
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: subscription.p256dh,
+              auth: subscription.auth
+            }
+          },
+          JSON.stringify({
+            title,
+            body,
+            url: '/?tab=players'
+          })
+        );
+
+        await sql`
+          INSERT INTO notification_log (
+            player_name,
+            notification_type,
+            matchweek,
+            endpoint
+          )
+          VALUES (
+            ${subscription.player_name},
+            ${notificationType},
+            ${Number(state.round)},
+            ${subscription.endpoint}
+          )
+          ON CONFLICT DO NOTHING
+        `;
+
+      } catch (error) {
+        console.error(
+          'Matchweek completion push failed:',
+          error
+        );
+
+        if (
+          error.statusCode === 404 ||
+          error.statusCode === 410
+        ) {
+          await sql`
+            UPDATE push_subscriptions
+            SET enabled = FALSE,
+                updated_at = NOW()
+            WHERE endpoint = ${subscription.endpoint}
+          `;
+        }
+      }
+    }
+  }
+}
+
     if (!state.deadline) {
       return res.status(200).json({
         ok: true,
