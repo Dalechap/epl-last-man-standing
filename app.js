@@ -1399,6 +1399,112 @@ const matchweeks = [
   return plannerFixturesCache;
 
        }
+
+// TEMPORARY LIVE-SCORE TEST: Fixtures only, once per minute.
+// This does not change player picks, competition state or Matchweek processing.
+let fixtureScoreTestBusy = false;
+let fixtureScoreTestLastScreen = null;
+
+async function refreshFixtureScoreTest() {
+  if (tab !== 'fixtures' || document.hidden || fixtureScoreTestBusy) return;
+
+  const round = Number(state.round);
+  const sections = [...document.querySelectorAll('details.matchweekDropdown')];
+  const currentSection = sections.find(section =>
+    section.querySelector('.matchweekSummary h2')?.textContent.trim() ===
+    `Matchweek ${round}`
+  );
+  if (!currentSection) return;
+
+  fixtureScoreTestBusy = true;
+  try {
+    const response = await fetch(`/api/football?round=${round}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (tab !== 'fixtures' || Number(state.round) !== round ||
+        !currentSection.isConnected) return;
+
+    for (const card of currentSection.querySelectorAll('.fixtureCard')) {
+      const names = [...card.querySelectorAll('.plannerTeamName')]
+        .map(element => normaliseTeamName(element.textContent));
+      if (names.length !== 2) continue;
+
+      const match = (data.matches || []).find(m =>
+        normaliseTeamName(m.homeTeam?.name) === names[0] &&
+        normaliseTeamName(m.awayTeam?.name) === names[1]
+      );
+      if (!match) continue;
+
+      const home = match.score?.fullTime?.home;
+      const away = match.score?.fullTime?.away;
+      const score = card.querySelector('.muted');
+      if (!score) continue;
+
+      score.textContent =
+        ['IN_PLAY', 'PAUSED', 'FINISHED'].includes(match.status) &&
+        home != null && away != null
+          ? `${home} - ${away}`
+          : 'v';
+    }
+
+    let checked = document.getElementById('fixtureScoreTestChecked');
+    if (!checked) {
+      checked = document.createElement('p');
+      checked.id = 'fixtureScoreTestChecked';
+      checked.className = 'muted';
+      currentSection.parentNode.insertBefore(checked, currentSection);
+    }
+    checked.textContent = `Scores checked: ${new Date().toLocaleTimeString()}`;
+  } catch (error) {
+    console.warn('Live score test failed:', error);
+  } finally {
+    fixtureScoreTestBusy = false;
+  }
+}
+
+
+// Check whether a score refresh is due.
+// Only fetch once per 60 seconds while Fixtures is visible.
+let fixtureScoreTestLastAttempt = 0;
+
+function fixtureScoreTestTick() {
+  if (tab !== 'fixtures' || document.hidden) return;
+
+  const firstSection =
+    document.querySelector('details.matchweekDropdown');
+
+  if (!firstSection) return;
+
+  const now = Date.now();
+
+  const screenChanged =
+    firstSection !== fixtureScoreTestLastScreen;
+
+  const refreshDue =
+    now - fixtureScoreTestLastAttempt >= 60000;
+
+  if (screenChanged || refreshDue) {
+    fixtureScoreTestLastScreen = firstSection;
+    fixtureScoreTestLastAttempt = now;
+    refreshFixtureScoreTest();
+  }
+}
+
+// Check every 5 seconds, without making an API request
+// unless a refresh is due.
+setInterval(fixtureScoreTestTick, 5000);
+
+// Resume checking when the iPhone browser becomes active.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    fixtureScoreTestTick();
+  }
+});
+
+window.addEventListener('pageshow', () => {
+  fixtureScoreTestTick();
+});
+
 function playerLoginModal(){
   return new Promise(resolve=>{
     const overlay=document.createElement('div');
@@ -3228,110 +3334,6 @@ if ('serviceWorker' in navigator) {
 }
 
 
-// TEMPORARY LIVE-SCORE TEST: Fixtures only, once per minute.
-// This does not change player picks, competition state or Matchweek processing.
-let fixtureScoreTestBusy = false;
-let fixtureScoreTestLastScreen = null;
-
-async function refreshFixtureScoreTest() {
-  if (tab !== 'fixtures' || document.hidden || fixtureScoreTestBusy) return;
-
-  const round = Number(state.round);
-  const sections = [...document.querySelectorAll('details.matchweekDropdown')];
-  const currentSection = sections.find(section =>
-    section.querySelector('.matchweekSummary h2')?.textContent.trim() ===
-    `Matchweek ${round}`
-  );
-  if (!currentSection) return;
-
-  fixtureScoreTestBusy = true;
-  try {
-    const response = await fetch(`/api/football?round=${round}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    if (tab !== 'fixtures' || Number(state.round) !== round ||
-        !currentSection.isConnected) return;
-
-    for (const card of currentSection.querySelectorAll('.fixtureCard')) {
-      const names = [...card.querySelectorAll('.plannerTeamName')]
-        .map(element => normaliseTeamName(element.textContent));
-      if (names.length !== 2) continue;
-
-      const match = (data.matches || []).find(m =>
-        normaliseTeamName(m.homeTeam?.name) === names[0] &&
-        normaliseTeamName(m.awayTeam?.name) === names[1]
-      );
-      if (!match) continue;
-
-      const home = match.score?.fullTime?.home;
-      const away = match.score?.fullTime?.away;
-      const score = card.querySelector('.muted');
-      if (!score) continue;
-
-      score.textContent =
-        ['IN_PLAY', 'PAUSED', 'FINISHED'].includes(match.status) &&
-        home != null && away != null
-          ? `${home} - ${away}`
-          : 'v';
-    }
-
-    let checked = document.getElementById('fixtureScoreTestChecked');
-    if (!checked) {
-      checked = document.createElement('p');
-      checked.id = 'fixtureScoreTestChecked';
-      checked.className = 'muted';
-      currentSection.parentNode.insertBefore(checked, currentSection);
-    }
-    checked.textContent = `Scores checked: ${new Date().toLocaleTimeString()}`;
-  } catch (error) {
-    console.warn('Live score test failed:', error);
-  } finally {
-    fixtureScoreTestBusy = false;
-  }
-}
-
-
-// Check whether a score refresh is due.
-// Only fetch once per 60 seconds while Fixtures is visible.
-let fixtureScoreTestLastAttempt = 0;
-
-function fixtureScoreTestTick() {
-  if (tab !== 'fixtures' || document.hidden) return;
-
-  const firstSection =
-    document.querySelector('details.matchweekDropdown');
-
-  if (!firstSection) return;
-
-  const now = Date.now();
-
-  const screenChanged =
-    firstSection !== fixtureScoreTestLastScreen;
-
-  const refreshDue =
-    now - fixtureScoreTestLastAttempt >= 60000;
-
-  if (screenChanged || refreshDue) {
-    fixtureScoreTestLastScreen = firstSection;
-    fixtureScoreTestLastAttempt = now;
-    refreshFixtureScoreTest();
-  }
-}
-
-// Check every 5 seconds, without making an API request
-// unless a refresh is due.
-setInterval(fixtureScoreTestTick, 5000);
-
-// Resume checking when the iPhone browser becomes active.
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    fixtureScoreTestTick();
-  }
-});
-
-window.addEventListener('pageshow', () => {
-  fixtureScoreTestTick();
-});
 
 
 
