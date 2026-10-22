@@ -2673,32 +2673,31 @@ Matchweek ${state.round}
 </div>
 
 ${
-current
-?`<p class='current'>
-Current pick:
-<b>${esc(current)}</b>
-
-</div>`
-:fixtures.length
-?`<label>Fixtures</label>
-
-<div class='fixtures'>
-${
-fixtures
-.map(f=>
-fixtureCard(
-  f.home,
-  f.away,
-  current,
-  p,
-  f.homeCrest,
-  f.awayCrest,
-  f.kickoff
-)
-)
-.join('')
+  current
+    ? `<p class='current'>
+         Current pick:
+         <b>${esc(current)}</b>
+       </p>`
+    : ''
 }
-</div>`
+
+${
+  fixtures.length
+    ? `<label>Fixtures</label>
+       <div class='fixtures'>
+         ${fixtures.map(f =>
+           fixtureCard(
+             f.home,
+             f.away,
+             current,
+             p,
+             f.homeCrest,
+             f.awayCrest,
+             f.kickoff
+           )
+         ).join('')}
+       </div>`
+
 :`<label>Team</label>
 
 <select id='teamSel'>
