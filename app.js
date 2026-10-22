@@ -1470,14 +1470,30 @@ return `<div class='standingRow'>
 }).join('')
 }</div>`;
 }
-function fixtureCard(home,away,current,p,homeCrest,awayCrest){
+function fixtureCard(home,away,current,p,homeCrest,awayCrest,kickoff){
 const hUsed=
 p.used.includes(home)&&current!==home;
 
 const aUsed=
 p.used.includes(away)&&current!==away;
 
+const kickoffText = kickoff && !Number.isNaN(new Date(kickoff).getTime())
+  ? new Date(kickoff).toLocaleString(undefined, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+  : '';
+
 return `<div class='fixtureCard'>
+  ${kickoffText
+    ? `<div class='muted' style='text-align:center;margin:12px 0 4px;font-size:12px;'>
+         ${esc(kickoffText)}
+       </div>`
+    : ''}
 <button
 class='teamPick ${current===home?'selected':''}'
 data-team='${esc(home)}'
@@ -2661,14 +2677,15 @@ current
 ?`<p class='current'>
 Current pick:
 <b>${esc(current)}</b>
-</p>`
-:''
-}
-
-${
-state.deadlinePassed
-?`<div class='closedBox'>
-Selections are closed for Matchweek ${state.round}.
+fixtureCard(
+  f.home,
+  f.away,
+  current,
+  p,
+  f.homeCrest,
+  f.awayCrest,
+  f.kickoff
+)
 </div>`
 :fixtures.length
 ?`<label>Fixtures</label>
