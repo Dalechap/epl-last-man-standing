@@ -14,6 +14,16 @@ export default async function handler(req, res) {
       });
     }
 
+        const cronSecret = process.env.CRON_SECRET;
+
+    if (
+      !cronSecret ||
+      req.headers.authorization !== `Bearer ${cronSecret}`
+    ) {
+      return res.status(401).json({
+        error: 'Unauthorized'
+      });
+    }
     const rows = await sql`
       SELECT state
       FROM competition_state
