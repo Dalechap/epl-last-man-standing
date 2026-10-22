@@ -181,7 +181,7 @@ const alivePlayers =
       )
     : [];
 
-for (const player of alivePlayers) {
+for (const player of (req.query?.event === 'new-matchweek' ? alivePlayers : [])) {
   const subscriptions = await sql`
     SELECT
       endpoint,
