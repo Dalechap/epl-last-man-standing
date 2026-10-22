@@ -367,7 +367,7 @@ openedNextMatchweek = true;
     if (openedNextMatchweek) {
       try {
         await fetch(
-          'https://lastmanstandingsports.com/api/notifications',
+          'https://lastmanstandingsports.com/api/notifications?event=new-matchweek',
           {
             method: 'POST'
           }
