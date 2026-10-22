@@ -91,7 +91,7 @@ if (!rows.length) {
   }
 
   return res.status(409).json({
-    error: 'That player name is already in the competition'
+    error: 'That player name is already in the competition, please choose anohter name'
   });
 }
 
