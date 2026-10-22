@@ -2799,7 +2799,7 @@ if(tab==='fixtures'){
 
    ${    
         planner.map(item=>`
-         <details class='card matchweekDropdown'>
+         <details class='card matchweekDropdown' ${item.matchweek === Number(state.round) ? 'open' : ''}>
             <summary class='matchweekSummary'>
   <div class='sectionHead'>
     <div>
