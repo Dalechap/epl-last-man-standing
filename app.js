@@ -2677,15 +2677,7 @@ current
 ?`<p class='current'>
 Current pick:
 <b>${esc(current)}</b>
-fixtureCard(
-  f.home,
-  f.away,
-  current,
-  p,
-  f.homeCrest,
-  f.awayCrest,
-  f.kickoff
-)
+
 </div>`
 :fixtures.length
 ?`<label>Fixtures</label>
@@ -2695,12 +2687,13 @@ ${
 fixtures
 .map(f=>
 fixtureCard(
-f.home,
-f.away,
-current,
-p,
-f.homeCrest,
-f.awayCrest
+  f.home,
+  f.away,
+  current,
+  p,
+  f.homeCrest,
+  f.awayCrest,
+  f.kickoff
 )
 )
 .join('')
