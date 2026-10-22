@@ -1488,12 +1488,13 @@ const kickoffText = kickoff && !Number.isNaN(new Date(kickoff).getTime())
     })
   : '';
 
-return `<div class='fixtureCard'>
+return `
   ${kickoffText
-    ? `<div class='muted' style='text-align:center;margin:12px 0 4px;font-size:12px;'>
+    ? `<div class='muted' style='text-align:center;margin:14px 0 6px;font-size:12px;font-weight:600;'>
          ${esc(kickoffText)}
        </div>`
     : ''}
+  <div class='fixtureCard'>
 <button
 class='teamPick ${current===home?'selected':''}'
 data-team='${esc(home)}'
