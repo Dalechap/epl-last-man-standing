@@ -2278,9 +2278,7 @@ ${
       Eliminated in Matchweek ${me.eliminatedRound||''}.
     </p>`
 }
-      <button id='switchPlayerBtn' class='secondary' style='margin-top:12px;padding:10px 14px;border:0;border-radius:10px;font-weight:800;cursor:pointer;'>
-        Switch Player
-      </button>
+     
     </div>
   `;
 })()
@@ -2362,12 +2360,7 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
 
   if ($('#switchPlayerBtn')) $('#switchPlayerBtn').onclick = () => {
     authenticatedPlayer = null;
-    authenticatedPin = null;
-    state.selectedPlayer = '';
-    tab = 'pick';
-    notice('');
-    render();
-  };
+  
   if($('#joinBtn')) $('#joinBtn').onclick=async ()=>{
 if(state.registrationClosed){
   $('#joinMessage').innerHTML=
