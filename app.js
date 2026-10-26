@@ -2166,7 +2166,8 @@ Enable Notifications
 }
 
 ${
-!authenticatedPlayer && !winner()
+!authenticatedPlayer && !winner() &&
+!state.registrationClosed && Number(state.round) === Number(state.startRound)
 ?`
 <div class='card'>
 
@@ -2190,15 +2191,6 @@ ${
 `
 :''
 }
-
-<div class='homeLogin'>
-  <button
-    class='primary'
-    id='homePlayerLogin'
-  >
-    Player Login
-  </button>
-</div>
 
 </div>
 `
@@ -2286,7 +2278,9 @@ ${
       Eliminated in Matchweek ${me.eliminatedRound||''}.
     </p>`
 }
-
+      <button id='switchPlayerBtn' class='secondary' style='margin-top:12px;padding:10px 14px;border:0;border-radius:10px;font-weight:800;cursor:pointer;'>
+        Switch Player
+      </button>
     </div>
   `;
 })()
@@ -2366,67 +2360,14 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
     </div>
   `;
 
-  if($('#homePlayerLogin')) $('#homePlayerLogin').onclick=async ()=>{
-  const login=await playerLoginModal();
-
-  if(!login){
-    return;
-  }
-
-  const selected=
-    state.players.find(
-      p=>
-        p.alive &&
-        p.name.toLowerCase()===
-        login.name.toLowerCase()
-    );
-
-  if(!selected){
-    notice(
-      'Player not found or already eliminated.',
-      'warn'
-    );
-    return;
-  }
-
-  try{
-    const response=
-      await fetch('/api/auth',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json'
-        },
-        body:JSON.stringify({
-          playerName:selected.name,
-          pin:login.pin
-        })
-      });
-
-    const data=
-      await response.json();
-
-    if(!response.ok){
-      notice(
-        data.error||'Incorrect PIN.',
-        'warn'
-      );
-      return;
-    }
-
-    authenticatedPlayer=selected.name;
-    authenticatedPin=login.pin;
-    state.selectedPlayer=selected.name;
-
+  if ($('#switchPlayerBtn')) $('#switchPlayerBtn').onclick = () => {
+    authenticatedPlayer = null;
+    authenticatedPin = null;
+    state.selectedPlayer = '';
+    tab = 'pick';
     notice('');
     render();
-
-  }catch(error){
-    notice(
-      'Unable to authenticate. Please try again.',
-      'warn'
-    );
-  }
-};
+  };
   if($('#joinBtn')) $('#joinBtn').onclick=async ()=>{
 if(state.registrationClosed){
   $('#joinMessage').innerHTML=
