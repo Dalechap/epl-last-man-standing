@@ -403,3 +403,19 @@ body:has(.tabs button[data-tab="fixtures"].active) .ball img {
 .playerList .pickHistoryItem {
   gap: 2px;
 }
+
+/* Compact Players search area */
+body:has(.tabs button[data-tab="players"].active) #content h2 {
+  margin-bottom: 8px;
+}
+
+body:has(.tabs button[data-tab="players"].active) #playerSearch {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+body:has(.tabs button[data-tab="players"].active) .privacyNote {
+  font-size: 13px;
+  margin: 4px 0 8px;
+  line-height: 1.3;
+}
