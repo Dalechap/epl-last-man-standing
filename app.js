@@ -3216,6 +3216,16 @@ ${fixtures.length
 }
 </p>
 
+<div class='card'>
+  <h3>Live Score Diagnostic</h3>
+  <button id='checkLiveScores' class='primary'>
+    Check API Scores
+  </button>
+  <pre id='liveScoreDiagnostic'
+       style='white-space:pre-wrap;font-size:13px'>
+    Press the button to check live scores.
+  </pre>
+</div> 
 <hr>
 
 <label>
@@ -3392,6 +3402,47 @@ Reset competition
 </section>
 `;
 
+  const checkLiveScoresBtn = document.getElementById('checkLiveScores');
+
+if (checkLiveScoresBtn) {
+  checkLiveScoresBtn.onclick = async () => {
+    const output = document.getElementById('liveScoreDiagnostic');
+    output.textContent = 'Checking API...';
+
+    try {
+      const round = Number(state.round);
+      const response = await fetch(
+        `/api/football?round=${round}`,
+        { cache: 'no-store' }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const lines = (data.matches || []).map(match => {
+        const home = match.score?.fullTime?.home;
+        const away = match.score?.fullTime?.away;
+
+        return `${match.homeTeam?.name} v ${match.awayTeam?.name}
+API Score: ${home ?? '-'} - ${away ?? '-'}
+Status: ${match.status}`;
+      });
+
+      output.textContent =
+        `Matchweek ${round}
+Checked: ${new Date().toLocaleTimeString()}
+
+${lines.join('\n\n') || 'No matches returned.'}`;
+
+    } catch (error) {
+      output.textContent = `API check failed: ${error.message}`;
+    }
+  };
+}
+  
 if($('#loadEpl')){
 $('#loadEpl').onclick=
 loadEplFixtures;
