@@ -3025,9 +3025,9 @@ const popularityTeams = Object.entries(popularityCounts)
 
 ${
   !state.deadlinePassed
-  ?`<p class='privacyNote'>
-     Selections hidden until Matchweek commences
-    </p>`
+ <p class='privacyNote playersPrivacyNote'>
+  MW${state.round} picks hidden until kickoff
+</p>
   :''
 }
 
