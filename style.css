@@ -436,3 +436,7 @@ body:has(.tabs button[data-tab="players"].active) .privacyNote {
   font-weight: 700 !important;
   cursor: pointer;
 }
+
+#switchPlayerBtn {
+  display: none !important;
+}
