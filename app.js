@@ -1803,7 +1803,7 @@ async function refreshFixtureScoreTest() {
 
   fixtureScoreTestBusy = true;
   try {
-    const response = await fetch(`/api/football?round=${round}`);
+   const response = await fetch(`/api/football?round=${round}`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     if (tab !== 'fixtures' || Number(state.round) !== round ||
