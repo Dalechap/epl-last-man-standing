@@ -3025,9 +3025,9 @@ const popularityTeams = Object.entries(popularityCounts)
 
 ${
   !state.deadlinePassed
-<p class='privacyNote'>
-  Selections hidden until Matchweek commences
-</p>
+  ?`<p class='privacyNote'>
+     Selections hidden until Matchweek commences
+    </p>`
   :''
 }
 
@@ -3788,7 +3788,6 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
-
 
 
 
