@@ -424,3 +424,15 @@ body:has(.tabs button[data-tab="players"].active) .privacyNote {
 .tabs {
   margin-bottom: 8px;
 }
+
+/* Switch Player button */
+#switchPlayerBtn {
+  background: #ffffff !important;
+  color: #43105b !important;
+  border: 1px solid #43105b !important;
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+}
