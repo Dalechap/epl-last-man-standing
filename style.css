@@ -378,6 +378,28 @@
   height: 60px !important;
   margin-left: 0 !important;
 }
+
+/* Compact banner on Players and Fixtures */
+body:has(.tabs button[data-tab="players"].active) .hero,
+body:has(.tabs button[data-tab="fixtures"].active) .hero {
+  padding: 12px 18px;
+  border-radius: 18px;
+}
+
+body:has(.tabs button[data-tab="players"].active) .hero h1,
+body:has(.tabs button[data-tab="fixtures"].active) .hero h1 {
+  font-size: 20px;
+  line-height: 1.15;
+  margin: 3px 0;
+}
+
+body:has(.tabs button[data-tab="players"].active) .ball,
+body:has(.tabs button[data-tab="fixtures"].active) .ball,
+body:has(.tabs button[data-tab="players"].active) .ball img,
+body:has(.tabs button[data-tab="fixtures"].active) .ball img {
+  width: 54px;
+  height: 54px;
+}
 .playerList .pickHistoryItem {
   gap: 2px;
 }
