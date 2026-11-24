@@ -440,3 +440,33 @@ body:has(.tabs button[data-tab="players"].active) .privacyNote {
 #switchPlayerBtn {
   display: none !important;
 }
+/* Narrow mobile screen compatibility */
+@media (max-width: 400px) {
+  .standingRow {
+    grid-template-columns: minmax(0, 1fr)
+      minmax(0, 1.4fr) 10px;
+    gap: 6px;
+  }
+
+  .standingName,
+  .standingInfo {
+    min-width: 0;
+  }
+
+  .standingInfo {
+    gap: 6px;
+  }
+
+  .standingPick {
+    overflow-wrap: anywhere;
+  }
+
+  .usedCount {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .standingRow > .dot {
+    justify-self: end;
+  }
+}
