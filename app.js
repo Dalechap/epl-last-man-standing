@@ -2320,7 +2320,10 @@ COMPETITION
 ${renderStandings()}
 </div>
 
-<details class='card rules'>
+<div class='card tableCard' id='hallOfFame' hidden>
+  <h2>🏆 Hall of Fame</h2>
+  <div id='competitionHistory'></div>
+</div>
 <summary><h2>Competition rules</h2></summary>
 
 <ul>
