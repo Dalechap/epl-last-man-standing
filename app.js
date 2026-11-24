@@ -3687,24 +3687,46 @@ notice(
 render();
 };
 }
-$('#reset').onclick=()=>{
-if(
-confirm(
-'Reset all players, picks, fixtures and used teams?'
-)){
-const nextRound=Number(state.round)+1;
+$('#reset').onclick = async () => {
+  if (!confirm(
+    'Start a new competition? Existing players and PINs will be retained. Previous selections and results will be cleared.'
+  )) {
+    return;
+  }
 
-state=freshState();
-state.round=nextRound;
-state.startRound=nextRound;
+  const previousState = state;
+  const nextRound = Number(state.round) + 1;
 
-saveAdmin();
-notice(
-'Competition reset.'
-);
+  const existingPlayers = state.players.map(player => ({
+    ...player,
+    alive: true,
+    picks: {},
+    used: [],
+    eliminatedRound: null
+  }));
 
-render();
-}
+  state = freshState();
+  state.round = nextRound;
+  state.startRound = nextRound;
+  state.players = existingPlayers;
+  state.registrationClosed = false;
+  state.processSnapshot = null;
+
+  const saved = await saveAdmin();
+
+  if (!saved?.ok) {
+    state = previousState;
+    localStorage.setItem(
+      'lms-state',
+      JSON.stringify(state)
+    );
+    render();
+    notice('Competition reset failed.', 'warn');
+    return;
+  }
+
+  notice('New competition created. Registration is open.');
+  render();
 };
 }
 }
