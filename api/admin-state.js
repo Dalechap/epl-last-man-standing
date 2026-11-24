@@ -1,4 +1,3 @@
-
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
@@ -13,7 +12,7 @@ export default async function handler(req, res) {
 
     const { adminPin, state: incomingState } = req.body || {};
 
-if (String(adminPin) !== String(process.env.ADMIN_PIN)) {
+    if (String(adminPin) !== String(process.env.ADMIN_PIN)) {
       return res.status(403).json({
         error: 'Incorrect Admin PIN'
       });
@@ -60,14 +59,76 @@ if (String(adminPin) !== String(process.env.ADMIN_PIN)) {
         });
     }
 
-    await sql`
-      INSERT INTO competition_state (id, state, updated_at)
-      VALUES (1, ${incomingState}, NOW())
-      ON CONFLICT (id)
-      DO UPDATE SET
-        state = EXCLUDED.state,
-        updated_at = NOW()
-    `;
+    const restarting =
+      existingState?.roundProcessed === true &&
+      Number(incomingState.startRound) >
+        Number(existingState.round);
+
+    if (restarting) {
+      await sql.transaction([
+        sql`
+          INSERT INTO competition_history (
+            start_round,
+            final_round,
+            winner,
+            participants,
+            completed_at,
+            snapshot
+          )
+          SELECT
+            (state->>'startRound')::integer,
+            (state->>'round')::integer,
+            (
+              SELECT p->>'name'
+              FROM jsonb_array_elements(state->'players') p
+              WHERE p->>'alive' = 'true'
+            ),
+            jsonb_array_length(state->'players'),
+            updated_at,
+            jsonb_set(
+              state - 'processSnapshot',
+              '{players}',
+              (
+                SELECT jsonb_agg(p - 'pin' ORDER BY ord)
+                FROM jsonb_array_elements(state->'players')
+                WITH ORDINALITY AS x(p, ord)
+              )
+            )
+          FROM competition_state
+          WHERE id = 1
+            AND state->>'roundProcessed' = 'true'
+            AND (
+              SELECT count(*)
+              FROM jsonb_array_elements(state->'players') p
+              WHERE p->>'alive' = 'true'
+            ) = 1
+            AND NOT EXISTS (
+              SELECT 1
+              FROM competition_history h
+              WHERE h.start_round =
+                (state->>'startRound')::integer
+                AND h.final_round =
+                (state->>'round')::integer
+            )
+          ON CONFLICT DO NOTHING
+        `,
+        sql`
+          UPDATE competition_state
+          SET state = ${incomingState},
+              updated_at = NOW()
+          WHERE id = 1
+        `
+      ]);
+    } else {
+      await sql`
+        INSERT INTO competition_state (id, state, updated_at)
+        VALUES (1, ${incomingState}, NOW())
+        ON CONFLICT (id)
+        DO UPDATE SET
+          state = EXCLUDED.state,
+          updated_at = NOW()
+      `;
+    }
 
     return res.status(200).json({
       ok: true
