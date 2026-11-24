@@ -31,7 +31,25 @@ export default async function handler(req, res) {
         });
     }
 
-    return res.status(200).json(publicState);
+    if (req.query?.history === '1') {
+  const history = await sql`
+    SELECT
+      id,
+      start_round,
+      final_round,
+      winner,
+      participants,
+      completed_at
+    FROM competition_history
+    ORDER BY id DESC
+  `;
+
+  res.setHeader('Cache-Control', 'no-store');
+
+  return res.status(200).json({ history });
+}
+
+return res.status(200).json(publicState);
 
   } catch (error) {
     console.error(error);
