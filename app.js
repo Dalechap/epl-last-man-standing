@@ -2362,7 +2362,41 @@ If every remaining player is eliminated in the same Matchweek, they all stay ali
       </button>
     </div>
   `;
+fetch('/api/state?history=1', {
+  cache: 'no-store'
+})
+.then(response => {
+  if (!response.ok) {
+    throw new Error('History unavailable');
+  }
+  return response.json();
+})
+.then(data => {
+  const panel = document.getElementById('hallOfFame');
+  const list = document.getElementById('competitionHistory');
 
+  if (!panel || !list || !data.history?.length) return;
+
+  list.innerHTML = data.history.map(item => `
+    <div style='padding:12px 0;border-top:1px solid #eee7f1'>
+      <div class='eyebrow dark'>
+        COMPETITION ${esc(String(item.id))}
+      </div>
+      <h3 style='margin:8px 0'>
+        🏆 ${esc(item.winner)}
+      </h3>
+      <div class='muted'>
+        ${esc(String(item.participants))} players ·
+        MW${esc(String(item.start_round))}–MW${esc(String(item.final_round))}
+      </div>
+    </div>
+  `).join('');
+
+  panel.hidden = false;
+})
+.catch(error => {
+  console.error('Hall of Fame:', error);
+});
   if ($('#switchPlayerBtn')) $('#switchPlayerBtn').onclick = () => {
     authenticatedPlayer = null;
     authenticatedPin = null;
