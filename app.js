@@ -3478,7 +3478,7 @@ Selections close automatically when the first EPL match of the Matchweek kicks o
 
 <hr>
 
-<div class='card' style='text-align:center;padding:16px;margin-bottom:12px'>
+<div hidden>
   <div class='muted'>Competition Code</div>
   <div
     id='adminCompetitionCode'
@@ -3654,7 +3654,8 @@ if (!/^[A-Z0-9]{6}$/i.test(competitionCode || '')) {
   notice('Competition code is not available yet.', 'warn');
   return;
 }
-
+const previousWinner = winner();
+    
     const startingRound = previousWinner
       ? Number(state.round) + 1
       : Number(state.startRound || state.round);
