@@ -130,8 +130,28 @@ if (
         updated_at = NOW()
       FROM updated_players
       WHERE competition_state.id = 1
-        AND competition_state.state->>'round' = ${String(round)}
-      RETURNING competition_state.state
+  AND competition_state.state->>'round' = ${String(round)}
+  AND COALESCE(
+    (competition_state.state->>'deadlinePassed')::boolean,
+    false
+  ) = false
+  AND COALESCE(
+    (competition_state.state->>'roundProcessed')::boolean,
+    false
+  ) = false
+  AND (
+    NULLIF(competition_state.state->>'deadline', '') IS NULL
+    OR (competition_state.state->>'deadline')::timestamptz > clock_timestamp()
+  )
+  AND EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(
+      competition_state.state->'players'
+    ) AS p
+    WHERE p->>'name' = ${playerName}::text
+      AND p->>'alive' = 'true'
+  )
+RETURNING competition_state.state
     `;
 
     if (!rows.length) {
