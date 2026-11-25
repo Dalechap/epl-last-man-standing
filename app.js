@@ -3646,7 +3646,14 @@ const shareCompetitionBtn =
 if (shareCompetitionBtn) {
   shareCompetitionBtn.onclick = async () => {
 
-    const previousWinner = winner();
+  const competitionCode = document
+  .getElementById('adminCompetitionCode')
+  ?.textContent.trim();
+
+if (!/^[A-Z0-9]{6}$/i.test(competitionCode || '')) {
+  notice('Competition code is not available yet.', 'warn');
+  return;
+}
 
     const startingRound = previousWinner
       ? Number(state.round) + 1
@@ -3664,6 +3671,7 @@ if (shareCompetitionBtn) {
       '',
       'Existing players can use their existing name and PIN.',
       'New players are welcome to register.',
+`🔑 Competition Code: ${competitionCode}`,
       '',
       'Join here:',
       'https://lastmanstandingsports.com',
