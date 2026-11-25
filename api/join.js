@@ -63,7 +63,8 @@ if (validateOnly === true) {
     }
 
     const rows = await sql`
-      UPDATE competition_state
+    WITH joined AS (
+  UPDATE competition_state
       SET
         state = jsonb_set(
           state,
@@ -121,14 +122,37 @@ AND NOT EXISTS (
       0
     )
 )
+       
+      AND NOT EXISTS (
+  SELECT 1
+  FROM player_profiles
+  WHERE name_key = lower(${cleanName}::text)
+)  
+        
         AND NOT EXISTS (
           SELECT 1
           FROM jsonb_array_elements(
             COALESCE(state->'players', '[]'::jsonb)
           ) AS player
           WHERE lower(player->>'name') = lower(${cleanName}::text)
-        )
-      RETURNING state
+        )RETURNING state
+),
+saved_profile AS (
+  INSERT INTO player_profiles (
+    name_key,
+    name,
+    pin
+  )
+  SELECT
+    lower(${cleanName}::text),
+    ${cleanName}::text,
+    ${cleanPin}::text
+  FROM joined
+  RETURNING name_key
+)
+SELECT joined.state
+FROM joined
+CROSS JOIN saved_profile
     `;
 
 if (!rows.length) {
