@@ -3968,14 +3968,33 @@ render();
 };
 }
 $('#reset').onclick = async () => {
+  const minimumRound = Number(state.round) + 1;
+
+  const input = prompt(
+    'Enter the starting Matchweek for the new competition:',
+    String(minimumRound)
+  );
+
+  if (input === null) return;
+
+  const nextRound = Number(input);
+
+  if (
+    !Number.isInteger(nextRound) ||
+    nextRound < minimumRound ||
+    nextRound > 38
+  ) {
+    notice('Invalid starting Matchweek.', 'warn');
+    return;
+  }
+
   if (!confirm(
-    'Start a new competition? Existing players and PINs will be retained. Previous selections and results will be cleared.'
+    `Start a new competition in Matchweek ${nextRound}? Existing players and PINs will be retained. Previous selections and results will be cleared.`
   )) {
     return;
   }
 
   const previousState = state;
-  const nextRound = Number(state.round) + 1;
 
   const existingPlayers = state.players.map(player => ({
     ...player,
