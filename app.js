@@ -2312,15 +2312,30 @@ ${
 ${
 !state.registrationClosed && Number(state.round) === Number(state.startRound)
 ?`
-<h2>Join Competition</h2>
+<h2>New Players</h2>
 
-<p class='joinIntro'>
-  New here? Create your player profile and 4-digit PIN.
-</p>
+<div id='joinCodeSection'>
+  <p class='joinIntro'>
+    Enter your competition code to register.
+  </p>
+
+  <input
+    id='joinCodeInput'
+    type='text'
+    placeholder='Competition code'
+    maxlength='6'
+    autocomplete='off'
+  >
+
+  <button class='primary' id='validateJoinCode'>
+    Verify Code
+  </button>
+</div>
 
 <button
   class='primary'
   id='joinBtn'
+  hidden
 >
   Join Competition
 </button>
@@ -2543,6 +2558,38 @@ fetch('/api/state?history=1', {
     notice('');
     render();
   };
+if ($('#validateJoinCode')) {
+  $('#validateJoinCode').onclick = async () => {
+    const code = $('#joinCodeInput').value.trim().toLowerCase();
+
+    try {
+      const response = await fetch('/api/join', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          competitionCode: code,
+          validateOnly: true
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Incorrect competition code');
+      }
+
+      localStorage.setItem('lms-access', code);
+
+      $('#joinCodeSection').hidden = true;
+      $('#joinBtn').hidden = false;
+      $('#joinMessage').textContent = '';
+
+    } catch (error) {
+      $('#joinMessage').textContent = error.message;
+    }
+  };
+}
+  
   if($('#joinBtn')) $('#joinBtn').onclick=async ()=>{
 if(state.registrationClosed){
   $('#joinMessage').innerHTML=
