@@ -2247,23 +2247,42 @@ notificationsSupported &&
   ) === String(state.startRound)
 )
 ?`
-<div class='card'>
-<h2>Notifications</h2>
+<div class='card' style='padding:12px 16px;
+display:flex;align-items:center;
+justify-content:space-between;
+margin-bottom:12px'>
 
-<p>
-Status:
-<strong style='color:${notificationPlayer ? 'green' : 'red'}'>
-${notificationPlayer ? 'Enabled' : 'Disabled'}
-</strong>
-</p>
+<strong>🔔 Notifications</strong>
 
 <button
-  class='secondary'
   id='toggleNotifications'
+  role='switch'
+  aria-label='Notifications'
+  aria-checked='${Boolean(notificationPlayer)}'
+  style='
+    width:52px;
+    height:30px;
+    border:0;
+    border-radius:20px;
+    padding:3px;
+    cursor:pointer;
+    background:${notificationPlayer
+      ? "#34C759"
+      : "#A1A1AA"};
+    display:flex;
+    align-items:center;
+    justify-content:${notificationPlayer
+      ? "flex-end"
+      : "flex-start"};
+  '
 >
-${notificationPlayer
-  ? 'Disable Notifications'
-  : 'Enable Notifications'}
+  <span style='
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:white;
+    box-shadow:0 1px 3px #0003;
+  '></span>
 </button>
 
 </div>
