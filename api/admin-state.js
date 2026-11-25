@@ -65,6 +65,26 @@ export default async function handler(req, res) {
         Number(existingState.round);
 
     if (restarting) {
+
+const profiles = await sql`
+  SELECT name, pin
+  FROM player_profiles
+  ORDER BY name
+`;
+
+if (!profiles.length) {
+  throw new Error('No registered player profiles found');
+}
+
+incomingState.players = profiles.map(profile => ({
+  name: profile.name,
+  pin: profile.pin,
+  alive: true,
+  picks: {},
+  used: [],
+  eliminatedRound: null
+}));
+      
       const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 const newCompetitionCode = Array.from(
