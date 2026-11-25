@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-
+import { randomInt } from 'node:crypto';
 const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
@@ -65,6 +65,12 @@ export default async function handler(req, res) {
         Number(existingState.round);
 
     if (restarting) {
+      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+const newCompetitionCode = Array.from(
+  { length: 6 },
+  () => alphabet[randomInt(alphabet.length)]
+).join('');
       await sql.transaction([
         sql`
           INSERT INTO competition_history (
@@ -115,6 +121,12 @@ export default async function handler(req, res) {
         sql`
           UPDATE competition_state
           SET state = ${incomingState},
+              updated_at = NOW()
+                    WHERE id = 1
+        `,
+        sql`
+          UPDATE competition_access
+          SET code = ${newCompetitionCode},
               updated_at = NOW()
           WHERE id = 1
         `
