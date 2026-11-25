@@ -27,6 +27,26 @@ if (!accessRows.length) {
   });
 }
 
+const registrationRows = await sql`
+  SELECT id
+  FROM competition_state
+  WHERE id = 1
+    AND (state->>'round') = (state->>'startRound')
+    AND COALESCE((state->>'registrationClosed')::boolean, false) = false
+    AND COALESCE((state->>'deadlinePassed')::boolean, false) = false
+    AND COALESCE((state->>'roundProcessed')::boolean, false) = false
+    AND (
+      NULLIF(state->>'deadline', '') IS NULL
+      OR (state->>'deadline')::timestamptz > NOW()
+    )
+`;
+
+if (!registrationRows.length) {
+  return res.status(403).json({
+    error: 'Registration is closed.'
+  });
+}
+
 if (validateOnly === true) {
   return res.status(200).json({
     ok: true
@@ -64,6 +84,19 @@ if (validateOnly === true) {
         ),
         updated_at = NOW()
       WHERE id = 1
+AND (state->>'round') = (state->>'startRound')
+AND COALESCE((state->>'roundProcessed')::boolean, false) = false
+AND (
+  NULLIF(state->>'deadline', '') IS NULL
+  OR (state->>'deadline')::timestamptz > NOW()
+)
+AND EXISTS (
+  SELECT 1
+  FROM competition_access
+  WHERE id = 1
+    AND lower(code) = ${cleanCode}
+)
+      
 AND COALESCE(
   (state->>'registrationClosed')::boolean,
   false
