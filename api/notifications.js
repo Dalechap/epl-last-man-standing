@@ -181,7 +181,17 @@ const alivePlayers =
       )
     : [];
 
-for (const player of (req.query?.event === 'new-matchweek' ? alivePlayers : [])) {
+const openingCompetition =
+  Number(state.round) === Number(state.startRound) &&
+  state.deadlinePassed !== true &&
+  state.registrationClosed !== true &&
+  new Date(state.deadline).getTime() > Date.now();
+
+for (const player of (
+  req.query?.event === 'new-matchweek' || openingCompetition
+    ? alivePlayers
+    : []
+)) {
   const subscriptions = await sql`
     SELECT
       endpoint,
@@ -213,10 +223,12 @@ for (const player of (req.query?.event === 'new-matchweek' ? alivePlayers : []))
     }
 
     const payload = JSON.stringify({
-      title:
-        `Matchweek ${state.round} is open`,
-      body:
-        'Make your selection before the deadline.',
+     title: openingCompetition
+  ? 'New Last Man Standing competition! ⚽'
+  : `Matchweek ${state.round} is open`,
+body: openingCompetition
+  ? `Join the new competition by making your first selection in Matchweek ${state.round}.`
+  : 'Make your selection before the deadline.',
       url: '/?tab=pick'
     });
 
