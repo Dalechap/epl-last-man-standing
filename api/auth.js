@@ -44,12 +44,6 @@ export default async function handler(req, res) {
       });
     }
 
-    if (player.alive !== true) {
-      return res.status(403).json({
-        error: 'Player has been eliminated'
-      });
-    }
-
     return res.status(200).json({
       ok: true,
       playerName: player.name
