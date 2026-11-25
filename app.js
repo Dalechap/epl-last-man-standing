@@ -1572,6 +1572,12 @@ async function enableNotifications(){
       await Notification.requestPermission();
 
     if(permission!=='granted'){
+
+      localStorage.setItem(
+  'lms-notification-declined-round',
+  String(state.startRound)
+);
+      
       notice(
         'Notifications were not enabled.',
         'warn'
@@ -2146,7 +2152,11 @@ const notificationPlayer=
 c.innerHTML=`
 
 ${
-notificationsSupported&&!notificationPlayer
+notificationsSupported &&
+!notificationPlayer &&
+localStorage.getItem(
+  'lms-notification-declined-round'
+) !== String(state.startRound)
 ?`
 <div class='card'>
 <h2>Notifications</h2>
@@ -2159,6 +2169,13 @@ class='primary'
 id='enableNotifications'
 >
 Enable Notifications
+</button>
+<button
+  class='secondary'
+  id='declineNotifications'
+  style='width:100%;margin-top:10px;padding:10px'
+>
+  No thanks
 </button>
 </div>
 `
@@ -2471,6 +2488,18 @@ notice(
 );
 });
 };
+  const declineNotificationsBtn =
+  $('#declineNotifications');
+
+if (declineNotificationsBtn) {
+  declineNotificationsBtn.onclick = () => {
+    localStorage.setItem(
+      'lms-notification-declined-round',
+      String(state.startRound)
+    );
+    render();
+  };
+}
 const enableNotificationsBtn=
   $('#enableNotifications');
 
