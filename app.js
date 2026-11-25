@@ -3689,7 +3689,19 @@ Reset competition
 .catch(error => {
   console.error('Competition code:', error);
 });
-  
+
+  let archivedWinner = null;
+
+fetch('/api/state?history=1', {
+  cache: 'no-store'
+})
+.then(response => response.json())
+.then(data => {
+  archivedWinner = data.history?.[0]?.winner || null;
+})
+.catch(error => {
+  console.error('Previous winner:', error);
+});
 const shareCompetitionBtn =
   document.getElementById('shareCompetition');
 
@@ -3704,11 +3716,11 @@ if (!/^[A-Z0-9]{6}$/i.test(competitionCode || '')) {
   notice('Competition code is not available yet.', 'warn');
   return;
 }
-const previousWinner = winner();
-    
-    const startingRound = previousWinner
-      ? Number(state.round) + 1
-      : Number(state.startRound || state.round);
+const previousWinner = winner() || archivedWinner;
+
+const startingRound = winner()
+  ? Number(state.round) + 1
+  : Number(state.startRound || state.round);
 
     const message = [
       '⚽ EPL LAST MAN STANDING',
