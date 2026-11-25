@@ -8,8 +8,31 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { name, pin } = req.body || {};
+    const { name, pin, competitionCode, validateOnly } = req.body || {};
 
+    const cleanCode = String(
+  competitionCode || ''
+).trim().toLowerCase();
+
+const accessRows = await sql`
+  SELECT id
+  FROM competition_access
+  WHERE id = 1
+    AND lower(code) = ${cleanCode}
+`;
+
+if (!accessRows.length) {
+  return res.status(403).json({
+    error: 'Incorrect competition code'
+  });
+}
+
+if (validateOnly === true) {
+  return res.status(200).json({
+    ok: true
+  });
+}
+    
     const cleanName = String(name || '').trim();
     const cleanPin = String(pin || '').trim();
 
