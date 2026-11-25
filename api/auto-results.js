@@ -73,10 +73,6 @@ export default async function handler(req, res) {
       ) {
         state.deadlinePassed = true;
 
-        if (Number(state.round) === 4) {
-          state.registrationClosed = true;
-        }
-
         changed = true;
       }
     }
@@ -103,6 +99,36 @@ export default async function handler(req, res) {
         message: 'Deadline has not passed'
       });
     }
+
+    if (
+  Number(state.round) === Number(state.startRound) &&
+  state.participationFinalised !== true
+) {
+  state.registrationClosed = true;
+
+  state.players = state.players.filter(
+    player => Boolean(player.picks?.[state.startRound])
+  );
+
+  state.participationFinalised = true;
+
+  await sql`
+    UPDATE competition_state
+    SET state = ${state},
+        updated_at = NOW()
+    WHERE id = 1
+  `;
+
+  changed = true;
+}
+
+if (state.players.length === 0) {
+  return res.status(200).json({
+    ok: true,
+    changed,
+    message: 'No players entered the competition'
+  });
+}
 
     const apiKey =
       process.env.FOOTBALL_DATA_API_KEY;
