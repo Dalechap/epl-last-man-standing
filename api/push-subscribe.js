@@ -10,11 +10,12 @@ export default async function handler(req, res) {
       });
     }
 
-    const {
-      playerName,
-      pin,
-      subscription
-    } = req.body || {};
+   const {
+  playerName,
+  pin,
+  subscription,
+  enabled = true
+} = req.body || {};
 
     const cleanName =
       String(playerName || '').trim();
@@ -64,6 +65,23 @@ export default async function handler(req, res) {
       });
     }
 
+    if (enabled === false) {
+  await sql`
+    UPDATE push_subscriptions
+    SET enabled = FALSE,
+        updated_at = NOW()
+    WHERE lower(player_name) =
+      lower(${player.name}::text)
+      AND endpoint = ${subscription.endpoint}
+  `;
+
+  return res.status(200).json({
+    ok: true,
+    enabled: false,
+    playerName: player.name
+  });
+}
+    
     await sql`
       INSERT INTO push_subscriptions (
         player_name,
