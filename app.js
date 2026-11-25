@@ -2695,14 +2695,14 @@ if(tab==='pick'){
     const selected=
       state.players.find(
         p=>
-          p.alive &&
+         
           p.name.toLowerCase()===
           login.name.toLowerCase()
       );
 
     if(!selected){
       notice(
-        'Player not found or already eliminated.',
+       'Player not found.',
         'warn'
       );
       tab='home';
