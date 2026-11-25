@@ -149,9 +149,8 @@ async function loadTeamDirectory(){
 
 let authenticatedAdminPin=null;
 
-const COMPETITION_CODE='lmsmw8';
 let competitionUnlocked=
-localStorage.getItem('lms-access')===COMPETITION_CODE;
+Boolean(localStorage.getItem('lms-access'));
 
 const appShell=document.querySelector('.shell');
 
@@ -192,24 +191,43 @@ Enter
 
 document.body.prepend(accessGate);
 
-document.getElementById('competitionCodeBtn').onclick=()=>{
+document.getElementById('competitionCodeBtn').onclick=async ()=>{
 
 const entered=
 document.getElementById('competitionCodeInput').value
 .trim()
 .toLowerCase();
 
-if(entered!==COMPETITION_CODE){
+try {
+  const response = await fetch('/api/join', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      competitionCode: entered,
+      validateOnly: true
+    })
+  });
 
-document.getElementById('competitionCodeError').innerHTML=
-`<p class='error'>Incorrect competition code.</p>`;
+  const data = await response.json();
 
-return;
+  if (!response.ok || !data.ok) {
+    throw new Error(
+      data.error || 'Incorrect competition code'
+    );
+  }
+
+} catch (error) {
+  document.getElementById(
+    'competitionCodeError'
+  ).textContent = error.message;
+
+  return;
 }
 
 competitionUnlocked=true;
-localStorage.setItem('lms-access',COMPETITION_CODE);
-
+localStorage.setItem('lms-access',entered);
 accessGate.remove();
 
 if(appShell){
@@ -2564,7 +2582,8 @@ method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({
 name:name.trim(),
-pin
+pin,
+competitionCode:localStorage.getItem('lms-access')
 })
 })
 .then(async response=>{
