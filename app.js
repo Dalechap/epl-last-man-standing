@@ -2750,12 +2750,19 @@ if(tab==='pick'){
       return;
     }
   }
-const p=
-  state.players.find(
-    player=>
-      player.name===authenticatedPlayer &&
-      player.alive
+const p = state.players.find(
+  player => player.name === authenticatedPlayer
+);
+
+if (!p || !p.alive) {
+  tab = 'home';
+  notice(
+    'You have been eliminated from this competition. You can join the next competition using your existing name and PIN.',
+    'warn'
   );
+  render();
+  return;
+}
 
 const current=
 p.picks[state.round]||'';
