@@ -1,3 +1,7 @@
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL);
+
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -23,9 +27,16 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({
-      ok: true
-    });
+   const rows = await sql`
+  SELECT code
+  FROM competition_access
+  WHERE id = 1
+`;
+
+return res.status(200).json({
+  ok: true,
+  competitionCode: rows[0]?.code || null
+});
 
   } catch (error) {
     console.error(error);
