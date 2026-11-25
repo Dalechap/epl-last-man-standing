@@ -21,14 +21,12 @@ export default async function handler(req, res) {
       });
     }
 
-    const rows = await sql`
-      SELECT player
-      FROM competition_state,
-      jsonb_array_elements(state->'players') AS player
-      WHERE id = 1
-        AND lower(player->>'name') = lower(${cleanName}::text)
-      LIMIT 1
-    `;
+   const rows = await sql`
+  SELECT name, pin
+  FROM player_profiles
+  WHERE name_key = lower(${cleanName}::text)
+  LIMIT 1
+`;
 
     if (!rows.length) {
       return res.status(404).json({
@@ -36,7 +34,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const player = rows[0].player;
+    const player = rows[0];
 
     if (String(player.pin) !== cleanPin) {
       return res.status(403).json({
