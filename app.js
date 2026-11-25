@@ -154,11 +154,7 @@ Boolean(localStorage.getItem('lms-access'));
 
 const appShell=document.querySelector('.shell');
 
-if(appShell && !competitionUnlocked){
-appShell.style.display='none';
-}
-
-if(!competitionUnlocked){
+if(false){
 
 const accessGate=document.createElement('main');
 accessGate.className='shell';
