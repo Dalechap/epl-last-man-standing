@@ -1691,6 +1691,63 @@ render();
   }
 }
 
+async function disableNotifications(){
+  const playerName = localStorage.getItem(
+    'lms-notification-player'
+  );
+
+  if (!playerName) return;
+
+  const pin = prompt(
+    `Enter the 4-digit PIN for ${playerName}`
+  );
+
+  if (!pin) return;
+
+  try {
+    const registration =
+      await navigator.serviceWorker.ready;
+
+    const subscription =
+      await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      throw new Error('No active subscription found');
+    }
+
+    const response = await fetch('/api/push-subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        playerName,
+        pin,
+        subscription: subscription.toJSON(),
+        enabled: false
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || 'Could not disable notifications');
+    }
+
+    localStorage.removeItem('lms-notification-player');
+
+    localStorage.setItem(
+      'lms-notification-declined-round',
+      String(state.startRound)
+    );
+
+    render();
+    notice('Notifications disabled.', 'ok');
+
+  } catch (error) {
+    notice(error.message, 'warn');
+  }
+}
 async function loadPlannerFixtures(){
 
     const currentRound = Number(state.round);
@@ -2181,7 +2238,38 @@ Enable Notifications
 `
 :''
 }
+${
+notificationsSupported &&
+(
+  notificationPlayer ||
+  localStorage.getItem(
+    'lms-notification-declined-round'
+  ) === String(state.startRound)
+)
+?`
+<div class='card'>
+<h2>Notifications</h2>
 
+<p>
+Status:
+<strong style='color:${notificationPlayer ? 'green' : 'red'}'>
+${notificationPlayer ? 'Enabled' : 'Disabled'}
+</strong>
+</p>
+
+<button
+  class='secondary'
+  id='toggleNotifications'
+>
+${notificationPlayer
+  ? 'Disable Notifications'
+  : 'Enable Notifications'}
+</button>
+
+</div>
+`
+:''
+}
 ${
 !authenticatedPlayer && !winner() &&
 !state.registrationClosed && Number(state.round) === Number(state.startRound)
@@ -2500,6 +2588,17 @@ if (declineNotificationsBtn) {
     render();
   };
 }
+
+  const toggleNotificationsBtn =
+  $('#toggleNotifications');
+
+if (toggleNotificationsBtn) {
+  toggleNotificationsBtn.onclick =
+    notificationPlayer
+      ? disableNotifications
+      : enableNotifications;
+}
+  
 const enableNotificationsBtn=
   $('#enableNotifications');
 
