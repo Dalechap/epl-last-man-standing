@@ -3468,6 +3468,13 @@ Selections close automatically when the first EPL match of the Matchweek kicks o
 
 <hr>
 
+<button
+  class='secondary full'
+  id='shareCompetition'
+  style='margin-bottom:16px'
+>
+  📤 Share Competition
+</button>
 
 <details>
 <summary><b>Advanced / Emergency Controls</b></summary>
@@ -3585,7 +3592,53 @@ Reset competition
 
 </section>
 `;
+const shareCompetitionBtn =
+  document.getElementById('shareCompetition');
 
+if (shareCompetitionBtn) {
+  shareCompetitionBtn.onclick = async () => {
+
+    const previousWinner = winner();
+
+    const startingRound = previousWinner
+      ? Number(state.round) + 1
+      : Number(state.startRound || state.round);
+
+    const message = [
+      '⚽ EPL LAST MAN STANDING',
+      '',
+      'A new competition is starting!',
+      '',
+      previousWinner
+        ? `🏆 Previous winner: ${previousWinner.name || previousWinner}`
+        : '',
+      `📅 Starting Matchweek: ${startingRound}`,
+      '',
+      'Existing players can use their existing name and PIN.',
+      'New players are welcome to register.',
+      '',
+      'Join here:',
+      'https://lastmanstandingsports.com',
+      '',
+      'Good luck everyone!'
+    ].filter(Boolean).join('\n');
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          text: message
+        });
+      } else {
+        await navigator.clipboard.writeText(message);
+        notice('Invitation copied to clipboard.', 'ok');
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        notice('Unable to share invitation.', 'warn');
+      }
+    }
+  };
+}
   const checkLiveScoresBtn = document.getElementById('checkLiveScores');
 
 if (checkLiveScoresBtn) {
