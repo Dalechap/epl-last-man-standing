@@ -3478,6 +3478,17 @@ Selections close automatically when the first EPL match of the Matchweek kicks o
 
 <hr>
 
+<div class='card' style='text-align:center;padding:16px;margin-bottom:12px'>
+  <div class='muted'>Competition Code</div>
+  <div
+    id='adminCompetitionCode'
+    style='font-size:28px;font-weight:800;letter-spacing:4px;margin:8px 0'
+  >
+    Loading...
+  </div>
+  <div class='muted'>Share with new players</div>
+</div>
+
 <button
   class='secondary full'
   id='shareCompetition'
@@ -3602,6 +3613,33 @@ Reset competition
 
 </section>
 `;
+
+  fetch('/api/admin-auth', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    pin: authenticatedAdminPin
+  })
+})
+.then(async response => {
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error);
+  }
+
+  const codeDisplay =
+    document.getElementById('adminCompetitionCode');
+
+  if (codeDisplay) {
+    codeDisplay.textContent =
+      data.competitionCode?.toUpperCase() || 'Unavailable';
+  }
+})
+.catch(error => {
+  console.error('Competition code:', error);
+});
+  
 const shareCompetitionBtn =
   document.getElementById('shareCompetition');
 
