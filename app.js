@@ -1460,11 +1460,19 @@ let shown=p.alive&&!state.deadlinePassed
 ?(pick?'Pick submitted':'No pick submitted')
 :(pick||'No pick');
 
-let statusText=!p.alive
-?'Eliminated'
-:(liveStatus==='pending-elimination'
-?'Pending elimination'
-:'Alive');
+const openingRegistration =
+  Number(state.round) === Number(state.startRound) &&
+  !state.deadlinePassed &&
+  !state.registrationClosed &&
+  !state.roundProcessed;
+
+let statusText = openingRegistration
+  ? (pick ? 'Entered' : 'Awaiting selection')
+  : !p.alive
+    ? 'Eliminated'
+    : liveStatus === 'pending-elimination'
+      ? 'Pending elimination'
+      : 'Alive';
 
 return `<div class='standingRow'>
 
@@ -1475,10 +1483,15 @@ return `<div class='standingRow'>
 
 <div class='standingInfo'>
 <span>${esc(shown)}</span>
-<span>${p.used.length} used</span>
+${openingRegistration
+  ? ''
+  : `<span>${p.used.length} used</span>`}
 </div>
 
-<span class='dot ${liveStatus==='pending-elimination'?'off':(p.alive?'on':'off')}'></span>
+<span
+  class='dot ${liveStatus==='pending-elimination'?'off':(p.alive?'on':'off')}'
+  style='${openingRegistration && !pick ? "background:#f59e0b;" : ""}'
+></span>
 
 </div>`;
 }).join('')
@@ -2514,8 +2527,8 @@ ${
 </div>
 
 <div class='card'>
-<span>Still alive</span>
-<strong>${alive()}</strong>
+<span>${openingRegistration?'Confirmed entries':'Still alive'}</span>
+<strong>${openingRegistration?confirmedEntries:alive()}</strong>
 </div>
 
 <div class='card'>
