@@ -3403,13 +3403,18 @@ ${esc(p.name)}
 
 <span
 class='${p.alive?'alive':'out'}'
+style='${openingRegistration && !currentPick
+  ? "background:#fef3c7;color:#92400e;"
+  : ""}'
 >
 ${
-  !p.alive
-    ?'Eliminated'
-    :livePlayerStatus(p)==='pending-elimination'
-    ?'Pending elimination'
-    :'Alive'
+  openingRegistration
+    ? (currentPick ? 'Entered' : 'Awaiting selection')
+    : !p.alive
+      ? 'Eliminated'
+      : livePlayerStatus(p)==='pending-elimination'
+        ? 'Pending elimination'
+        : 'Alive'
 }
 </span>
 </div>
@@ -3430,7 +3435,7 @@ ${p.alive && state.deadlinePassed &&
 </div>
 
 
-<div class='muted'>
+<div class='muted' ${openingRegistration?'hidden':''}>
   <strong>Pick history:</strong>
   <div class='pickHistoryRow'>
     ${
