@@ -2312,7 +2312,7 @@ ${
 ${
 !state.registrationClosed && Number(state.round) === Number(state.startRound)
 ?`
-<h2>New Players</h2>
+<h2>New Player Registration</h2>
 
 <div id='joinCodeSection'>
   <p class='joinIntro'>
@@ -2367,6 +2367,40 @@ ${esc(w.name)} is the Last Man Standing!
 The competition is complete.
 </p>
 </div>
+</div>`
+:(
+  Number(state.round) === Number(state.startRound) &&
+  !state.deadlinePassed &&
+  !state.roundProcessed
+)
+?`<div class='card'>
+  <div class='eyebrow dark'>NEW COMPETITION</div>
+
+  <h2>⚽ The next competition starts in Matchweek ${state.startRound}!</h2>
+
+  <p><strong>Selection deadline:</strong>
+  ${state.deadline
+    ? new Date(state.deadline).toLocaleString()
+    : 'To be confirmed'}</p>
+
+  <hr>
+
+  <h3>Already registered?</h3>
+  <p>Go to Make Pick, enter your existing name and PIN,
+  and select your team. There is no need to register again.</p>
+
+  <h3>New player?</h3>
+  <p>Go to New Player Registration on this Home page.
+  Enter the competition code provided in your invitation,
+  register your name and create a 4-digit PIN.
+  Then go to Make Pick and select your team.</p>
+
+  <hr>
+
+  <p><strong>Important:</strong> Your first selection
+  automatically enters you into the competition.
+  If you do not make a selection before the opening
+  Matchweek deadline, you will not be entered.</p>
 </div>`
 :''
 }
