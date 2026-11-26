@@ -2194,8 +2194,41 @@ function joinCompetitionModal(){
 async function render(){
 syncDeadline();
 
-$('#summary').textContent=
-`Matchweek ${state.round} · ${alive()} player${alive()==1?'':'s'} alive`;
+const openingRegistration =
+  Number(state.round) === Number(state.startRound) &&
+  !state.deadlinePassed &&
+  !state.registrationClosed &&
+  !state.roundProcessed;
+
+const confirmedEntries = state.players.filter(
+  player => Boolean(player.picks?.[state.startRound])
+).length;
+
+if (openingRegistration) {
+  $('#summary').innerHTML = `
+    Starting Matchweek ${state.startRound}
+    <div style="color:#16a34a;font-weight:600;margin-top:6px;">
+      Registration open
+    </div>
+    <div style="display:flex;gap:24px;margin-top:10px;">
+      <div>
+        Registered players<br>
+        <strong style="font-size:22px;">
+          ${state.players.length}
+        </strong>
+      </div>
+      <div>
+        Confirmed entries<br>
+        <strong style="font-size:22px;">
+          ${confirmedEntries}
+        </strong>
+      </div>
+    </div>
+  `;
+} else {
+  $('#summary').textContent =
+    `Matchweek ${state.round} · ${alive()} player${alive()==1?'':'s'} alive`;
+}
 
 document
 .querySelectorAll('.tabs button')
