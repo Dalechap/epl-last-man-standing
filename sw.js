@@ -33,3 +33,7 @@ self.addEventListener('notificationclick', event => {
     clients.openWindow(url)
   );
 });
+
+self.addEventListener('fetch', event => {
+  // Allows PWA installability criteria
+});

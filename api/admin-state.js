@@ -1,5 +1,6 @@
 import { sql } from '../lib/db.js';
 import { currentAdminPin } from './admin-auth.js';
+import { freshSlice } from '../lib/sports.js';
 import {
   cleanSportId,
   loadRoot,
@@ -35,17 +36,30 @@ export default async function handler(req, res) {
     );
     const league = req.body?.league || incomingState.league;
     const { root } = await loadRoot(sql);
-    const existingSlice = readSlice(root, sportId, league);
+    const existingSlice = readSlice(root, sportId, league) || {};
+    const defaultSlice = freshSlice(sportId);
     const nextSlice = {
+      ...defaultSlice,
+      ...existingSlice,
       ...incomingState,
       sport: sportId,
       league: sportId === 'football'
-        ? (league || existingSlice?.league || 'PL')
-        : incomingState.league || null,
-      resultMode: incomingState.resultMode === 'manual'
+        ? (league || incomingState.league || existingSlice.league || 'PL')
+        : (incomingState.league || existingSlice.league || null),
+      resultMode: sportId === 'tennis'
         ? 'manual'
-        : 'live'
+        : (incomingState.resultMode === 'manual' ? 'manual' : (incomingState.resultMode || existingSlice.resultMode || 'live'))
     };
+
+    if (!Array.isArray(nextSlice.players)) {
+      nextSlice.players = Array.isArray(existingSlice.players) ? existingSlice.players : [];
+    }
+    if (!nextSlice.fixtures || typeof nextSlice.fixtures !== 'object') {
+      nextSlice.fixtures = (existingSlice.fixtures && typeof existingSlice.fixtures === 'object') ? existingSlice.fixtures : {};
+    }
+    if (!nextSlice.results || typeof nextSlice.results !== 'object') {
+      nextSlice.results = (existingSlice.results && typeof existingSlice.results === 'object') ? existingSlice.results : {};
+    }
 
     delete nextSlice.competitions;
 
@@ -70,6 +84,13 @@ export default async function handler(req, res) {
 
         return player;
       });
+    }
+
+    if (incomingState.appCode || incomingState.code || req.body?.competitionCode) {
+      const cleanCode = String(incomingState.appCode || incomingState.code || req.body?.competitionCode).trim();
+      root.code = cleanCode;
+      nextSlice.code = cleanCode;
+      nextSlice.appCode = cleanCode;
     }
 
     if (!root.competitions) {

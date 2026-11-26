@@ -36,10 +36,8 @@ export default async function handler(req, res) {
       });
     }
 
-    if (
-      slice.registrationClosed ||
-      slice.deadlinePassed
-    ) {
+    const isClosed = slice.registrationClosed === true || (slice.registrationClosed === undefined && Boolean(slice.deadlinePassed));
+    if (isClosed) {
       return res.status(403).json({
         error: 'Registration is closed. The competition has already started.'
       });

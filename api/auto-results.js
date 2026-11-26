@@ -26,7 +26,7 @@ async function processSlice(slice, sportId) {
     return { changed: false, openedNext: false };
   }
 
-  if (slice.resultMode === 'manual') {
+  if (slice.resultMode === 'manual' || (slice.sport || sportId) === 'tennis') {
     return { changed, openedNext: false };
   }
 

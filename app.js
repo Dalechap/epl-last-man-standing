@@ -159,6 +159,325 @@ SPORTS.push(
   }
 );
 
+const TOP_COMPETITIONS = [
+  {
+    key: 'epl',
+    sport: 'football',
+    league: 'PL',
+    title: 'Premier League',
+    tag: 'Football · EPL',
+    image: '/EPL.jpg',
+    code: 'EPL',
+    description: 'Pick 1 team each matchweek. Survives if they win.'
+  },
+  {
+    key: 'nfl',
+    sport: 'nfl',
+    league: null,
+    title: 'NFL',
+    tag: 'American Football',
+    image: '/assets/sports/nfl.svg',
+    code: 'NFL',
+    description: 'Pick 1 NFL team each week. Win = survive.'
+  },
+  {
+    key: 'nrl',
+    sport: 'nrl',
+    league: null,
+    title: 'NRL',
+    tag: 'National Rugby League',
+    image: '/assets/sports/nrl.svg',
+    code: 'NRL',
+    description: 'Pick 1 NRL team each round. One use per team.'
+  },
+  {
+    key: 'afl',
+    sport: 'afl',
+    league: null,
+    title: 'AFL',
+    tag: 'Australian Football League',
+    image: '/assets/sports/afl.svg',
+    code: 'AFL',
+    description: 'Pick 1 AFL team each round. One use per team.'
+  }
+];
+
+function resolveCompetition(input){
+  if(!input) return null;
+  const s = String(input).trim().toLowerCase();
+  if(s==='epl' || s==='pl' || s==='premier-league' || s==='football:pl' || s==='football' || s==='lmsmw8'){
+    return { key:'epl', sport:'football', league:'PL', code:'EPL', title:'Premier League' };
+  }
+  if(s==='nfl'){
+    return { key:'nfl', sport:'nfl', league:null, code:'NFL', title:'NFL' };
+  }
+  if(s==='nrl'){
+    return { key:'nrl', sport:'nrl', league:null, code:'NRL', title:'NRL' };
+  }
+  if(s==='afl'){
+    return { key:'afl', sport:'afl', league:null, code:'AFL', title:'AFL' };
+  }
+  const sport = sportById(s);
+  if(sport){
+    return {
+      key: sport.id,
+      sport: sport.id,
+      league: sport.leagues?.[0]?.id || null,
+      code: sport.id.toUpperCase(),
+      title: sport.label
+    };
+  }
+  return null;
+}
+
+function currentCompetitionInfo(){
+  let info;
+  if(selectedSport==='football' && (selectedLeague==='PL' || !selectedLeague)){
+    info = { key:'epl', code:'EPL', title:'Premier League' };
+  } else if(selectedSport==='nfl'){
+    info = { key:'nfl', code:'NFL', title:'NFL' };
+  } else if(selectedSport==='nrl'){
+    info = { key:'nrl', code:'NRL', title:'NRL' };
+  } else if(selectedSport==='afl'){
+    info = { key:'afl', code:'AFL', title:'AFL' };
+  } else {
+    const sport = sportById(selectedSport);
+    const league = sport?.leagues?.find(l => l.id === selectedLeague);
+    const title = league ? `${league.label}` : (sport ? `${sport.label}` : 'Last Man Standing');
+    info = {
+      key: selectedLeague ? `${selectedSport}_${selectedLeague}` : (selectedSport || 'epl'),
+      code: (selectedLeague || selectedSport || 'EPL').toUpperCase(),
+      title
+    };
+  }
+
+  if(state && state.code){
+    info.code = String(state.code).trim().toUpperCase();
+  }
+  return info;
+}
+
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  updateInstallUi();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  notice('LMS has been added to your Home Screen!', 'ok');
+  updateInstallUi();
+});
+
+function isStandaloneApp(){
+  return Boolean(
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function updateInstallUi(){
+  const isStandalone = isStandaloneApp();
+  const installBtns = document.querySelectorAll('#installAppBtn, #gateInstallBtn, #gateInstallBox, #shareInstallAppBtn');
+  installBtns.forEach(btn => {
+    if (isStandalone) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+    }
+  });
+}
+
+function triggerInstallApp(){
+  if(isStandaloneApp()){
+    notice('LMS is already installed on your Home Screen.', 'ok');
+    return;
+  }
+
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then((choiceResult) => {
+      if(choiceResult && choiceResult.outcome === 'accepted'){
+        notice('Adding LMS to your Home Screen...', 'ok');
+      }
+      deferredInstallPrompt = null;
+      updateInstallUi();
+    });
+    return;
+  }
+
+  showInstallInstructionsModal();
+}
+
+function showInstallInstructionsModal(){
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'loginOverlay';
+  overlay.innerHTML = `
+    <div class='loginModal' style='max-width:420px;text-align:left;position:relative;'>
+      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'>
+        <div class='eyebrow dark'>ADD TO HOME SCREEN</div>
+        <button id='installCloseCross' type='button' style='background:none;border:none;font-size:22px;cursor:pointer;color:#82768a;line-height:1;padding:4px;'>✕</button>
+      </div>
+
+      <div style='display:flex;align-items:center;gap:14px;margin-bottom:16px;'>
+        <img src='/icon-192.png' alt='LMS' style='width:56px;height:56px;border-radius:14px;box-shadow:0 4px 14px rgba(67,16,91,.2);'>
+        <div>
+          <h2 style='font-size:20px;margin:0 0 3px;'>Install LMS App</h2>
+          <p class='muted' style='margin:0;font-size:13px;'>Add LMS icon to your Home Screen</p>
+        </div>
+      </div>
+
+      <div style='background:#fcf9fd;border:1px solid #ebdfee;border-radius:14px;padding:16px;margin-bottom:18px;'>
+        ${isIOS ? `
+          <p style='margin:0 0 10px;font-size:13px;font-weight:800;color:#43105b;'>On iPhone / iPad (Safari):</p>
+          <ol style='margin:0;padding-left:18px;font-size:13px;color:#4d3b55;line-height:1.6;'>
+            <li style='margin-bottom:6px;'>Tap the <b>Share</b> button <span style='display:inline-block;padding:2px 8px;background:#eee4f4;border-radius:6px;font-size:14px;vertical-align:middle;'>⎋</span> at the bottom of Safari.</li>
+            <li style='margin-bottom:6px;'>Scroll down and tap <b>'Add to Home Screen'</b> <span style='display:inline-block;padding:2px 8px;background:#eee4f4;border-radius:6px;font-size:13px;vertical-align:middle;'>➕</span>.</li>
+            <li>Tap <b>'Add'</b> at the top right to finish!</li>
+          </ol>
+        ` : `
+          <p style='margin:0 0 10px;font-size:13px;font-weight:800;color:#43105b;'>How to install:</p>
+          <ol style='margin:0;padding-left:18px;font-size:13px;color:#4d3b55;line-height:1.6;'>
+            <li style='margin-bottom:6px;'>Tap the browser menu <b>(⋮ or ⋯)</b> in the corner.</li>
+            <li style='margin-bottom:6px;'>Select <b>'Install app'</b> or <b>'Add to Home screen'</b>.</li>
+            <li>Confirm to add the LMS app icon to your Home Screen!</li>
+          </ol>
+        `}
+      </div>
+
+      <button id='installCloseBtn' class='primary full' type='button' style='margin-top:0;'>
+        Got it
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.querySelector('#installCloseCross').onclick = close;
+  overlay.querySelector('#installCloseBtn').onclick = close;
+}
+
+function showShareModal(){
+  const comp = currentCompetitionInfo();
+  const origin = window.location.origin;
+  const code = comp.code;
+  const shareUrl = `${origin}/?code=${encodeURIComponent(code)}`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'loginOverlay';
+  overlay.innerHTML = `
+    <div class='loginModal' style='max-width:440px;text-align:left;position:relative;'>
+      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>
+        <div class='eyebrow dark'>INVITE FRIENDS</div>
+        <button id='shareCloseCross' type='button' style='background:none;border:none;font-size:22px;cursor:pointer;color:#82768a;line-height:1;padding:4px;'>✕</button>
+      </div>
+
+      <h2 style='font-size:24px;margin:0 0 6px;'>${esc(comp.title)}</h2>
+      <p class='muted' style='margin:0 0 18px;font-size:14px;'>
+        Share this link or code so friends can visit and join your competition!
+      </p>
+
+      <label style='display:block;font-size:12px;font-weight:800;color:#6e6174;margin-bottom:6px;text-transform:uppercase;'>
+        Competition Share Link
+      </label>
+      <div style='display:flex;gap:8px;align-items:center;margin-bottom:18px;'>
+        <input id='shareLinkInput' type='text' readonly value='${esc(shareUrl)}' style='flex:1;min-width:0;width:100%;padding:10px 12px;font-size:13px;border:1px solid #d9cfe0;border-radius:10px;background:#fbf9fc;'>
+        <button id='copyLinkBtn' type='button' class='primary' style='width:auto;margin:0;padding:10px 18px;white-space:nowrap;font-size:14px;cursor:pointer;flex-shrink:0;border-radius:10px;min-height:42px;'>
+          Copy Link
+        </button>
+      </div>
+
+      <label style='display:block;font-size:12px;font-weight:800;color:#6e6174;margin-bottom:6px;text-transform:uppercase;'>
+        Competition Code
+      </label>
+      <div style='display:flex;gap:8px;align-items:center;margin-bottom:20px;'>
+        <div style='flex:1;min-width:0;padding:12px 14px;background:#f3ecf7;border-radius:10px;font-weight:900;font-size:20px;color:#43105b;letter-spacing:2px;text-align:center;'>
+          ${esc(code)}
+        </div>
+        <button id='copyCodeBtn' type='button' class='secondary' style='width:auto;margin:0;padding:11px 18px;font-size:14px;white-space:nowrap;cursor:pointer;flex-shrink:0;border-radius:10px;'>
+          Copy Code
+        </button>
+      </div>
+
+      ${navigator.share ? `
+        <button id='nativeShareBtn' class='primary' type='button' style='margin-top:0;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;'>
+          <span>📲 Share via App (LINE, WhatsApp...)</span>
+        </button>
+      ` : ''}
+
+      ${!isStandaloneApp() ? `
+        <button id='shareInstallAppBtn' type='button' style='background:#f6eff9;color:#5b1978;border:1px solid #ebdfee;border-radius:12px;padding:11px 16px;font-size:13px;font-weight:800;width:100%;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;'>
+          <span>📲 Add LMS to Home Screen</span>
+        </button>
+      ` : ''}
+
+      <button id='shareCloseBtn' class='loginCancel' type='button' style='margin-top:0;'>
+        Done
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.querySelector('#shareCloseCross').onclick = close;
+  overlay.querySelector('#shareCloseBtn').onclick = close;
+
+  const copyLinkBtn = overlay.querySelector('#copyLinkBtn');
+  copyLinkBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      copyLinkBtn.textContent = '✓ Copied!';
+      setTimeout(() => copyLinkBtn.textContent = 'Copy Link', 2000);
+    } catch {
+      overlay.querySelector('#shareLinkInput').select();
+      document.execCommand('copy');
+      copyLinkBtn.textContent = '✓ Copied!';
+      setTimeout(() => copyLinkBtn.textContent = 'Copy Link', 2000);
+    }
+  };
+
+  const copyCodeBtn = overlay.querySelector('#copyCodeBtn');
+  copyCodeBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      copyCodeBtn.textContent = '✓ Copied!';
+      setTimeout(() => copyCodeBtn.textContent = 'Copy Code', 2000);
+    } catch {
+      copyCodeBtn.textContent = '✓ Copied!';
+      setTimeout(() => copyCodeBtn.textContent = 'Copy Code', 2000);
+    }
+  };
+
+  const nativeShareBtn = overlay.querySelector('#nativeShareBtn');
+  if (nativeShareBtn) {
+    nativeShareBtn.onclick = async () => {
+      try {
+        await navigator.share({
+          title: `${comp.title} - Last Man Standing`,
+          text: `Join the ${comp.title} on Last Man Standing! Code: ${code}`,
+          url: shareUrl
+        });
+      } catch (err) {
+        // ignore cancellation
+      }
+    };
+  }
+
+  const shareInstallBtn = overlay.querySelector('#shareInstallAppBtn');
+  if (shareInstallBtn) {
+    shareInstallBtn.onclick = () => {
+      close();
+      triggerInstallApp();
+    };
+  }
+}
+
 let selectedSport=localStorage.getItem('lms-sport')||'';
 let selectedLeague=localStorage.getItem('lms-league')||'PL';
 const TERMS_KEY='lms-terms';
@@ -293,7 +612,7 @@ picks:{},
 used:[],
 eliminatedRound:null
 })),
-resultMode:'live'
+resultMode:(selectedSport==='tennis'?'manual':'live')
 });
 
 let state=JSON.parse(localStorage.getItem('lms-state')||'null')||freshState();
@@ -382,78 +701,15 @@ function restorePlayer(){
 let plannerFixturesCache=null;
 let plannerFixturesCacheRound=null;
 
+let autoResultsCheckInProgress=false;
 let authenticatedAdminPin=null;
 
-const COMPETITION_CODE='lmsmw8';
-let competitionUnlocked=
-localStorage.getItem('lms-access')===COMPETITION_CODE;
+let competitionUnlocked=Boolean(localStorage.getItem('lms-access'));
 
 const appShell=document.querySelector('.shell');
 
-if(appShell && !competitionUnlocked){
-appShell.style.display='none';
-}
-
-if(appShell && competitionUnlocked && (!selectedSport || !termsAccepted())){
-appShell.style.display='none';
-}
-
-if(!competitionUnlocked){
-
-const accessGate=document.createElement('main');
-accessGate.className='shell';
-
-accessGate.innerHTML=`
-<section class='card formCard'>
-<h2>Enter Competition</h2>
-
-<p>
-Enter the competition access code to continue.
-</p>
-
-<input
-id='competitionCodeInput'
-type='text'
-placeholder='Competition code'
-autocomplete='off'
->
-
-<button
-class='primary'
-id='competitionCodeBtn'
->
-Enter
-</button>
-
-<div id='competitionCodeError'></div>
-</section>
-`;
-
-document.body.prepend(accessGate);
-
-document.getElementById('competitionCodeBtn').onclick=()=>{
-
-const entered=
-document.getElementById('competitionCodeInput').value
-.trim()
-.toLowerCase();
-
-if(entered!==COMPETITION_CODE){
-
-document.getElementById('competitionCodeError').innerHTML=
-`<p class='error'>Incorrect competition code.</p>`;
-
-return;
-}
-
-competitionUnlocked=true;
-localStorage.setItem('lms-access',COMPETITION_CODE);
-
-accessGate.remove();
-continueAfterAccess();
-
-};
-
+if(appShell && (!competitionUnlocked || !selectedSport || !termsAccepted())){
+  appShell.style.display='none';
 }
 const $=s=>document.querySelector(s);
 
@@ -626,15 +882,18 @@ state=serverState;
 if(state.deadlinePassed===undefined) state.deadlinePassed=false;
 if(state.deadline===undefined) state.deadline=null;
 if(state.roundProcessed===undefined) state.roundProcessed=false;
-if(!state.results) state.results={};
-if(!state.fixtures) state.fixtures={};
+if(!state.results || typeof state.results !== 'object') state.results={};
+if(!state.fixtures || typeof state.fixtures !== 'object') state.fixtures={};
 if(!state.processSnapshot) state.processSnapshot=null;
+if(selectedSport==='tennis') state.resultMode='manual';
+if(!Array.isArray(state.players)) state.players=[];
 
 state.players.forEach(p=>{
-if(!p.picks)p.picks={};
-if(!p.used)p.used=[];
-if(p.alive===undefined)p.alive=true;
-if(p.eliminatedRound===undefined)p.eliminatedRound=null;
+  if(!p) return;
+  if(!p.picks)p.picks={};
+  if(!p.used)p.used=[];
+  if(p.alive===undefined)p.alive=true;
+  if(p.eliminatedRound===undefined)p.eliminatedRound=null;
 });
 
 restorePlayer();
@@ -723,35 +982,40 @@ function confirmModal(title, message){
 }
 
 function alivePlayers(){
-return state.players.filter(p=>p.alive);
+  if(!Array.isArray(state?.players)) return [];
+  return state.players.filter(p=>p && p.alive);
 }
 
 function alive(){
-return alivePlayers().length;
+  return alivePlayers().length;
 }
 
 function winner(){
-return state.roundProcessed&&alive()===1
-?state.players.find(p=>p.alive)
-:null;
+  if(!Array.isArray(state?.players)) return null;
+  return state.roundProcessed&&alive()===1
+    ?state.players.find(p=>p && p.alive)
+    :null;
 }
 
 function player(){
-return state.players.find(
-p=>p.name===state.selectedPlayer&&p.alive
-)
-||state.players.find(p=>p.alive)
-||state.players[0];
+  if(!Array.isArray(state?.players)) return null;
+  return state.players.find(
+    p=>p && p.name===state.selectedPlayer&&p.alive
+  )
+  ||state.players.find(p=>p && p.alive)
+  ||state.players[0]
+  ||null;
 }
 
 function roundPicks(){
-return state.players
-.filter(p=>p.alive&&p.picks[state.round])
-.map(p=>p.picks[state.round]);
+  if(!Array.isArray(state?.players)) return [];
+  return state.players
+    .filter(p=>p && p.alive && p.picks && p.picks[state.round])
+    .map(p=>p.picks[state.round]);
 }
 
 function pickedTeams(){
-return [...new Set(roundPicks())].sort();
+  return [...new Set(roundPicks())].sort();
 }
 
 // List every team in the loaded matches.
@@ -762,7 +1026,8 @@ function fixtureTeams(){
 }
 
 function roundFixtures(){
-return state.fixtures[state.round]||[];
+  if(!state?.fixtures || typeof state.fixtures !== 'object') return [];
+  return state.fixtures[state.round]||[];
 }
 
 // Copy one API match into the shape the screen uses.
@@ -2248,6 +2513,16 @@ ${
 ?`
 <div class='card'>
 
+<div class='shareBanner' style='display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:linear-gradient(135deg,#f8f2fc,#f0e4f7);border:1px solid #ebdfee;border-radius:14px;margin-bottom:18px;'>
+  <div>
+    <strong style='font-size:13px;color:#43105b;display:block;'>Playing with friends?</strong>
+    <span class='muted' style='font-size:12px;'>Share this link or code so friends can join.</span>
+  </div>
+  <button id='bannerShareBtn' type='button' class='secondary' style='white-space:nowrap;padding:8px 14px;font-size:12px;cursor:pointer;background:#fff;'>
+    🔗 Invite Friends
+  </button>
+</div>
+
 ${
 !state.registrationClosed
 ?`
@@ -2381,7 +2656,10 @@ const myCrest=
           :'None yet'
         }
       </p>
-      <button class='logOutBtn' id='logOutBtn' type='button'>Log out</button>
+      <div style='display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap;'>
+        <button class='logOutBtn' id='logOutBtn' type='button' style='margin-top:0;'>Log out</button>
+        <button class='secondary' id='authShareBtn' type='button' style='font-size:13px;padding:9px 16px;cursor:pointer;'>🔗 Invite Friends</button>
+      </div>
 ${
   me.alive
   ?''
@@ -2628,6 +2906,14 @@ if(enableNotificationsBtn){
     $('#logOutBtn').onclick=logOut;
   }
 
+  if($('#bannerShareBtn')){
+    $('#bannerShareBtn').onclick=()=>showShareModal();
+  }
+
+  if($('#authShareBtn')){
+    $('#authShareBtn').onclick=()=>showShareModal();
+  }
+
   $('#homeAdminBtn').onclick=async ()=>{
   if(!adminUnlocked){
     const pin=await adminPinModal();
@@ -2669,10 +2955,14 @@ if(enableNotificationsBtn){
 }
 
 if(tab==='pick'){
-  if(!authenticatedPlayer||!termsAccepted()){
+  if(!authenticatedPlayer){
     tab='home';
+    notice('Please log in before making a pick.','warn');
     render();
     return;
+  }
+  if(!termsAccepted()){
+    saveTermsAcceptance(true);
   }
 const p=
   state.players.find(
@@ -2707,28 +2997,30 @@ t===current
 
 let fixtures=roundFixtures();
 
-if(!fixtures.length){
+if(!fixtures.length && !state.deadlinePassed){
   try{
     const response=
       await fetch(
-        `/api/football?round=${state.round}&${fixtureQuery()}`
+        `/api/football?round=${state.round}&${fixtureQuery()}`,
+        { signal: AbortSignal.timeout(2000) }
       );
 
-    const data=
-      await response.json();
-
     if(response.ok){
+      const data=
+        await response.json().catch(()=>({}));
       fixtures=
         (data.matches||[]).map(mapApiMatch);
       state.fixtures[state.round]=fixtures;
     }
   }catch(error){
-    console.error(
+    console.warn(
       'Could not load Make Pick fixtures:',
       error
     );
   }
 }
+
+if(tab !== 'pick') return;
 
 c.innerHTML=`
 <section class='card formCard'>
@@ -3104,6 +3396,19 @@ ${esc(shown)}
 `;
 }
 
+function toDatetimeLocalValue(isoString){
+  if(!isoString) return '';
+  const d=new Date(isoString);
+  if(isNaN(d.getTime())) return '';
+  const pad=n=>String(n).padStart(2,'0');
+  const Y=d.getFullYear();
+  const M=pad(d.getMonth()+1);
+  const D=pad(d.getDate());
+  const h=pad(d.getHours());
+  const m=pad(d.getMinutes());
+  return `${Y}-${M}-${D}T${h}:${m}`;
+}
+
 if(tab==='admin'){
 if(!adminUnlocked){
 tab='home';
@@ -3111,8 +3416,10 @@ notice('Admin access is locked.','warn');
 render();
 return;
 }
-const manual=state.resultMode==='manual';
-const teams=manual?fixtureTeams():pickedTeams();
+const isTennis=selectedSport==='tennis';
+const manual=isTennis||state.resultMode==='manual';
+const availableTeams=fixtureTeams();
+const teams=availableTeams.length?availableTeams:pickedTeams();
 const teamRows=teams.length
 ?teams.map(t=>{
   if(!manual){
@@ -3140,6 +3447,12 @@ const teamRows=teams.length
       ['zero-home','0–0 draw — this team was HOME'],
       ['zero-away','0–0 draw — this team was AWAY']
     ]
+    :isTennis
+    ?[
+      ['','Select result…'],
+      ['win','Win'],
+      ['loss','Loss']
+    ]
     :[
       ['','Select result…'],
       ['win','Win'],
@@ -3155,7 +3468,7 @@ ${options.map(([value,label])=>`<option value='${value}' ${current===value?'sele
 </div>`;
 }).join('')
 :`<p class='muted'>
-${manual?'Download the matches first.':'No team selections have been made yet.'}
+${isTennis?'No tennis player selections have been made yet.':(manual?'Download the matches first or wait for selections.':'No team selections have been made yet.')}
 </p>`;
 
 const w=winner();
@@ -3165,23 +3478,64 @@ c.innerHTML=`
 <section class='card formCard'>
 <h2>Admin</h2>
 
-<p class='muted'>
-Run the current ${roundNoun().toLowerCase()} from here. Live mode uses the real match result. Manual mode lets you set who won.
-</p>
-
-<div class='adminModes'>
-<button id='modeLive' class='${state.resultMode==='manual'?'secondary':'primary'}' type='button'>Use real results</button>
-<button id='modeManual' class='${state.resultMode==='manual'?'primary':'secondary'}' type='button'>Set results myself</button>
+<div class='pickStep' style='background:#fcf9fd;border:1px solid #ebdfee;border-radius:14px;padding:16px 18px;margin:14px 0 18px;'>
+  <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'>
+    <p class='eyebrow dark' style='margin:0;'>COMPETITION CODE (APP SETTING)</p>
+    <span class='statusPill open' style='font-size:11px;padding:3px 10px;'>Active: ${esc(state.appCode || state.code || 'lmsmw8')}</span>
+  </div>
+  <p class='muted' style='font-size:13px;margin:0 0 10px;'>
+    Set the access code for the app. Users must enter this code to unlock and enter the competition. Saved directly to database.
+  </p>
+  <div class='row' style='gap:8px;'>
+    <input
+      type='text'
+      id='adminCompCodeInput'
+      value='${esc(state.appCode || state.code || 'lmsmw8')}'
+      placeholder='e.g. lmsmw8'
+      style='font-weight:800;letter-spacing:1px;flex:1;'
+    >
+    <button
+      id='saveCompCodeBtn'
+      type='button'
+      style='background:#43105b;color:#fff;cursor:pointer;white-space:nowrap;padding:0 18px;border-radius:10px;font-weight:800;min-height:42px;'
+    >
+      Save code
+    </button>
+  </div>
 </div>
 
 <p class='muted'>
-${fixtures.length
-?`${fixtures.length} matches are loaded for ${roundTitle(state.round)}.`
-:`No matches are loaded for ${roundTitle(state.round)} yet.`
+${isTennis
+  ? `Run the current ${roundNoun().toLowerCase()} from here. Set the winner or loser for each tennis player below.`
+  : `Run the current ${roundNoun().toLowerCase()} from here. Live mode uses the real match result. Manual mode lets you set who won.`
 }
 </p>
 
-<hr>
+${isTennis ? `
+  <div style='background:#fff9eb;border:1px solid #f5cf7a;border-radius:14px;padding:14px 18px;margin:14px 0 16px;display:flex;align-items:flex-start;gap:12px;'>
+    <span style='font-size:24px;line-height:1;margin-top:2px;'>🎾</span>
+    <div>
+      <div style='font-size:14px;font-weight:800;color:#7c4704;margin-bottom:4px;'>
+        Manual Result Mode (Tennis)
+      </div>
+      <div style='font-size:13px;color:#7c4704;line-height:1.45;'>
+        Automated live results are not available for Tennis (no live API feed). Please enter match outcomes (Win / Loss) manually below before processing the round.
+      </div>
+    </div>
+  </div>
+` : `
+  <div class='adminModes'>
+    <button id='modeLive' class='${state.resultMode==='manual'?'secondary':'primary'}' type='button'>Use real results</button>
+    <button id='modeManual' class='${state.resultMode==='manual'?'primary':'secondary'}' type='button'>Set results myself</button>
+  </div>
+
+  <p class='muted'>
+  ${fixtures.length
+  ?`${fixtures.length} matches are loaded for ${roundTitle(state.round)}.`
+  :`No matches are loaded for ${roundTitle(state.round)} yet.`
+  }
+  </p>
+`}
 
 <div class='pickStep'>
 <p class='eyebrow dark'>Step 1</p>
@@ -3190,12 +3544,44 @@ ${fixtures.length
 ${
 state.deadline
 ?`Picks close at ${esc(new Date(state.deadline).toLocaleString('en-GB',{timeZone:'Asia/Bangkok'}))} Thailand time.`
-:'Load the matches first. The closing time is the first kickoff.'
+:'Load the matches first or set a closing time below.'
 }
 </p>
 <p class='statusPill ${state.deadlinePassed?'closed':'open'}'>
 ${state.deadlinePassed?'Picks are closed':'Picks are open'}
 </p>
+
+<div style='margin:14px 0 12px;'>
+  <label for='customDeadlineInput' style='display:block;font-size:13px;font-weight:700;margin-bottom:6px;'>
+    Set custom closing time (for testing):
+  </label>
+  <div class='row'>
+    <input
+      type='datetime-local'
+      id='customDeadlineInput'
+      value='${toDatetimeLocalValue(state.deadline)}'
+      ${state.roundProcessed?'disabled':''}
+    >
+    <button
+      id='saveCustomDeadlineBtn'
+      type='button'
+      style='background:#43105b;color:#fff;cursor:pointer;white-space:nowrap;'
+      ${state.roundProcessed?'disabled':''}
+    >
+      Save date
+    </button>
+  </div>
+  ${currentKickoff()?`
+    <button
+      id='resetDeadlineToMatchBtn'
+      type='button'
+      style='background:transparent;border:0;color:#6e6174;font-size:13px;cursor:pointer;padding:6px 0;text-decoration:underline;'
+    >
+      ↺ Reset to first match kickoff (${new Date(currentKickoff()).toLocaleString('en-GB',{timeZone:'Asia/Bangkok'})})
+    </button>
+  `:''}
+</div>
+
 <button
 id='deadlineBtn'
 class='${state.deadlinePassed?'success':'danger'} full'
@@ -3205,21 +3591,39 @@ ${state.roundProcessed?'disabled':''}
 ${state.deadlinePassed?'Re-open picks':'Close picks'}
 </button>
 <p class='muted'>The coloured words are a status. Press the button to open or close picks.</p>
+
+<hr style='margin:18px 0 14px;'>
+
+<label style='display:block;font-size:13px;font-weight:700;margin-bottom:4px;'>Player registration:</label>
+<p class='statusPill ${state.registrationClosed?'closed':'open'}'>
+${state.registrationClosed?'Registration is closed':'Registration is open'}
+</p>
+<button
+id='toggleRegBtn'
+class='${state.registrationClosed?'success':'danger'} full'
+type='button'
+>
+${state.registrationClosed?'Open registration (allow new players)':'Close registration'}
+</button>
 </div>
 
+${isTennis ? '' : `
 <div class='pickStep'>
 <p class='eyebrow dark'>Get the matches</p>
 <p class='muted'>This downloads who plays whom in ${roundTitle(state.round)}, and sets the closing time from the first kickoff. Press it when this round has no matches yet.</p>
 <button class='primary' id='loadEpl' type='button'>Download ${roundTitle(state.round)} matches</button>
 </div>
+`}
 
 <div class='pickStep'>
-<p class='eyebrow dark'>${manual?'Set each team':'Real results'}</p>
+<p class='eyebrow dark'>${isTennis ? 'Set player results' : (manual ? 'Set each team' : 'Real results')}</p>
 
 <p class='muted'>
-${manual
-?'Choose what happened for each team, then close this matchweek.'
-:'These are the real scores for the teams people picked.'}
+${isTennis
+  ? 'Select Win or Loss for each tennis player picked this round, then process the round.'
+  : (manual
+    ? 'Choose what happened for each team, then close this matchweek.'
+    : 'These are the real scores for the teams people picked.')}
 </p>
 
 ${teamRows}
@@ -3441,6 +3845,96 @@ render();
 };
 }
 
+if($('#saveCompCodeBtn')){
+  $('#saveCompCodeBtn').onclick=async ()=>{
+    const input=$('#adminCompCodeInput');
+    const val=String(input?.value||'').trim();
+    if(!val){
+      notice('Please enter a competition code.', 'warn');
+      return;
+    }
+    if(!/^[A-Za-z0-9\-_]{2,20}$/.test(val)){
+      notice('Code should be 2-20 letters, numbers, or dashes.', 'warn');
+      return;
+    }
+
+    state.code=val;
+    state.appCode=val;
+    await saveAdmin();
+    notice(`Competition code set to "${val}".`, 'ok');
+    render();
+  };
+}
+
+if($('#saveCustomDeadlineBtn')){
+  $('#saveCustomDeadlineBtn').onclick=async ()=>{
+    const input=$('#customDeadlineInput');
+    if(!input || !input.value){
+      notice('Please select a date and time.', 'warn');
+      return;
+    }
+
+    const chosen=new Date(input.value);
+    if(isNaN(chosen.getTime())){
+      notice('Invalid date/time.', 'warn');
+      return;
+    }
+
+    state.deadline=chosen.toISOString();
+    state.keepPicksOpen=false;
+    state.deadlinePassed=Date.now()>=chosen.getTime();
+
+    await saveAdmin();
+    notice(
+      `Closing time set to ${chosen.toLocaleString('en-GB',{timeZone:'Asia/Bangkok'})} Thailand time.`,
+      'ok'
+    );
+    render();
+  };
+}
+
+if($('#resetDeadlineToMatchBtn')){
+  $('#resetDeadlineToMatchBtn').onclick=async ()=>{
+    const kickoff=currentKickoff();
+    if(!kickoff){
+      notice('No matches loaded for this round.', 'warn');
+      return;
+    }
+
+    state.deadline=kickoff.toISOString();
+    state.keepPicksOpen=false;
+    state.deadlinePassed=Date.now()>=kickoff.getTime();
+
+    await saveAdmin();
+    notice('Closing time reset to first match kickoff.', 'ok');
+    render();
+  };
+}
+
+if($('#toggleRegBtn')){
+  $('#toggleRegBtn').onclick=async ()=>{
+    const opening=Boolean(state.registrationClosed);
+    const ok=await confirmModal(
+      opening?'Open registration?':'Close registration?',
+      opening
+        ?'New players will be able to join and register for this competition.'
+        :'New players will not be able to join.'
+    );
+
+    if(!ok) return;
+
+    state.registrationClosed=!opening;
+    await saveAdmin();
+    notice(
+      state.registrationClosed
+        ?'Registration is now closed.'
+        :'Registration is now open. New players can join.',
+      'ok'
+    );
+    render();
+  };
+}
+
 document
 .querySelectorAll(
 '.resultSel'
@@ -3606,6 +4100,11 @@ render();
 
 // Save whether this competition uses real scores or admin results.
 async function setResultMode(mode){
+  if(selectedSport==='tennis'){
+    notice('Live result fetching is not available for Tennis. Mode is set to manual.', 'warn');
+    return;
+  }
+
   const manual=mode==='manual';
   const current=state.resultMode==='manual'?'manual':'live';
 
@@ -3746,6 +4245,8 @@ function continueAfterAccess(){
     return;
   }
 
+  document.getElementById('sportGate')?.remove();
+
   if(appShell){
     appShell.style.display='';
   }
@@ -3793,6 +4294,17 @@ function paintSport(){
       showSportGate();
     };
   }
+
+  const shareBtn=document.getElementById('shareCompBtn');
+  if(shareBtn){
+    shareBtn.onclick=()=>showShareModal();
+  }
+
+  const installBtn=document.getElementById('installAppBtn');
+  if(installBtn){
+    installBtn.onclick=()=>triggerInstallApp();
+  }
+  updateInstallUi();
 }
 
 // Short line under a sport name.
@@ -3845,16 +4357,249 @@ function paintGate(html){
   return gate;
 }
 
-// Show one sport card at a time.
-function showSportGate(){
+// Show initial access gate asking for the competition code stored in the database.
+function showAccessGate(){
   const gate=paintGate(`
-    <p class='gateKicker'>Step 1</p>
-    <h2>Choose a sport</h2>
-    <p>Each sport has its own players and results.</p>
-    <div class='sportGrid' id='sportGrid'></div>
-  `);
-  const grid=gate.querySelector('#sportGrid');
+    <p class='gateKicker'>Welcome to Last Man Standing</p>
+    <h2>Enter Competition</h2>
+    <p>Enter the competition access code to continue.</p>
 
+    <div style='margin-top:18px;'>
+      <input
+        id='competitionCodeInput'
+        type='text'
+        placeholder='Competition code'
+        autocomplete='off'
+        style='text-transform:uppercase;font-weight:800;letter-spacing:1.5px;padding:12px 14px;font-size:16px;border:1px solid #d9cfe0;border-radius:12px;text-align:center;width:100%;box-sizing:border-box;margin-bottom:12px;'
+      >
+
+      <button
+        class='primary'
+        id='competitionCodeBtn'
+        type='button'
+        style='width:100%;margin:0;min-height:46px;font-size:15px;font-weight:800;border-radius:12px;cursor:pointer;'
+      >
+        Enter
+      </button>
+
+      <div id='competitionCodeError' style='margin-top:10px;'></div>
+    </div>
+
+    <div id='gateInstallBox' style='margin-top:20px;padding:16px 18px;background:#fff;border:1px solid #ebdfee;border-radius:18px;box-shadow:0 4px 16px rgba(42,11,61,.04);box-sizing:border-box;'>
+      <div style='display:flex;align-items:center;gap:12px;margin-bottom:12px;text-align:left;'>
+        <img src='/icon-192.png' alt='LMS' style='width:42px;height:42px;border-radius:10px;box-shadow:0 2px 8px rgba(67,16,91,.15);flex-shrink:0;'>
+        <div style='flex:1;min-width:0;'>
+          <div style='font-size:14px;font-weight:800;color:#43105b;line-height:1.2;margin-bottom:3px;'>Install LMS App</div>
+          <div class='muted' style='font-size:12px;line-height:1.35;'>Add to your Home Screen for quick access</div>
+        </div>
+      </div>
+      <button id='gateInstallBtn' type='button' class='primary' style='width:100%;margin:0;min-height:46px;padding:10px 16px;font-size:14px;font-weight:800;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;cursor:pointer;'>
+        <span>📲 Install LMS App</span>
+      </button>
+    </div>
+  `);
+
+  const input=gate.querySelector('#competitionCodeInput');
+  const btn=gate.querySelector('#competitionCodeBtn');
+  const errorEl=gate.querySelector('#competitionCodeError');
+
+  const submitAccess=async ()=>{
+    const entered=String(input?.value||'').trim();
+    if(!entered){
+      errorEl.innerHTML=`<p class='error' style='color:#b82820;font-size:13px;margin:4px 0;'>Please enter a competition code.</p>`;
+      return;
+    }
+
+    try{
+      btn.disabled=true;
+      btn.textContent='Verifying...';
+      errorEl.innerHTML='';
+
+      const res=await fetch('/api/verify-code',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code:entered})
+      });
+      const data=await res.json();
+
+      if(res.ok && data.ok){
+        competitionUnlocked=true;
+        localStorage.setItem('lms-access','ok');
+
+        if(data.isAppCode){
+          if(selectedSport && termsAccepted()){
+            continueAfterAccess();
+          }else{
+            showSportGate();
+          }
+        }else if(data.sport){
+          openChosenSport(data.sport, data.league);
+        }else{
+          showSportGate();
+        }
+        return;
+      }
+
+      errorEl.innerHTML=`<p class='error' style='color:#b82820;font-size:13px;margin:4px 0;'>Incorrect competition code.</p>`;
+    }catch(e){
+      console.error(e);
+      errorEl.innerHTML=`<p class='error' style='color:#b82820;font-size:13px;margin:4px 0;'>Unable to verify code. Please try again.</p>`;
+    }finally{
+      btn.disabled=false;
+      btn.textContent='Enter';
+    }
+  };
+
+  btn.onclick=submitAccess;
+  input.onkeydown=e=>{ if(e.key==='Enter') submitAccess(); };
+
+  const gateInstallBtn=gate.querySelector('#gateInstallBtn');
+  if(gateInstallBtn){
+    gateInstallBtn.onclick=()=>triggerInstallApp();
+  }
+  updateInstallUi();
+}
+
+// Show the 4 featured competitions (EPL, NFL, NRL, AFL) or all sports.
+function showSportGate(showAll=false){
+  if(showAll){
+    return showAllSportsGate();
+  }
+
+  const gate=paintGate(`
+    <p class='gateKicker'>Welcome to Last Man Standing</p>
+    <h2>Choose your competition</h2>
+    <p>Select a sport to play or join with your friends.</p>
+    <div class='sportGrid' id='topCompGrid'></div>
+
+    <div class='codeInviteBox' style='margin-top:22px;padding:18px 20px;background:#fff;border:1px solid #ebdfee;border-radius:18px;box-shadow:0 6px 18px rgba(42,11,61,.04);text-align:center;'>
+      <p style='font-size:14px;font-weight:800;color:#43105b;margin:0 0 4px;'>Have an invite code?</p>
+      <p class='muted' style='font-size:12px;margin:0 0 12px;'>Enter a code from a friend (e.g. EPL, NFL, NRL, AFL):</p>
+      <div style='display:flex;gap:8px;max-width:320px;margin:0 auto;'>
+        <input id='hubCodeInput' type='text' placeholder='e.g. EPL' style='text-transform:uppercase;font-weight:800;letter-spacing:1.5px;padding:10px 14px;font-size:14px;border:1px solid #d9cfe0;border-radius:10px;text-align:center;flex:1;'>
+        <button id='hubCodeBtn' class='primary' type='button' style='width:auto;margin:0;padding:10px 20px;font-size:14px;white-space:nowrap;'>Join</button>
+      </div>
+      <div id='hubCodeError' style='margin-top:8px;'></div>
+    </div>
+
+    <div id='gateInstallBox' style='margin-top:16px;padding:16px 18px;background:#fff;border:1px solid #ebdfee;border-radius:18px;box-shadow:0 4px 16px rgba(42,11,61,.04);box-sizing:border-box;'>
+      <div style='display:flex;align-items:center;gap:12px;margin-bottom:12px;text-align:left;'>
+        <img src='/icon-192.png' alt='LMS' style='width:42px;height:42px;border-radius:10px;box-shadow:0 2px 8px rgba(67,16,91,.15);flex-shrink:0;'>
+        <div style='flex:1;min-width:0;'>
+          <div style='font-size:14px;font-weight:800;color:#43105b;line-height:1.2;margin-bottom:3px;'>Install LMS App</div>
+          <div class='muted' style='font-size:12px;line-height:1.35;'>Add to your Home Screen for quick access</div>
+        </div>
+      </div>
+      <button id='gateInstallBtn' type='button' class='primary' style='width:100%;margin:0;min-height:46px;padding:10px 16px;font-size:14px;font-weight:800;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;cursor:pointer;'>
+        <span>📲 Install LMS App</span>
+      </button>
+    </div>
+
+    <div style='text-align:center;margin-top:20px;'>
+      <button id='seeAllSportsBtn' type='button' style='background:none;border:none;color:#755786;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;'>
+        See all other sports & leagues (F1, NBA, Tennis...)
+      </button>
+    </div>
+  `);
+
+  const grid=gate.querySelector('#topCompGrid');
+
+  TOP_COMPETITIONS.forEach(comp=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='sportBtn';
+    button.innerHTML=`
+      <img class='sportIcon' src='${esc(comp.image)}' alt='${esc(comp.title)}'>
+      <span style='flex:1;'>
+        <span class='sportName'>${esc(comp.title)}</span>
+        <span class='sportHint'>${esc(comp.tag)}</span>
+      </span>
+      <span style='font-size:11px;font-weight:800;background:#efe5f6;color:#5b1978;padding:4px 8px;border-radius:8px;'>${esc(comp.code)}</span>
+    `;
+    button.onclick=()=>{
+      button.classList.add('isSelected');
+      window.setTimeout(()=>{
+        openChosenSport(comp.sport, comp.league);
+      }, 160);
+    };
+    grid.appendChild(button);
+  });
+
+  const codeInput=gate.querySelector('#hubCodeInput');
+  const codeBtn=gate.querySelector('#hubCodeBtn');
+  const codeError=gate.querySelector('#hubCodeError');
+
+  const submitCode=async ()=>{
+    const entered=String(codeInput.value||'').trim();
+    if(!entered){
+      codeError.innerHTML=`<p class='error' style='color:#b82820;font-size:13px;margin:4px 0;'>Please enter a competition code.</p>`;
+      return;
+    }
+    const resolved=resolveCompetition(entered);
+    if(resolved){
+      openChosenSport(resolved.sport, resolved.league);
+      return;
+    }
+    try{
+      codeBtn.disabled=true;
+      codeBtn.textContent='...';
+      const verifyRes=await fetch('/api/verify-code',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code:entered})
+      });
+      if(verifyRes.ok){
+        const vdata=await verifyRes.json();
+        if(vdata && vdata.ok && vdata.sport){
+          openChosenSport(vdata.sport, vdata.league);
+          return;
+        }
+      }
+
+      const res=await fetch('/api/state?code='+encodeURIComponent(entered));
+      if(res.ok){
+        const found=await res.json();
+        if(found && found.sport){
+          openChosenSport(found.sport, found.league);
+          return;
+        }
+      }
+    }catch(e){
+      console.warn(e);
+    }finally{
+      codeBtn.disabled=false;
+      codeBtn.textContent='Join';
+    }
+    codeError.innerHTML=`<p class='error' style='color:#b82820;font-size:13px;margin:4px 0;'>Unknown code. Try EPL, NFL, NRL, or AFL, or check your custom code.</p>`;
+  };
+
+  codeBtn.onclick=submitCode;
+  codeInput.onkeydown=e=>{ if(e.key==='Enter') submitCode(); };
+
+  const gateInstallBtn=gate.querySelector('#gateInstallBtn');
+  if(gateInstallBtn){
+    gateInstallBtn.onclick=()=>triggerInstallApp();
+  }
+  updateInstallUi();
+
+  gate.querySelector('#seeAllSportsBtn').onclick=()=>showSportGate(true);
+}
+
+// Show all sports list
+function showAllSportsGate(){
+  const gate=paintGate(`
+    <button class='gateBack' id='gateBackToTop' type='button'>
+      <span aria-hidden='true'>←</span> Back to main 4 competitions
+    </button>
+    <p class='gateKicker'>All Sports</p>
+    <h2>Choose any sport</h2>
+    <p>Each sport has its own competition and results.</p>
+    <div class='sportGrid' id='allSportsGrid'></div>
+  `);
+
+  gate.querySelector('#gateBackToTop').onclick=()=>showSportGate(false);
+
+  const grid=gate.querySelector('#allSportsGrid');
   SPORTS.forEach(sport=>{
     const button=document.createElement('button');
     button.type='button';
@@ -3868,13 +4613,11 @@ function showSportGate(){
     `;
     button.onclick=()=>{
       button.classList.add('isSelected');
-
       window.setTimeout(()=>{
         if(sport.leagues.length){
           showLeagues(sport);
           return;
         }
-
         openChosenSport(sport.id, null);
       }, 160);
     };
@@ -4022,7 +4765,45 @@ the Matchweek will be processed the next time somebody opens it.
 */
 // Open the saved competition, or the next setup step.
 async function startApp(){
-  if(!competitionUnlocked){
+  // Check URL query parameters (e.g. ?comp=nfl or ?sport=nfl or ?code=EPL or ?join=...)
+  const urlParams=new URLSearchParams(window.location.search);
+  const compParam=urlParams.get('comp') || urlParams.get('sport') || urlParams.get('code') || urlParams.get('join');
+
+  if(compParam){
+    const resolved=resolveCompetition(compParam);
+    if(resolved){
+      competitionUnlocked=true;
+      localStorage.setItem('lms-access','ok');
+      localStorage.setItem(TERMS_KEY,'accepted');
+      chooseSport(resolved.sport, resolved.league);
+      return;
+    }
+
+    try{
+      const res=await fetch('/api/verify-code',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code:compParam})
+      });
+      if(res.ok){
+        const found=await res.json();
+        if(found && found.ok){
+          competitionUnlocked=true;
+          localStorage.setItem('lms-access','ok');
+          localStorage.setItem(TERMS_KEY,'accepted');
+          if(found.sport){
+            chooseSport(found.sport, found.league);
+            return;
+          }
+        }
+      }
+    }catch(e){
+      console.warn('Code lookup error:', e);
+    }
+  }
+
+  if(!competitionUnlocked && !localStorage.getItem('lms-access')){
+    showAccessGate();
     return;
   }
 
