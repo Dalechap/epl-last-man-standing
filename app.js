@@ -3756,25 +3756,36 @@ const startingRound = winner()
   ? Number(state.round) + 1
   : Number(state.startRound || state.round);
 
-    const message = [
-      '⚽ EPL LAST MAN STANDING',
-      '',
-      'A new competition is starting!',
-      '',
-      previousWinner
-        ? `🏆 Previous winner: ${previousWinner.name || previousWinner}`
-        : '',
-      `📅 Starting Matchweek: ${startingRound}`,
-      '',
-      'Existing players can use their existing name and PIN.',
-      'New players are welcome to register.',
-`🔑 Competition Code: ${competitionCode}`,
-      '',
-      'Join here:',
-      'https://lastmanstandingsports.com',
-      '',
-      'Good luck everyone!'
-    ].filter(Boolean).join('\n');
+   const message = [
+  '⚽ *EPL LAST MAN STANDING*',
+  '',
+  'A new competition is starting!',
+  '',
+  ...(previousWinner
+    ? [`🏆 Previous winner: ${previousWinner.name || previousWinner}`]
+    : []),
+  `📅 Starting Matchweek: ${startingRound}`,
+  `⏰ Selection deadline: ${
+    !winner() && state.deadline
+      ? new Date(state.deadline).toLocaleString()
+      : 'To be confirmed'
+  }`,
+  '',
+  '*Already registered?*',
+  'Go to Make Pick, enter your existing name and PIN, and select your team. No need to register again.',
+  '',
+  '*New players*',
+  'Go to New Player Registration on the Home page. Enter the competition code, register your name and create a 4-digit PIN. Then go to Make Pick and select your team.',
+  '',
+  `🔑 Competition Code: ${competitionCode}`,
+  '',
+  '*Important:* Your first selection automatically enters you into the competition. If you do not make a selection before the opening Matchweek deadline, you will not be entered.',
+  '',
+  'Join here:',
+  'https://lastmanstandingsports.com',
+  '',
+  'Good luck everyone! ⚽'
+].join('\n');
 
     try {
       if (navigator.share) {
