@@ -2564,7 +2564,7 @@ For a 0–0 draw, the away-team picker survives; the home-team picker is elimina
 </li>
 
 <li>
-No pick before the deadline = eliminated.
+In the opening Matchweek, players who do not make a selection before the deadline will not be entered into the competition. In subsequent Matchweeks, failure to make a selection before the deadline will result in elimination.
 </li>
 
 <li>
